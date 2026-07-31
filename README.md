@@ -19,27 +19,29 @@ Python-based Simulations of Chemistry Framework
 
 # Installation
 
-* Install stable release:
+* Install release contain `COF26` functional:
 
-        pip install pyscf
-
-* New features developed in recent years are available in the pyscf-forge package:
-
-        pip install pyscf-forge
-
-* Certain modules are maintained as extensions of PySCF, such as dispersion,
-  dmrgscf, fciqmc, icmpspt, properties, semiempirical, shciscf ... (more on
-  https://github.com/pyscf) can be installed using pip:
-
-        pip install pyscf[all]
-
-  An individual extension can be installed:
-
-        pip install pyscf[dispersion]
+`git clone https://github.com/chen-yu-hao/pyscf.git`
+`cd pyscf`
+`pip install -e .`
 
 * More details of custom installation can be found in
   [installation manual](http://pyscf.org/user/install.html#build-from-source)
 
+# Use on-top functional COF26
+
+```import pyscf
+from pyscf import mcpdft
+mol = pyscf.M(
+    atom = 'O 0 0 0; O 0 0 1.2',
+    basis = 'ccpvdz',
+    spin = 2)
+myhf = mol.RHF().run()
+ncas, nelecas = (6,(5,3))
+otfnal = 'COF26'
+# For convenience, mycas.grids.level can be set at construction using an optional kwarg
+mycas = mcpdft.CASSCF(myhf, otfnal, ncas, nelecas, grids_level=6).run()
+```
 
 # Citing PySCF
 
