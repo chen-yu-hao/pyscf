@@ -22,7 +22,9 @@ Python-based Simulations of Chemistry Framework
 * Install release contain `COF26` functional:
 
 `git clone https://github.com/chen-yu-hao/pyscf.git`
+
 `cd pyscf`
+
 `pip install -e .`
 
 * More details of custom installation can be found in
