@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from pyscf import gto, scf
+import numpy
+from pyscf import dft, gto, scf
 from pyscf.dft.libxc import XC_KEYS, XC_ALIAS, hybrid_coeff, rsh_coeff
 from pyscf.dft.libxc import parse_xc, is_nlc, needs_laplacian
 from pyscf import mcpdft
@@ -79,6 +80,20 @@ def tearDownModule():
 
 class KnownValues(unittest.TestCase):
 
+    def test_mc26_and_cof26_presets (self):
+        rho = numpy.ones ((6, 1))
+        for name in ('MC26', 'COF26'):
+            with self.subTest (name=name):
+                preset = mcpdft.otfnal.OT_PRESET[name]
+                mcpdft.otfnal.register_otfnal (name, preset)
+                try:
+                    self.assertAlmostEqual (
+                        dft.libxc.hybrid_coeff (name), preset['hyb'][0], 15)
+                    exc = dft.libxc.eval_xc (name, rho, 0, deriv=0)[0]
+                    self.assertEqual (exc.shape, (1,))
+                finally:
+                    mcpdft.otfnal.unregister_otfnal (name)
+
     def test_combo_fnals (self):
         # just a sanity test for the string parsing
         x_list = ["", "LDA", "0.4*LDA+0.6*B88", "0.5*LDA+0.7*B88-0.2*MPW91"]
@@ -103,7 +118,6 @@ class KnownValues(unittest.TestCase):
 if __name__ == "__main__":
     print("Full Tests for MC-PDFT on-top functional class API")
     unittest.main()
-
 
 
 
