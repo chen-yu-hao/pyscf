@@ -14,13 +14,16 @@
 
 '''Full iterative CCSDTQ for real unrestricted Hartree--Fock references.
 
-T1, T2 and T3 use the full native UCCSDT spin blocks.  T4 has five blocks,
+T1 and T2 use the full native UCCSDT spin blocks.  T3 and T4 are compact
+in this module.  T4 has five blocks,
 aaaa, aaab, aabb, bbba, bbbb; same-spin occupied and virtual groups are
 stored as strictly increasing combinations in this module.  The highm
-variant stores full T4.  All ranks enter the connected CC equations and
+variant stores full T3 and T4.  All ranks enter the connected CC equations and
 are iterated to convergence; e_tot is the CCSDTQ total energy.
 '''
 
+import ctypes
+from functools import lru_cache
 from itertools import combinations
 from math import factorial, prod
 
@@ -40,10 +43,33 @@ def _check_memory(mycc, size, what):
 
 
 def init_amps(mycc, eris=None):
-    size = 8 * sum(prod(utils.block_shape(mycc, rank, b, rank == 4 and mycc.do_tri_max_t))
+    size = 8 * sum(prod(utils.block_shape(mycc, rank, b, rank >= 3 and mycc.do_tri_max_t))
                    for rank in range(1, 5) for b in range(rank + 1))
     _check_memory(mycc, size, 'initial amplitudes')
+    if mycc.do_tri_max_t:
+        initial = mycc.copy()
+        initial.cc_order = 3
+        mycc.emp2, tamps = uccsdt.init_amps_uhf(initial, eris)
+        tamps.append(tuple(np.zeros(utils.block_shape(mycc, 4, b, True)) for b in range(5)))
+        return mycc.emp2, tamps
     return uccsdt.init_amps_uhf(mycc, eris)
+
+
+def _setup_compact_t3(mycc):
+    dims = tuple(mycc.nocc), tuple(mycc.nmo)
+    if getattr(mycc, '_compact_t3_dims', None) != dims:
+        names = ['t2c_%s_%s_%s' % (kind, order, space)
+                 for space in ('oa', 'va', 'ob', 'vb')
+                 for order in ('6f', '2f') for kind in ('map', 'mask')]
+        for name, array in zip(names, mycc.setup_tri2block()):
+            setattr(mycc, name, array)
+        mycc._compact_t3_dims = dims
+    max_occ = max(mycc.nocc)
+    max_vir = max(n - o for n, o in zip(mycc.nmo, mycc.nocc))
+    for suffix in ('aaa', 'aab'):
+        for axis, size in (('o', max_occ), ('v', max_vir)):
+            name = 'blksize_%s_%s' % (axis, suffix)
+            setattr(mycc, name, min(getattr(mycc, name), size))
 
 
 def _quadruples_backend(mycc):
@@ -89,16 +115,29 @@ def residuals(mycc, tamps, eris):
     uccsdt.update_t1_fock_eris_uhf(mycc, imds, t1, eris)
     uccsdt.intermediates_t1t2_uhf(mycc, imds, t2)
     r1, r2 = uccsdt.compute_r1r2_uhf(mycc, imds, t2)
-    uccsdt_highm.r1r2_add_t3_uhf_(mycc, imds, r1, r2, t3)
-    uccsdt.antisymmetrize_r2_uhf_(r2)
+    if mycc.do_tri_max_t:
+        _setup_compact_t3(mycc)
+        uccsdt.r1r2_add_t3_tri_uhf_(mycc, imds, r1, r2, t3)
+        uccsdt.antisymmetrize_r2_uhf_(r2)
+        if any(t.size for t in t3):
+            uccsdt.intermediates_t3_uhf(mycc, imds, t2)
+            uccsdt.intermediates_t3_add_t3_tri_uhf(mycc, imds, t3)
+        r3 = uccsdt.compute_r3_tri_uhf(mycc, imds, t2, t3, eris=eris)
+    else:
+        uccsdt_highm.r1r2_add_t3_uhf_(mycc, imds, r1, r2, t3)
+        uccsdt.antisymmetrize_r2_uhf_(r2)
+        uccsdt.intermediates_t3_uhf(mycc, imds, t2)
+        uccsdt_highm.intermediates_t3_add_t3_uhf(mycc, imds, t3)
+        r3 = uccsdt_highm.compute_r3_uhf(mycc, imds, t2, t3)
+        uccsdt_highm.antisymmetrize_r3_uhf_(r3)
 
-    uccsdt.intermediates_t3_uhf(mycc, imds, t2)
-    uccsdt_highm.intermediates_t3_add_t3_uhf(mycc, imds, t3)
-    r3 = uccsdt_highm.compute_r3_uhf(mycc, imds, t2, t3)
-    uccsdt_highm.antisymmetrize_r3_uhf_(r3)
-
+    # Quadruple contractions only need the T1-dressed Fock and ERIs.
+    # Release the triples intermediates before allocating R4/work panels.
+    quad_imds = uccsdt._IMDS()
+    quad_imds.t1_fock, quad_imds.t1_eris = imds.t1_fock, imds.t1_eris
+    imds = None
     r4 = tuple(np.zeros_like(t, order='C') for t in t4)
-    backend.residuals(mycc, imds, t2, t3, t4, out=(r2, r3, r4))
+    backend.residuals(mycc, quad_imds, t2, t3, t4, out=(r2, r3, r4))
     return [r1, r2, r3, r4]
 
 
@@ -123,21 +162,39 @@ def _t4_axis_energies(mycc, block, mo_energy):
     return energies
 
 
+@lru_cache(maxsize=1)
+def _r4_divide_kernel():
+    library = lib.load_library('libccsdt')
+    try:
+        version = library.UCCSDTQabi_version
+        version.restype = ctypes.c_int
+        if version() != 1:
+            raise RuntimeError('UCCSDTQ native ABI mismatch; rebuild libccsdt')
+        function = library.UCCSDTQdivide_r4_
+    except AttributeError as err:
+        raise RuntimeError('UCCSDTQ native ABI unavailable; rebuild libccsdt') from err
+    function.restype = None
+    return function
+
+
 def r4_divide_e_(mycc, r4, mo_energy):
-    '''Divide by sum(e_occ)-sum(e_vir)-4*level_shift in bounded chunks.'''
-    # Limit temporary denominators to 131072 doubles, even for full T4.
-    chunk = 131072
+    '''Divide by sum(e_occ)-sum(e_vir)-4*level_shift without a denominator tensor.'''
+    kernel = _r4_divide_kernel()
     for block, residual in enumerate(r4):
-        axes = _t4_axis_energies(mycc, block, mo_energy)
-        flat = residual.reshape(-1)
-        strides = [int(np.prod(residual.shape[k+1:], dtype=np.int64))
-                   for k in range(residual.ndim)]
-        for start in range(0, flat.size, chunk):
-            index = np.arange(start, min(start + chunk, flat.size), dtype=np.int64)
-            denom = np.zeros(index.size)
-            for e, stride in zip(axes, strides):
-                denom += e[(index // stride) % e.size]
-            flat[start:start + chunk] /= denom
+        assert residual.dtype == np.float64
+        if not residual.size:
+            continue
+        if (not residual.flags.writeable or not residual.flags.aligned or
+                residual.shape != utils.block_shape(mycc, 4, block, mycc.do_tri_max_t)):
+            raise ValueError('invalid T4 residual storage')
+        axes = [np.ascontiguousarray(e, dtype=np.float64)
+                for e in _t4_axis_energies(mycc, block, mo_energy)]
+        pointers = (ctypes.c_void_p * len(axes))(*(e.ctypes.data for e in axes))
+        shape = np.asarray(residual.shape, dtype=np.int64)
+        strides = np.asarray(residual.strides, dtype=np.int64) // residual.itemsize
+        kernel(residual.ctypes.data_as(ctypes.c_void_p), pointers,
+               ctypes.c_int32(residual.ndim), shape.ctypes.data_as(ctypes.c_void_p),
+               strides.ctypes.data_as(ctypes.c_void_p))
     return r4
 
 
@@ -146,15 +203,18 @@ def update_amps_uccsdtq_(mycc, tamps, eris):
     time0 = logger.process_clock(), logger.perf_counter()
     r1, r2, r3, r4 = residuals(mycc, tamps, eris)
     uccsdt.r1r2_divide_e_uhf_(mycc, r1, r2, eris.mo_energy)
-    uccsdt_highm.r3_divide_e_uhf_(mycc, r3, eris.mo_energy)
+    if mycc.do_tri_max_t:
+        uccsdt.r3_tri_divide_e_uhf_(mycc, r3, eris.mo_energy)
+    else:
+        uccsdt_highm.r3_divide_e_uhf_(mycc, r3, eris.mo_energy)
     r4_divide_e_(mycc, r4, eris.mo_energy)
     norms = []
     for rank, (amplitudes, residual) in enumerate(zip(tamps, (r1, r2, r3, r4)), 1):
         for block, (t, r) in enumerate(zip(amplitudes, residual)):
             norm = np.linalg.norm(r)
-            if rank == 4 and mycc.do_tri_max_t:
+            if rank >= 3 and mycc.do_tri_max_t:
                 # Match the full-tensor norm, including same-spin copies.
-                norm *= factorial(4 - block) * factorial(block)
+                norm *= factorial(rank - block) * factorial(block)
             norms.append(norm)
             t += r
     logger.timer_debug1(mycc, 'UCCSDTQ residual and update', *time0)
@@ -170,7 +230,7 @@ def _prepare_tamps(mycc, tamps):
     for rank, blocks in enumerate(tamps, 1):
         if len(blocks) != rank + 1:
             raise ValueError('T%d requires %d spin blocks' % (rank, rank + 1))
-        compact = rank == 4 and mycc.do_tri_max_t
+        compact = rank >= 3 and mycc.do_tri_max_t
         converted = []
         for b, block in enumerate(blocks):
             block = np.asarray(block)
@@ -184,7 +244,7 @@ def _prepare_tamps(mycc, tamps):
             converted.append(np.asarray(block, dtype=np.float64, order='C'))
         result.append(tuple(converted))
     for rank in range(len(result) + 1, 5):
-        shapes = [utils.block_shape(mycc, rank, b, rank == 4 and mycc.do_tri_max_t)
+        shapes = [utils.block_shape(mycc, rank, b, rank >= 3 and mycc.do_tri_max_t)
                   for b in range(rank + 1)]
         _check_memory(mycc, 8 * sum(prod(shape) for shape in shapes), 'initial amplitudes')
         result.append(tuple(np.zeros(shape) for shape in shapes))
@@ -197,7 +257,7 @@ def tamps_tri2full(mycc, tamps):
 
 
 def tamps_full2tri(mycc, tamps):
-    return list(tamps[:3]) + [utils.pack_t4(mycc, tamps[3])]
+    return list(tamps[:2]) + [utils.pack_blocks(mycc, tamps[2], 3), utils.pack_t4(mycc, tamps[3])]
 
 
 class UCCSDTQ(uccsdt.UCCSDT):

@@ -18,8 +18,7 @@
 The rank-four blocks follow :mod:`pyscf.cc.uccsdt`'s interleaved
 majority-spin convention.  A compact block stores strictly increasing
 occupied and virtual indices for each same-spin group.  Mixed-spin groups
-remain dense.  T3 is normally full in UCCSDTQ, but the conversion routines
-also accept the compact T3 produced by UCCSDT.
+remain dense.  Compact UCCSDTQ stores both T3 and T4 in this form.
 
 This module deliberately contains no solver state or global dimensions.  All
 sizes are obtained from the CC object passed to a helper, which makes the
@@ -285,7 +284,7 @@ def vector_size(mycc, include_t4=True):
 
 
 def vector_to_amplitudes(mycc, vector):
-    """Reconstruct full T1--T3 and compact/full T4 from a DIIS vector."""
+    """Reconstruct full T1/T2 and compact/full T3/T4 from a DIIS vector."""
     vector = np.asarray(vector)
     sizes = [0]
     cc_order = int(getattr(mycc, 'cc_order', 4))
@@ -306,7 +305,7 @@ def vector_to_amplitudes(mycc, vector):
             n = int(np.prod(shape, dtype=np.int64))
             compact.append(vector[offset:offset + n].reshape(shape).copy())
             offset += n
-        if rank < 4 or not getattr(mycc, 'do_tri_max_t', False):
+        if rank < 3 or not getattr(mycc, 'do_tri_max_t', False):
             tamps.append(unpack_blocks(mycc, compact, rank))
         else:
             tamps.append(tuple(compact))
@@ -325,14 +324,9 @@ def memory_estimate(mycc, diis_space=None, include_t4_diis=None):
     include_t4 = bool(getattr(mycc, 'do_diis_max_t', False)) if include_t4_diis is None else bool(include_t4_diis)
     parts = {}
     for rank in range(1, cc_order + 1):
-        if rank == 4 and not getattr(mycc, 'do_tri_max_t', True):
-            count = sum(int(np.prod(block_shape(mycc, rank, b, compact=False), dtype=np.int64))
-                        for b in range(rank + 1))
-        elif rank == 4:
-            count = sum(int(np.prod(block_shape(mycc, rank, b, compact=True), dtype=np.int64)) for b in range(rank + 1))
-        else:
-            count = sum(int(np.prod(block_shape(mycc, rank, b, compact=False), dtype=np.int64))
-                        for b in range(rank + 1))
+        compact = rank >= 3 and getattr(mycc, 'do_tri_max_t', True)
+        count = sum(int(np.prod(block_shape(mycc, rank, b, compact), dtype=np.int64))
+                    for b in range(rank + 1))
         parts['T%d' % rank] = count * itemsize
     for rank in range(1, cc_order + 1):
         parts['R%d' % rank] = parts['T%d' % rank]
@@ -420,9 +414,12 @@ def load_chk(chkfile, mycc=None, group=None):
         tamps = payload.get('tamps')
         if tamps is not None:
             tamps = list(tamps)
-            if bool(getattr(mycc, 'do_tri_max_t', True)) != (payload.get('storage') == 'compact'):
-                convert = pack_t4 if getattr(mycc, 'do_tri_max_t', True) else unpack_t4
-                tamps[3] = convert(mycc, tamps[3])
+            convert = pack_blocks if getattr(mycc, 'do_tri_max_t', True) else unpack_blocks
+            # Older compact checkpoints only packed T4. Convert each rank
+            # from its actual shape, rather than relying on the storage tag.
+            for rank in (3, 4):
+                if len(tamps) >= rank and tamps[rank - 1] is not None:
+                    tamps[rank - 1] = convert(mycc, tamps[rank - 1], rank)
             mycc.tamps = tamps
         if 'e_corr' in payload:
             mycc.e_corr = payload['e_corr']

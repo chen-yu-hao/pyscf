@@ -81,7 +81,7 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
                     np.result_type(*tensors, alpha) == np.result_type(*tensors)):
                 return pytblis.contract(script, *tensors, alpha=alpha, allow_partial_trace=True)
             result = pytblis.contract(script, *tensors, allow_partial_trace=True)
-        elif (any(np.shares_memory(out, tensor) for tensor in tensors) or
+        elif (any(np.may_share_memory(out, tensor) for tensor in tensors) or
                 np.iscomplexobj(alpha) or np.iscomplexobj(beta) or
                 out.dtype != np.result_type(*tensors)):
             # TBLIS does not guarantee aliasing or NumPy dtype promotion.
@@ -96,7 +96,7 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
         # pytblis.einsum, which does not accept alpha/beta. Aliasing, empty
         # and other-arity cases use a temporary before accumulation.
         if (out is not None and len(tensors) == 2 and all(t.size for t in tensors)
-                and not any(np.shares_memory(out, t) for t in tensors)):
+                and not any(np.may_share_memory(out, t) for t in tensors)):
             return lib.numpy_helper.contract(script, *tensors, out=out,
                                              alpha=alpha, beta=beta)
         result = lib.einsum(script, *tensors, optimize='optimal')
@@ -105,7 +105,7 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
         # the old temporary-plus-accumulate path is retained because the
         # output may alias an input and must be read before it is overwritten.
         if (out is not None and beta == 0.0 and
-                not any(np.shares_memory(out, tensor) for tensor in tensors)):
+                not any(np.may_share_memory(out, tensor) for tensor in tensors)):
             np.einsum(script, *tensors, out=out, optimize='optimal')
             if alpha != 1.0:
                 out *= alpha

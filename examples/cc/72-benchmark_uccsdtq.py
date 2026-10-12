@@ -54,7 +54,7 @@ def worker(nthreads, repeat):
     rng = np.random.default_rng(3049)
     # Fixed nonzero high-rank amplitudes exercise all native term families.
     t3 = [rng.normal(scale=1e-4, size=utils.block_shape(mycc, 3, b, True)) for b in range(4)]
-    tamps[2] = utils.unpack_blocks(mycc, t3, 3)
+    tamps[2] = tuple(t3)
     tamps[3] = [rng.normal(scale=1e-5, size=x.shape) for x in tamps[3]]
     input_fingerprints = [float(lib.finger(x)) for x in (mf.mo_coeff[0], mf.mo_coeff[1], eris.pppp,
                           eris.pPpP, eris.PPPP)]

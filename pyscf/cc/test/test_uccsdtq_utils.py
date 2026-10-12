@@ -59,6 +59,7 @@ class TestUCCSDTQStorage(unittest.TestCase):
         vector = u.amplitudes_to_vector(self.cc, tamps)
         restored = u.vector_to_amplitudes(self.cc, vector)
         self.assertEqual(len(restored), 3)
+        self.assertEqual([a.shape for a in restored[2]], [a.shape for a in packed])
         for a, b in zip(packed, u.pack_blocks(self.cc, restored[2], 3)):
             np.testing.assert_allclose(a, b)
         from pyscf.cc import uccsdt
@@ -79,10 +80,17 @@ class TestUCCSDTQStorage(unittest.TestCase):
         self.assertEqual(v4.size, u.vector_size(self.cc))
         out = u.vector_to_amplitudes(self.cc, v4)
         self.assertEqual(len(out), 4)
-        for a, b in zip(tamps[3], u.unpack_t4(self.cc, out[3])):
-            # The vector stores only unique coordinates; the source is already
-            # antisymmetric, so this compares the full representation.
-            np.testing.assert_allclose(a, b)
+        for rank in (3, 4):
+            self.assertEqual([a.shape for a in out[rank - 1]],
+                             [u.block_shape(self.cc, rank, b, True) for b in range(rank + 1)])
+            for a, b in zip(tamps[rank - 1], u.unpack_blocks(self.cc, out[rank - 1], rank)):
+                np.testing.assert_allclose(a, b)
+        self.cc.do_tri_max_t = False
+        full = u.vector_to_amplitudes(self.cc, v4)
+        for rank in (3, 4):
+            for a, b in zip(tamps[rank - 1], full[rank - 1]):
+                np.testing.assert_allclose(a, b)
+        np.testing.assert_array_equal(u.amplitudes_to_vector(self.cc, full), v4)
         self.cc.do_diis_max_t = False
         np.testing.assert_array_equal(u.amplitudes_to_vector(self.cc, tamps), v4)
         self.assertEqual(len(u.vector_to_amplitudes(self.cc, v4)), 4)
@@ -116,6 +124,11 @@ class TestUCCSDTQStorage(unittest.TestCase):
 
     def test_memory_components_and_checkpoint(self):
         parts = u.memory_estimate(self.cc, diis_space=3, include_t4_diis=False)
+        for rank in (3, 4):
+            packed_size = 8 * sum(int(np.prod(u.block_shape(self.cc, rank, b, True)))
+                                 for b in range(rank + 1))
+            self.assertEqual(parts['T%d' % rank], packed_size)
+            self.assertEqual(parts['R%d' % rank], packed_size)
         self.assertGreater(parts['T4'], 0)
         self.assertNotEqual(parts['total_components'], parts['T4'])
         self.assertEqual(parts['DIIS'], 2 * 3 * 8 * u.vector_size(self.cc, include_t4=False))
@@ -131,6 +144,39 @@ class TestUCCSDTQStorage(unittest.TestCase):
             self.assertEqual(payload['order'], 4)
             self.assertEqual(payload['storage'], 'compact')
             self.assertEqual(len(payload['tamps']), 4)
+
+    def test_checkpoint_converts_each_rank_from_actual_shape(self):
+        full = [tuple(self._antisymmetric_full(rank, b) for b in range(rank + 1))
+                for rank in range(1, 5)]
+        vector = u.amplitudes_to_vector(self.cc, full)
+        with tempfile.TemporaryDirectory() as td:
+            self.cc.chkfile = os.path.join(td, 'uccsdtq.chk')
+            # The first case matches historical compact checkpoints with
+            # full T3 and compact T4. The others cover each rank separately.
+            for compact_t3, compact_t4 in ((False, True), (True, False), (True, True), (False, False)):
+                self.cc.do_tri_max_t = True
+                self.cc.tamps = full[:2] + [
+                    u.pack_blocks(self.cc, full[2], 3) if compact_t3 else full[2],
+                    u.pack_t4(self.cc, full[3]) if compact_t4 else full[3]]
+                u.dump_chk(self.cc)
+                for compact_target in (True, False):
+                    with self.subTest(source=(compact_t3, compact_t4), target=compact_target):
+                        self.cc.do_tri_max_t = compact_target
+                        u.load_chk(self.cc.chkfile, self.cc)
+                        for rank in (3, 4):
+                            self.assertEqual([a.shape for a in self.cc.tamps[rank - 1]],
+                                             [u.block_shape(self.cc, rank, b, compact_target)
+                                              for b in range(rank + 1)])
+                        np.testing.assert_array_equal(u.amplitudes_to_vector(self.cc, self.cc.tamps), vector)
+
+    def test_full_t3_memory_estimate(self):
+        self.cc.do_tri_max_t = False
+        parts = u.memory_estimate(self.cc)
+        for rank in (3, 4):
+            full_size = 8 * sum(int(np.prod(u.block_shape(self.cc, rank, b, False)))
+                               for b in range(rank + 1))
+            self.assertEqual(parts['T%d' % rank], full_size)
+            self.assertEqual(parts['R%d' % rank], full_size)
 
     def test_packed_index_lexicographic(self):
         from itertools import combinations

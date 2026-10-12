@@ -436,7 +436,7 @@ class _Executor:
             self.buffers = tuple(np.empty(required) for _ in range(3))
             self.stats['max_fused_buffer_bytes'] = 3*required*8
         plan = _FinalPlan(rank, na, *storage._dims(self.mycc),
-                          int(rank == 4 and self.mycc.do_tri_max_t), workers,
+                          int(rank >= 3 and output.ndim < 2*rank), workers,
                           len(rows), len(cols), len(shared), len(maps))
         plan.rows[:len(rows)], plan.cols[:len(cols)], plan.shared[:len(shared)] = rows, cols, shared
         for label, (start, count) in ranges.items():
@@ -539,7 +539,9 @@ def residuals(mycc, imds, t2, t3, t4, out=None, _families=None):
     shapes += [storage.block_shape(mycc, r, b, False) for r in (2,3,4) for b in range(r+1)]
     for number, (array, shape) in enumerate(zip(arrays, shapes)):
         valid = array.shape == shape
-        if number >= 12:
+        if 8 <= number < 12:
+            valid |= array.shape == storage.block_shape(mycc, 3, number-8, True)
+        elif number >= 12:
             valid |= array.shape == storage.block_shape(mycc, 4, number-12, True)
         if not valid or array.dtype != np.float64:
             raise ValueError('invalid UCCSDTQ input shape or dtype at block %d' % number)
@@ -552,7 +554,7 @@ def residuals(mycc, imds, t2, t3, t4, out=None, _families=None):
     groups = _plans(dims, None if _families is None else tuple(_families))
     # Cached symbolic plans are part of RSS, not hidden matrix workspace.
     available = int(max(0., max_memory-lib.current_memory()[0])*1e6)
-    output_shapes = [[storage.block_shape(mycc, r, b, r == 4 and mycc.do_tri_max_t)
+    output_shapes = [[direct._residual_shape(mycc, r, b, t3)
                       for b in range(r+1)] for r in (2,3,4)]
     if out is None:
         available -= 8*sum(prod(s) for shapes in output_shapes for s in shapes)

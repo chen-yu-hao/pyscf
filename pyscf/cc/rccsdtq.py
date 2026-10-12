@@ -45,7 +45,7 @@ _libccsdt = lib.load_library('libccsdt')
 
 def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
     '''Accumulate RCCSDTQ contractions without an extra scaled output copy.'''
-    if out is not None and beta == 1.0 and einsum_backend in ('numpy', 'pyscf'):
+    if out is not None and beta == 1.0 and einsum_backend == 'numpy':
         result = _base_einsum(einsum_backend, script, *tensors, alpha=alpha)
         return np.add(result, out, out=out)
     return _base_einsum(einsum_backend, script, *tensors, out=out, alpha=alpha, beta=beta)

@@ -19,6 +19,7 @@ import copy
 from itertools import combinations, product
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 import numpy as np
 
@@ -75,7 +76,8 @@ class KnownValues(unittest.TestCase):
         full = _solve(uhf_be, compact=False)
         self.assertTrue(full.converged)
         self.assertAlmostEqual(full.e_tot, be_compact.e_tot, 10)
-        for a, b in zip(full.tamps[:3], be_compact.tamps[:3]):
+        expanded = be_compact.tamps_tri2full(be_compact.tamps)
+        for a, b in zip(full.tamps, expanded):
             for x, y in zip(a, b):
                 np.testing.assert_allclose(x, y, atol=2e-9)
         np.testing.assert_allclose(full.amplitudes_to_vector(full.tamps),
@@ -166,8 +168,34 @@ class KnownValues(unittest.TestCase):
         solver.conv_tol, solver.conv_tol_normt = 1e-11, 1e-9
         solver.kernel(tamps=copy.deepcopy(seed.tamps))
         self.assertTrue(solver.converged)
-        self.assertEqual(solver.tamps[2][0].ndim, 6)
+        self.assertEqual(solver.tamps[2][0].ndim, 2)
         self.assertAlmostEqual(solver.e_tot, be_compact.e_tot, 9)
+
+    def test_packed_t3_storage_and_full_update(self):
+        rng = np.random.default_rng(317)
+        for backend in ('direct', 'blocked'):
+            with self.subTest(backend=backend):
+                packed = cc.UCCSDTQ(uhf_b)
+                packed.quadruples_backend = backend
+                packed.do_diis_max_t = True
+                eris = packed.ao2mo()
+                _, initial = packed.init_amps(eris)
+                for rank in (3, 4):
+                    self.assertEqual([a.shape for a in initial[rank-1]],
+                                     [utils.block_shape(packed, rank, b, True) for b in range(rank+1)])
+                tamps = packed.vector_to_amplitudes(rng.normal(scale=.007, size=packed.vector_size()))
+                full_tamps = packed.tamps_tri2full(tamps)
+                full = cc.UCCSDTQ(uhf_b, compact_tamps=False)
+                full.quadruples_backend = backend
+                self.assertLess(packed.memory_estimate()['T3'], full.memory_estimate()['T3'])
+                with mock.patch.object(uccsdtq.uccsdt_highm, 'compute_r3_uhf',
+                                       side_effect=AssertionError('Full T3 residual allocation')):
+                    actual_norms = packed.update_amps_(tamps, eris)
+                expected_norms = full.update_amps_(full_tamps, eris)
+                np.testing.assert_allclose(actual_norms, expected_norms, atol=3e-12, rtol=3e-12)
+                for actual_rank, expected_rank in zip(packed.tamps_tri2full(tamps), full_tamps):
+                    for actual, expected in zip(actual_rank, expected_rank):
+                        np.testing.assert_allclose(actual, expected, atol=3e-12, rtol=3e-12)
 
     def test_arbitrary_noncanonical_residuals_match_bch(self):
         beh = gto.M(atom='Be 0 0 0; H 0 0 1.342', basis='sto-3g', spin=1, verbose=0)

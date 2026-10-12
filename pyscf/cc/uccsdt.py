@@ -2345,8 +2345,7 @@ def memory_estimate_log_uccsdt(mycc):
         # mixed blocks and could under-report their workspace by 2x.
         mixed = mycc.blksize_o_aab**2 * mycc.blksize_v_aab**2 * max(
             noccb * nvirb, nocca * nvira)
-        same = max(mycc.blksize_o_aaa**3 * mycc.blksize_v_aaa**3,
-                   mycc.blksize_o_aaa**3 * mycc.blksize_v_aaa**3)
+        same = mycc.blksize_o_aaa**3 * mycc.blksize_v_aaa**3
         blk_memory = max(mixed, same) * 8
         log.info("    Block workspace         %8s", format_size(blk_memory))
     if mycc.incore_complete:

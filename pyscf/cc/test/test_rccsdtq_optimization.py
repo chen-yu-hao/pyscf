@@ -90,6 +90,23 @@ class KnownValues(unittest.TestCase):
         original.assert_called_once_with('pytblis', 'ij,jk->ik', left, right,
                                          out=out, alpha=.25, beta=1.)
 
+    def test_pyscf_accumulation_keeps_direct_output_contract(self):
+        rng = np.random.default_rng(913)
+        left, right = rng.normal(size=(2, 24, 24))
+        contract = rccsdt.lib.numpy_helper.contract
+        for order in ('C', 'F'):
+            with self.subTest(order=order):
+                out = np.array(rng.normal(size=(24, 24)), order=order)
+                expected = -.25 * (left @ right) + out.copy()
+                with patch.object(rccsdt.lib, 'einsum',
+                                  side_effect=AssertionError('A separate contraction output is unnecessary')), \
+                        patch.object(rccsdt.lib.numpy_helper, 'contract', wraps=contract) as call:
+                    returned = rccsdtq._einsum('pyscf', 'ij,jk->ik', left, right,
+                                              out=out, alpha=-.25, beta=1.)
+                self.assertIs(returned, out)
+                call.assert_called_once_with('ij,jk->ik', left, right, out=out, alpha=-.25, beta=1.)
+                np.testing.assert_allclose(out, expected, atol=2e-12, rtol=2e-12)
+
     def test_optimized_helper_is_local_to_rccsdtq(self):
         self.assertIs(rccsdtq._base_einsum, rccsdt._einsum)
         self.assertIs(rccsdtq_highm._einsum, rccsdtq._einsum)

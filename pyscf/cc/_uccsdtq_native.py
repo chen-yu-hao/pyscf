@@ -15,7 +15,7 @@
 """Direct C/OpenMP spin-blocked contractions for UCCSDTQ.
 
 This first native engine prioritizes bounded workspace and transparent
-connection to the verified equations.  It reads compact T4 directly and never
+connection to the verified equations.  It reads compact T3/T4 directly and never
 allocates a dense spin-orbital tensor.  It uses scalar contractions rather than
 BLAS intermediates, so large-orbital calculations can be computationally costly.
 """
@@ -220,7 +220,7 @@ def _metadata(mycc, arrays):
             meta.ngroup = len(groups)
             for j, (sz, d) in enumerate(groups):
                 meta.group_size[j], meta.group_dim[j] = sz, d
-            meta.compact = rank == 4 and tuple(array.shape) == storage.block_shape(mycc, rank, block, True)
+            meta.compact = rank >= 3 and tuple(array.shape) == storage.block_shape(mycc, rank, block, True)
     return metas
 
 
@@ -239,11 +239,17 @@ def _native_kernel():
     return function
 
 
+def _residual_shape(mycc, rank, block, t3):
+    if rank == 3:
+        return tuple(t3[block].shape)
+    return storage.block_shape(mycc, rank, block, rank == 4 and mycc.do_tri_max_t)
+
+
 def residuals(mycc, imds, t2, t3, t4, out=None):
     """Add raw T4 feedback to R2/R3 and the complete raw R4.
 
-    T2/T3 and lower residuals use full native blocks. T4 input can be full or
-    compact; R4 output follows ``mycc.do_tri_max_t``. Provided outputs are
+    T2 uses full native blocks. T3/T4 input can be full or compact; R3 output
+    follows T3's layout and R4 follows ``mycc.do_tri_max_t``. Provided outputs are
     updated in place, and every input amplitude/integral remains unchanged.
     """
     oa, ob, va, vb = storage._dims(mycc)
@@ -257,7 +263,9 @@ def residuals(mycc, imds, t2, t3, t4, out=None):
         expected.extend(storage.block_shape(mycc, rank, b, False) for b in range(rank+1))
     for number, (array, shape) in enumerate(zip(arrays, expected)):
         valid = tuple(array.shape) == shape
-        if number >= 12:
+        if 8 <= number < 12:
+            valid |= tuple(array.shape) == storage.block_shape(mycc, 3, number-8, True)
+        elif number >= 12:
             valid |= tuple(array.shape) == storage.block_shape(mycc, 4, number-12, True)
         if not valid or array.dtype != np.float64:
             raise ValueError('invalid shape or dtype for UCCSDTQ native input %d' % number)
@@ -266,16 +274,14 @@ def residuals(mycc, imds, t2, t3, t4, out=None):
     metas = _metadata(mycc, arrays)
     pointers = (ctypes.c_void_p * len(arrays))(*(a.ctypes.data for a in arrays))
     if out is None:
-        out = tuple(tuple(np.zeros(storage.block_shape(mycc, rank, block,
-                        rank == 4 and mycc.do_tri_max_t)) for block in range(rank+1))
+        out = tuple(tuple(np.zeros(_residual_shape(mycc, rank, block, t3)) for block in range(rank+1))
                     for rank in (2, 3, 4))
     if tuple(map(len, out)) != (3, 4, 5):
         raise ValueError('invalid native UCCSDTQ output spin-block counts')
     native = _native_kernel()
     for rank, blocks in zip((2, 3, 4), out):
         for block, result in enumerate(blocks):
-            expected_shape = storage.block_shape(mycc, rank, block,
-                                                 rank == 4 and mycc.do_tri_max_t)
+            expected_shape = _residual_shape(mycc, rank, block, t3)
             if result.shape != expected_shape or result.dtype != np.float64 or not result.flags.writeable:
                 raise ValueError('invalid native UCCSDTQ output shape, dtype, or writeability')
             if not result.size:
@@ -285,7 +291,7 @@ def residuals(mycc, imds, t2, t3, t4, out=None):
             native(pointers, metas, terms, ctypes.c_int64(len(terms)),
                    ctypes.c_int32(oa), ctypes.c_int32(ob), ctypes.c_int32(va), ctypes.c_int32(vb),
                    ctypes.c_int32(rank), ctypes.c_int32(rank-block),
-                   ctypes.c_int32(rank == 4 and mycc.do_tri_max_t),
+                   ctypes.c_int32(rank >= 3 and result.ndim < 2*rank),
                    result.ctypes.data_as(ctypes.c_void_p),
                    strides.ctypes.data_as(ctypes.c_void_p))
     return out

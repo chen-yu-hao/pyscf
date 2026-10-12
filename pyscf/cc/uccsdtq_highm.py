@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''Full iterative UCCSDTQ with full native spin-block T4 storage.'''
+'''Full iterative UCCSDTQ with full native spin-block T3/T4 storage.'''
 
 from pyscf.cc import uccsdtq
 

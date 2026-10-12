@@ -16,7 +16,7 @@ assert mycc.converged
 print(mycc.e_tot)
 ```
 
-See `71-uccsdtq.py` for a complete example comparing compact and full T4
+See `71-uccsdtq.py` for a complete example comparing compact and full T3/T4
 storage, starting both calculations from converged UCCSDT amplitudes.
 
 ## Equations and conventions
@@ -52,9 +52,14 @@ Methods and factorization context:
 
 ## Storage, starting amplitudes and restart
 
-T1, T2 and T3 use the existing full UCCSDT layouts. The mixed doubles block
+T1 and T2 use the existing full UCCSDT layouts. The mixed doubles block
 is `t2ab[i,a,J,B]`. Full triples are ordered `aaa/aab/bba/bbb`, with mixed
 blocks `t3aab[i,j,a,b,K,C]` and `t3bba[I,J,A,B,k,c]`.
+
+Compact T3 stores `aaa/bbb` as `(ijk),(abc)` and `aab/bba` as
+`(ij),(ab),K,C`, with strictly increasing same-spin combinations. Both
+T3 amplitudes and residuals remain packed through the compact iteration;
+the full-storage variant retains the full layouts above.
 
 T4 uses five blocks in the order `aaaa/aaab/aabb/bbba/bbbb`. The majority
 spin comes first; for `aabb` alpha comes first. This preserves the existing
@@ -69,7 +74,7 @@ UCCSDT interleaved occupied/virtual convention.
 | bbbb | `IJKL ABCD` | `(IJKL) (ABCD)` |
 
 Parentheses represent strictly increasing same-spin combinations in
-lexicographic order. `compact_tamps=True` compresses T4; T3 stays full.
+lexicographic order. `compact_tamps=True` compresses both T3 and T4.
 `mycc.tamps_full2tri(tamps_full)` and `mycc.tamps_tri2full(tamps_compact)`
 convert a complete `[t1, t2, t3, t4]` list. The private storage helpers
 `_uccsdtq_utils.pack_t4(mycc, t4)` and `unpack_t4(mycc, t4)` convert only
@@ -77,8 +82,9 @@ the five T4 blocks. Full T4 expansion checks the remaining `max_memory` budget b
 allocating its output.
 
 A converged UCCSDT starting point may be supplied as
-`mycc.kernel(tamps=ccsdt.tamps, eris=eris)`. The driver converts compact T3
-to full T3 and initializes the absent T4 blocks to zero. Reusing compatible
+`mycc.kernel(tamps=ccsdt.tamps, eris=eris)`. The driver accepts compact or
+full T3, converts it to the solver's storage and initializes absent T4 blocks
+to zero. Reusing compatible
 bare ERIs avoids another AO-to-MO transformation; the source and target
 must use the same orbitals and frozen space.
 The iteration updates supplied amplitude arrays in place; use
@@ -93,7 +99,9 @@ on a new object it initializes T4 to zero.
 
 `mycc.dump_chk()` stores data under `uccsdtq` or `uccsdtq_highm`, preserving
 the UCCSDT checkpoint groups. Metadata records the active dimensions and
-T4 representation. Standard PySCF checkpoint loading can recover a saved
+T4 representation. Checkpoint helpers also accept older compact checkpoints
+that stored full T3, converting each rank from its actual shape. Standard
+PySCF checkpoint loading can recover a saved
 amplitude list:
 
 ```python

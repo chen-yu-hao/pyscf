@@ -83,6 +83,29 @@ class KnownValues(unittest.TestCase):
                 self.assertIs(returned, alias_left)
                 np.testing.assert_allclose(alias_left, expected, atol=1e-13, rtol=1e-13)
 
+    def test_disjoint_interleaved_views_use_conservative_alias_check(self):
+        rng = np.random.default_rng(429)
+        backends = ['numpy', 'pyscf']
+        if rccsdt._get_pytblis() is not None:
+            backends.append('pytblis')
+        for backend in backends:
+            for beta in (0., 1., -.5):
+                with self.subTest(backend=backend, beta=beta):
+                    backing = rng.normal(size=(4, 8))
+                    left, out = backing[:, ::2], backing[:, 1::2]
+                    right = rng.normal(size=(4, 4))
+                    self.assertFalse(np.shares_memory(left, out))
+                    self.assertTrue(np.may_share_memory(left, out))
+                    left_original = left.copy()
+                    expected = -.25 * (left @ right) + beta * out.copy()
+                    with patch.object(rccsdt.np, 'shares_memory',
+                                      side_effect=AssertionError('Exact alias checks are unnecessary')):
+                        returned = rccsdt._einsum(backend, 'ij,jk->ik', left, right,
+                                                   out=out, alpha=-.25, beta=beta)
+                    self.assertIs(returned, out)
+                    np.testing.assert_allclose(out, expected, atol=2e-13, rtol=2e-13)
+                    np.testing.assert_array_equal(left, left_original)
+
     def test_pyscf_accumulation_with_automatic_pytblis_backend(self):
         try:
             import pytblis

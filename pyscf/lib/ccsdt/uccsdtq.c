@@ -22,6 +22,31 @@
 
 int UCCSDTQabi_version(void) { return 1; }
 
+/* Axis energies cover either full indices or packed same-spin combinations.
+ * Decode each row once, then divide its last axis without index division or
+ * a denominator tensor.  Strides are in doubles and may be non-contiguous. */
+void UCCSDTQdivide_r4_(double *residual, const double **energies,
+                      int32_t ndim, const int64_t *shape, const int64_t *strides)
+{
+    int64_t rows = 1;
+    for (int32_t axis = 0; axis < ndim-1; ++axis) rows *= shape[axis];
+    const int64_t last = shape[ndim-1], step = strides[ndim-1];
+#pragma omp parallel for schedule(static)
+    for (int64_t row = 0; row < rows; ++row) {
+        int64_t index = row, offset = 0, coordinates[8];
+        for (int32_t axis = ndim-2; axis >= 0; --axis) {
+            coordinates[axis] = index % shape[axis];
+            index /= shape[axis];
+            offset += coordinates[axis] * strides[axis];
+        }
+        double prefix = 0.;
+        for (int32_t axis = 0; axis < ndim-1; ++axis)
+            prefix += energies[axis][coordinates[axis]];
+        for (int64_t column = 0; column < last; ++column)
+            residual[offset+column*step] /= prefix + energies[ndim-1][column];
+    }
+}
+
 typedef struct {
     int32_t array, ndim, indices[8];
 } QFactor;
