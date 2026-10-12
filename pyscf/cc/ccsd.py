@@ -25,6 +25,8 @@ RCCSD for real integrals
 
 import ctypes
 from functools import reduce
+import threading
+import weakref
 import numpy
 from pyscf import gto
 from pyscf import lib
@@ -487,6 +489,88 @@ def _contract_vvvv_t2(mycc, mol, vvvv, t2, out=None, verbose=None):
         return _contract_s1vvvv_t2(mycc, mol, vvvv, t2, out, verbose)
 
 
+class _VVVVWorkspace:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.buffer = None
+
+
+# Scratch is not part of the solver state: shallow copies, scanners and pickles
+# must not inherit a mutable workspace. Weak keys release it with its owner.
+_vvvv_workspaces = weakref.WeakKeyDictionary()
+_vvvv_workspace_lock = threading.Lock()
+
+
+def _clear_vvvv_workspace(mycc):
+    with _vvvv_workspace_lock:
+        _vvvv_workspaces.pop(mycc, None)
+    # An active call retains its own workspace and buffer until C returns.
+
+
+def _contract_s4vvvv_incore(mycc, vvvv, t2, out):
+    '''Try one OpenMP team for resident packed integrals; otherwise return None.'''
+    if not (isinstance(vvvv, numpy.ndarray) and vvvv.dtype == numpy.double
+            and vvvv.flags.c_contiguous and vvvv.flags.aligned):
+        return None
+    na, nb = t2.shape[-2:]
+    nx = t2.size // (na * nb)
+    threads = lib.num_threads()
+    tile = min(8, na)
+    nblocks = (na + tile - 1) // tile
+    if (nblocks * (nblocks + 1) // 2 < threads
+            or vvvv.shape != (na * (na + 1) // 2, nb * (nb + 1) // 2)
+            or max(nx, na * nb) > numpy.iinfo(numpy.int32).max):
+        return None
+    try:
+        with _vvvv_workspace_lock:
+            workspace = _vvvv_workspaces.get(mycc)
+            if workspace is None:
+                workspace = _VVVVWorkspace()
+                _vvvv_workspaces[mycc] = workspace
+    except TypeError:  # Custom callers need not be weak-referenceable/hashable.
+        return None
+    if not workspace.lock.acquire(blocking=False):
+        return None
+    try:
+        x = numpy.require(t2, dtype=numpy.double, requirements=['C', 'A'])
+        result = numpy.ndarray(t2.shape, dtype=numpy.double, buffer=out)
+        if (not result.flags.writeable or not result.flags.aligned
+                or numpy.may_share_memory(result, x)
+                or numpy.may_share_memory(result, vvvv)):
+            return None
+        required = threads * ((tile * nb)**2 + nx * na * nb) * 8
+        # Reserve output pages even for a supplied, possibly untouched buffer.
+        # The resident cached workspace is already included in current_memory.
+        available = int((mycc.max_memory - lib.current_memory()[0]) * 1e6) - result.nbytes
+        buffer = workspace.buffer
+        if available < 0:
+            workspace.buffer = None
+            return None
+        if buffer is None or buffer.nbytes < required:
+            if required > available:
+                workspace.buffer = None
+                return None
+            workspace.buffer = buffer = None
+            try:
+                buffer = numpy.empty(required // 8, dtype=numpy.double)
+                buffer.fill(0)
+            except MemoryError:
+                return None
+            workspace.buffer = buffer
+        # Keep buffer strongly referenced while ctypes releases the GIL.
+        status = _ccsd.libcc.CCcontract_s4vvvv(
+            result.ctypes.data_as(ctypes.c_void_p),
+            vvvv.ctypes.data_as(ctypes.c_void_p),
+            x.ctypes.data_as(ctypes.c_void_p),
+            ctypes.c_int(nx), ctypes.c_int(na), ctypes.c_int(nb), ctypes.c_int(tile),
+            buffer.ctypes.data_as(ctypes.c_void_p), ctypes.c_size_t(buffer.nbytes))
+        if status == 0:
+            return result
+        return None
+    finally:
+        workspace.lock.release()
+
+
 def _contract_s4vvvv_t2(mycc, mol, vvvv, t2, out=None, verbose=None):
     '''Ht2 = numpy.einsum('ijcd,acbd->ijab', t2, vvvv)
     where vvvv has to be real and has the 4-fold permutation symmetry
@@ -498,6 +582,10 @@ def _contract_s4vvvv_t2(mycc, mol, vvvv, t2, out=None, verbose=None):
     assert (t2.dtype == numpy.double)
     if t2.size == 0:
         return numpy.zeros_like(t2)
+
+    result = _contract_s4vvvv_incore(mycc, vvvv, t2, out)
+    if result is not None:
+        return result
 
     _dgemm = lib.numpy_helper._dgemm
     time0 = logger.process_clock(), logger.perf_counter()
@@ -590,20 +678,18 @@ def _contract_s4vvvv_t2(mycc, mol, vvvv, t2, out=None, verbose=None):
             off1 = i1*(i1+1)//2
             return numpy.asarray(vvvv[off0:off1], order='C')
 
-        tril2sq = lib.square_mat_in_trilu_indices(nvira)
         loadbuf = numpy.empty((blksize,blksize,nvirb,nvirb))
 
         slices = list(lib.prange(0, nvira, blksize))
         for istep, wwbuf in enumerate(fmap(load, lib.prange(0, nvira, blksize))):
             i0, i1 = slices[istep]
-            off0 = i0*(i0+1)//2
             for j0, j1 in lib.prange(0, i1, blksize):
-                eri = wwbuf[tril2sq[i0:i1,j0:j1]-off0]
                 tmp = numpy.ndarray((i1-i0,nvirb,j1-j0,nvirb), buffer=loadbuf)
-                _ccsd.libcc.CCload_eri(tmp.ctypes.data_as(ctypes.c_void_p),
-                                       eri.ctypes.data_as(ctypes.c_void_p),
-                                       (ctypes.c_int*4)(i0, i1, j0, j1),
-                                       ctypes.c_int(nvirb))
+                _ccsd.libcc.CCload_eri_s4(
+                    tmp.ctypes.data_as(ctypes.c_void_p),
+                    wwbuf.ctypes.data_as(ctypes.c_void_p),
+                    ctypes.c_int(i0), ctypes.c_int(i1),
+                    ctypes.c_int(j0), ctypes.c_int(j1), ctypes.c_int(nvirb))
                 contract_blk_(tmp, i0, i1, j0, j1)
             wwbuf = None
             time0 = log.timer_debug1('vvvv [%d:%d]'%(i0,i1), *time0)
@@ -1017,6 +1103,7 @@ class CCSDBase(lib.StreamObject):
         self._nmo = n
 
     def reset(self, mol=None):
+        _clear_vvvv_workspace(self)
         if mol is not None:
             self.mol = mol
         self._scf.reset(mol)

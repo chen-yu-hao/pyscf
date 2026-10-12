@@ -17,6 +17,9 @@
  */
 
 #include <stdlib.h>
+#include <limits.h>
+#include <stdint.h>
+#include <string.h>
 #include <math.h>
 //#include <omp.h>
 #include "config.h"
@@ -167,6 +170,127 @@ void CCload_eri(double *out, double *eri, int *orbs_slice, int nao)
         }
         free(buf);
 }
+}
+
+/* Write a contiguous (j,l) output row directly from pair-packed integrals. */
+static void load_s4_row(double *dst, const double *packed, size_t i, size_t k,
+                        int j0, int j1, size_t nb, size_t npair, size_t offset)
+{
+    for (size_t j = j0; j < (size_t)j1; ++j) {
+        const size_t high = i > j ? i : j;
+        const size_t low = i > j ? j : i;
+        const double *src = packed + (high * (high + 1) / 2 + low - offset) * npair;
+        memcpy(dst, src + k * (k + 1) / 2, (k + 1) * sizeof(double));
+        size_t kl = (k + 1) * (k + 2) / 2 + k;
+        for (size_t l = k + 1; l < nb; ++l) {
+            dst[l] = src[kl];
+            kl += l + 1;
+        }
+        dst += nb;
+    }
+}
+
+/* packed begins at first-pair row i0*(i0+1)/2. The two pair dimensions
+ * may differ for mixed-spin integrals. No intermediate unpacked array. */
+void CCload_eri_s4(double *out, const double *packed, int i0, int i1,
+                   int j0, int j1, int nvirb)
+{
+    const size_t ni = i1 - i0;
+    const size_t nb = nvirb;
+    const size_t nj = j1 - j0;
+    const size_t npair = nb * (nb + 1) / 2;
+    const size_t offset = (size_t)i0 * (i0 + 1) / 2;
+#pragma omp parallel for schedule(static)
+    for (size_t ik = 0; ik < ni * nb; ++ik) {
+        load_s4_row(out + ik * nj * nb, packed, ik / nb + i0, ik % nb,
+                    j0, j1, nb, npair, offset);
+    }
+}
+
+/* Status 1: unsupported dimensions or insufficient caller-owned scratch.
+ * On every nonzero return, output and all inputs remain untouched. */
+int CCcontract_s4vvvv(double *out, const double *packed, const double *t2,
+                      int nx, int na, int nb, int tile,
+                      double *scratch, size_t capacity_bytes)
+{
+    if (nx < 0 || na < 0 || nb < 0 || tile <= 0) return 1;
+    if (!nx || !na || !nb) return 0;
+    if (tile > na) tile = na;
+    if ((size_t)na > INT_MAX / (size_t)nb) return 1;
+    const int nvir2 = na * nb;
+    const size_t width = (size_t)tile * nb;
+    if (width > SIZE_MAX / width || (size_t)nx > SIZE_MAX / nvir2) return 1;
+    const size_t panel_size = width * width;
+    const size_t result_size = (size_t)nx * nvir2;
+    if (panel_size > SIZE_MAX - result_size) return 1;
+    const size_t stride = panel_size + result_size;
+    if (stride > SIZE_MAX / sizeof(double)) return 1;
+    const size_t stride_bytes = stride * sizeof(double);
+    const size_t npair = (size_t)nb * ((size_t)nb + 1) / 2;
+    const size_t ntiles = ((size_t)na + tile - 1) / tile;
+    const size_t ntasks = ntiles * (ntiles + 1) / 2;
+    int status = 0;
+    int threads = 0;
+
+#pragma omp parallel shared(scratch, status, threads)
+    {
+#pragma omp single
+        {
+            threads = omp_get_num_threads();
+            if ((size_t)threads > SIZE_MAX / stride_bytes) {
+                status = 1;
+            } else if (!scratch || (size_t)threads * stride_bytes > capacity_bytes) {
+                status = 1;
+            }
+        }
+        if (!status) {
+            double *panel = scratch + (size_t)omp_get_thread_num() * stride;
+            double *h = panel + panel_size;
+            memset(h, 0, result_size * sizeof(double));
+#pragma omp for schedule(static, 1)
+            for (size_t task = 0; task < ntasks; ++task) {
+                size_t it = (size_t)((sqrt(8.0 * task + 1) - 1) * 0.5);
+                while ((it + 1) * (it + 2) / 2 <= task) ++it;
+                while (it * (it + 1) / 2 > task) --it;
+                const size_t jt = task - it * (it + 1) / 2;
+                const int i0 = it * tile;
+                const int j0 = jt * tile;
+                const int ni = na - i0 < tile ? na - i0 : tile;
+                const int nj = na - j0 < tile ? na - j0 : tile;
+                const int m = nj * nb;
+                const int kdim = ni * nb;
+
+                for (int ii = 0; ii < ni; ++ii) {
+                    for (int k = 0; k < nb; ++k) {
+                        load_s4_row(panel + ((size_t)ii * nb + k) * m,
+                                    packed, i0 + ii, k, j0, j0 + nj, nb,
+                                    npair, 0);
+                    }
+                }
+
+                const double one = 1;
+                const char normal = 'N', transpose = 'T';
+                /* Row-major H_j += X_i panel, expressed as Fortran GEMM. */
+                dgemm_(&normal, &normal, &m, &nx, &kdim, &one,
+                       panel, &m, t2 + (size_t)i0 * nb, &nvir2,
+                       &one, h + (size_t)j0 * nb, &nvir2);
+                if (i0 != j0) {
+                    dgemm_(&transpose, &normal, &kdim, &nx, &m, &one,
+                           panel, &m, t2 + (size_t)j0 * nb, &nvir2,
+                           &one, h + (size_t)i0 * nb, &nvir2);
+                }
+            }
+            /* omp-for barrier above completes every private accumulator. */
+#pragma omp for schedule(static)
+            for (size_t p = 0; p < result_size; ++p) {
+                double sum = scratch[panel_size + p];
+                for (int worker = 1; worker < threads; ++worker)
+                    sum += scratch[(size_t)worker * stride + panel_size + p];
+                out[p] = sum;
+            }
+        }
+    }
+    return status;
 }
 
 /*
