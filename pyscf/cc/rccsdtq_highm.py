@@ -32,11 +32,11 @@ import ctypes
 from pyscf import lib
 from pyscf.lib import logger
 from pyscf.cc import rccsdtq
-from pyscf.cc.rccsdt import (_einsum, t3_spin_summation_inplace_, update_t1_fock_eris, intermediates_t1t2,
+from pyscf.cc.rccsdt import (t3_spin_summation_inplace_, update_t1_fock_eris, intermediates_t1t2,
                             compute_r1r2, r1r2_divide_e_, intermediates_t3, _PhysicistsERIs)
 from pyscf.cc.rccsdt_highm import (t3_spin_summation, t3_perm_symmetrize_inplace_, purify_tamps_, r1r2_add_t3_,
                                     intermediates_t3_add_t3, compute_r3, r3_divide_e_)
-from pyscf.cc.rccsdtq import t4_project_1_minus_p4_p31_inplace_, t4_add_, _IMDS
+from pyscf.cc.rccsdtq import t4_project_1_minus_p4_p31_inplace_, t4_add_, _IMDS, _einsum
 from pyscf import __config__
 
 

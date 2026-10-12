@@ -257,6 +257,8 @@ def contract(subscripts, A, B, alpha=1, beta=0, out=None, **kwargs):
     new_orderCt = [idxCt.index(idx) for idx in idxC]
 
     if A.size == 0 or B.size == 0:
+        if out is not None:
+            return _numpy_einsum(idx_str, A, B, alpha=alpha, beta=beta, out=out)
         shapeCt = [shapeCt[i] for i in new_orderCt]
         return numpy.zeros(shapeCt, dtype=C_dtype)
 
@@ -271,6 +273,29 @@ def contract(subscripts, A, B, alpha=1, beta=0, out=None, **kwargs):
         Bt = numpy.asarray(Bt.reshape(inner_shape,-1), order='F')
     else:
         Bt = numpy.asarray(Bt.reshape(inner_shape,-1), order='C')
+
+    if (out is not None and A.dtype == B.dtype == out.dtype and
+            C_dtype in (numpy.float64, numpy.complex128) and
+            numpy.isscalar(alpha) and numpy.isscalar(beta) and
+            numpy.result_type(C_dtype, alpha, beta) == C_dtype and
+            out.shape == tuple(shapeCt[i] for i in new_orderCt) and
+            out.flags.writeable and out.flags.aligned and
+            not numpy.may_share_memory(out, A) and
+            not numpy.may_share_memory(out, B)):
+        # Assigning shape to a view fails rather than allocating a temporary.
+        # The output must follow the same free-index grouping as the GEMM.
+        Ct = out.transpose([idxC.index(idx) for idx in idxCt]).view()
+        try:
+            Ct.shape = (At.shape[0], Bt.shape[1])
+        except AttributeError:
+            pass
+        else:
+            if Ct.flags.c_contiguous:
+                dot(At, Bt, alpha=alpha, c=Ct, beta=beta)
+                return out
+            if Ct.flags.f_contiguous:
+                dot(Bt.T, At.T, alpha=alpha, c=Ct.T, beta=beta)
+                return out
 
     C = dot(At,Bt).reshape(shapeCt, order='A').transpose(new_orderCt)
     if alpha != 1:
@@ -295,6 +320,11 @@ def einsum(scripts, *tensors, **kwargs):
     be explicitly specified (i.e. 'ij,j->i' and not 'ij,j').
     '''
     if EINSUM_BACKEND == 'pytblis':
+        if len(tensors) == 2 and ('alpha' in kwargs or 'beta' in kwargs):
+            # pytblis.einsum has no scaled-accumulation interface. Use the
+            # two-operand helper, including its small-array and dtype guards.
+            _contract = kwargs.pop('_contract', contract)
+            return _contract(scripts, *tensors, **kwargs)
         if 'optimize' in kwargs and kwargs['optimize'] is True:
             kwargs['optimize'] = 'optimal'
         return pytblis.einsum(scripts, *tensors, **kwargs)

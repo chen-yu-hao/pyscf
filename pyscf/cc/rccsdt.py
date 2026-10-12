@@ -43,19 +43,20 @@ from pyscf import __config__
 
 _libccsdt = lib.load_library('libccsdt')
 
+def _get_pytblis():
+    try:
+        import pytblis
+    except ImportError:
+        return None
+    return pytblis
+
 def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
     '''Wrapper for einsum supporting pytblis, pyscf.lib.einsum, or numpy.einsum backends.'''
     if einsum_backend == 'pytblis':
-        try:
-            import pytblis
-        except ImportError:
-            import numpy as np
+        pytblis = _get_pytblis()
+        if pytblis is None:
             einsum_backend = 'numpy'
-    elif einsum_backend == 'numpy':
-        import numpy as np
-    elif einsum_backend == 'pyscf':
-        from pyscf import lib
-    else:
+    elif einsum_backend not in ('numpy', 'pyscf'):
         raise ValueError(f"Unknown einsum_backend: {einsum_backend}")
 
     def _fix_strides_for_pytblis(arr):
@@ -68,6 +69,15 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
 
     if einsum_backend == 'pytblis':
         if out is None:
+            # Apply real scaling while TBLIS writes its result instead of
+            # allocating another output-sized NumPy array. Keep NumPy's
+            # promotion behavior for complex or precision-changing alpha.
+            if (not np.iscomplexobj(alpha) and
+                    np.result_type(*tensors, alpha) == np.result_type(*tensors)):
+                return pytblis.contract(script, *tensors, alpha=alpha)
+            result = pytblis.contract(script, *tensors)
+        elif any(np.shares_memory(out, tensor) for tensor in tensors):
+            # TBLIS does not guarantee aliased input/output semantics.
             result = pytblis.contract(script, *tensors)
         else:
             tensors = [_fix_strides_for_pytblis(x) for x in tensors]
@@ -75,8 +85,24 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
             pytblis.contract(script, *tensors, out=out, alpha=alpha, beta=beta)
             return out
     elif einsum_backend == 'pyscf':
+        # Call the two-operand contract directly: lib.einsum may dispatch to
+        # pytblis.einsum, which does not accept alpha/beta. Aliasing, empty
+        # and other-arity cases use a temporary before accumulation.
+        if (out is not None and len(tensors) == 2 and all(t.size for t in tensors)
+                and not any(np.shares_memory(out, t) for t in tensors)):
+            return lib.numpy_helper.contract(script, *tensors, out=out,
+                                             alpha=alpha, beta=beta)
         result = lib.einsum(script, *tensors, optimize='optimal')
     else:
+        # NumPy can write the common beta=0 contraction directly. For beta!=0
+        # the old temporary-plus-accumulate path is retained because the
+        # output may alias an input and must be read before it is overwritten.
+        if (out is not None and beta == 0.0 and
+                not any(np.shares_memory(out, tensor) for tensor in tensors)):
+            np.einsum(script, *tensors, out=out, optimize='optimal')
+            if alpha != 1.0:
+                out *= alpha
+            return out
         result = np.einsum(script, *tensors, optimize='optimal')
 
     if out is None:
@@ -86,6 +112,15 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
     else:
         if beta == 0.0:
             out[:] = alpha * result
+        elif beta == 1.0:
+            # Contraction has finished before out is changed, including when
+            # out aliases an operand. Avoid allocating beta*out and a sum.
+            if alpha == 1.0:
+                np.add(out, result, out=out)
+            elif alpha == -1.0:
+                np.subtract(out, result, out=out)
+            else:
+                np.add(out, alpha * result, out=out)
         else:
             out[:] = alpha * result + beta * out
         return out
@@ -247,8 +282,23 @@ def update_fock(mycc, x, y, t1, eris):
     nocc = mycc.nocc
     t1_fock = eris.fock + einsum('risa,ia->rs', eris.pppp[:, :nocc, :, nocc:], t1) * 2.0
     t1_fock -= einsum('rias,ia->rs', eris.pppp[:, :nocc, nocc:, :], t1)
-    t1_fock = x @ t1_fock @ y.T
-    return t1_fock
+    return _dress_fock(t1_fock, t1, nocc)
+
+def _dress_fock(fock, t1, nocc):
+    """Apply X F Y^T without materializing the two identity-plus-T1 maps.
+
+    X = I - T1^T in the virtual/occupied block and Y^T = I + T1^T in
+    the same block.  The two block updates are algebraically identical
+    to ``update_xy`` followed by two dense matrix products, while requiring
+    O(nocc*nvir*nmo) work and no pair of nmo-by-nmo identity arrays.
+    """
+    fock = np.array(fock, copy=True)
+    t1t = t1.T
+    fock[nocc:, :] -= t1t.dot(fock[:nocc, :])
+    # The second update uses the already left-dressed matrix; its
+    # virtual/occupied corner supplies the cross term exactly once.
+    fock[:, :nocc] += fock[:, nocc:].dot(t1t)
+    return fock
 
 def update_eris(mycc, x, y, eris):
     backend = mycc.einsum_backend
@@ -565,6 +615,13 @@ def intermediates_t3_add_t3_tri(mycc, imds, t3):
     t3_tmp = None
     return imds
 
+def _r3_vvvv_tri_grouped(einsum, W_vvvv, t3, r3):
+    """Accumulate the W_vvvv*T3 terms over the packed occupied index."""
+    einsum('abde,qdec->qabc', W_vvvv, t3, out=r3, alpha=1.0, beta=1.0)
+    einsum('acde,qdbe->qabc', W_vvvv, t3, out=r3, alpha=1.0, beta=1.0)
+    einsum('bcde,qade->qabc', W_vvvv, t3, out=r3, alpha=1.0, beta=1.0)
+    return r3
+
 def compute_r3_tri(mycc, imds, t2, t3):
     '''Compute r3 with triangular-stored T3 amplitudes; r3 is returned in triangular form as well.
     r3 will require a symmetry restoration step afterward.
@@ -748,15 +805,18 @@ def compute_r3_tri(mycc, imds, t2, t3):
     time1 = log.timer_debug1('t3: W_oooo * t3', *time1)
 
     time2 = logger.process_clock(), logger.perf_counter()
-    index = 0
-    for i0 in range(nocc):
-        for j0 in range(i0, nocc):
-            for k0 in range(j0, nocc):
-                einsum('abde,dec->abc', W_vvvv, t3[index], out=r3[index], alpha=1.0, beta=1.0)
-                einsum('acde,dbe->abc', W_vvvv, t3[index], out=r3[index], alpha=1.0, beta=1.0)
-                einsum('bcde,ade->abc', W_vvvv, t3[index], out=r3[index], alpha=1.0, beta=1.0)
-                index += 1
-        time2 = log.timer_debug1('t3: iter: W_vvvv %3d:'%i0, *time2)
+    if backend == 'pytblis' and _get_pytblis() is not None and t3.shape[0]:
+        _r3_vvvv_tri_grouped(einsum, W_vvvv, t3, r3)
+    else:
+        index = 0
+        for i0 in range(nocc):
+            for j0 in range(i0, nocc):
+                for k0 in range(j0, nocc):
+                    einsum('abde,dec->abc', W_vvvv, t3[index], out=r3[index], alpha=1.0, beta=1.0)
+                    einsum('acde,dbe->abc', W_vvvv, t3[index], out=r3[index], alpha=1.0, beta=1.0)
+                    einsum('bcde,ade->abc', W_vvvv, t3[index], out=r3[index], alpha=1.0, beta=1.0)
+                    index += 1
+            time2 = log.timer_debug1('t3: iter: W_vvvv %3d:'%i0, *time2)
     W_vvvv = imds.W_vvvv = None
     time1 = log.timer_debug1('t3: W_vvvv * t3', *time1)
     return r3

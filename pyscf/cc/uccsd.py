@@ -38,6 +38,12 @@ MEMORYMIN = getattr(__config__, 'cc_ccsd_memorymin', 2000)
 
 # This is unrestricted (U)CCSD, in spatial-orbital form.
 
+def _divide_by_doubles_denominator(t2, eia, ejb):
+    # One occupied slice avoids an additional full doubles-sized temporary.
+    for i in range(t2.shape[0]):
+        t2[i] /= eia[i, :, None] + ejb[:, None, :]
+
+
 def update_amps(cc, t1, t2, eris):
     time0 = logger.process_clock(), logger.perf_counter()
     log = logger.Logger(cc.stdout, cc.verbose)
@@ -81,7 +87,10 @@ def update_amps(cc, t1, t2, eris):
     wOvvO = np.zeros((noccb,nvira,nvira,noccb), dtype=dtype)
 
     mem_now = lib.current_memory()[0]
-    max_memory = max(0, cc.max_memory - mem_now - u2aa.size*8e-6)
+    # current_memory already includes the allocated output arrays. Reserve
+    # only the rank-four contraction temporary that will be built next.
+    workspace_mb = max(u2aa.nbytes, u2ab.nbytes, u2bb.nbytes) / 1e6
+    max_memory = max(0, cc.max_memory - mem_now - workspace_mb)
     if nvira > 0 and nocca > 0:
         blksize = max(ccsd.BLKMIN, int(max_memory*1e6/8/(nvira**3*3+1)))
         for p0,p1 in lib.prange(0, nocca, blksize):
@@ -139,7 +148,7 @@ def update_amps(cc, t1, t2, eris):
     Woooo = lib.einsum('je,nemi->mnij', t1a, eris_ovoo)
     Woooo = Woooo - Woooo.transpose(0,1,3,2)
     Woooo += np.asarray(eris.oooo).transpose(0,2,1,3)
-    Woooo += lib.einsum('ijef,menf->mnij', tauaa, eris_ovov) * .5
+    lib.einsum('ijef,menf->mnij', tauaa, eris_ovov, out=Woooo, alpha=.5, beta=1)
     u2aa += lib.einsum('mnab,mnij->ijab', tauaa, Woooo*.5)
     Woooo = tauaa = None
     ovoo = eris_ovoo - eris_ovoo.transpose(2,1,0,3)
@@ -165,7 +174,7 @@ def update_amps(cc, t1, t2, eris):
     WOOOO = lib.einsum('je,nemi->mnij', t1b, eris_OVOO)
     WOOOO = WOOOO - WOOOO.transpose(0,1,3,2)
     WOOOO += np.asarray(eris.OOOO).transpose(0,2,1,3)
-    WOOOO += lib.einsum('ijef,menf->mnij', taubb, eris_OVOV) * .5
+    lib.einsum('ijef,menf->mnij', taubb, eris_OVOV, out=WOOOO, alpha=.5, beta=1)
     u2bb += lib.einsum('mnab,mnij->ijab', taubb, WOOOO*.5)
     WOOOO = taubb = None
     OVOO = eris_OVOO - eris_OVOO.transpose(2,1,0,3)
@@ -203,8 +212,8 @@ def update_amps(cc, t1, t2, eris):
 
     eris_ovOV = np.asarray(eris.ovOV)
     WoOoO += lib.einsum('iJeF,meNF->mNiJ', tauab, eris_ovOV)
-    u2ab += lib.einsum('mNaB,mNiJ->iJaB', tauab, WoOoO)
-    WoOoO = None
+    lib.einsum('mNaB,mNiJ->iJaB', tauab, WoOoO, out=u2ab, beta=1)
+    WoOoO = tauab = None
 
     tilab = make_tau_ab(t2[1], t1 , t1 , fac=0.5)
     Fvva -= lib.einsum('mNaF,meNF->ae', tilab, eris_ovOV)
@@ -226,7 +235,7 @@ def update_amps(cc, t1, t2, eris):
     wOvVo -= lib.einsum('nb,MnEj->MbEj', t1a, tmpbaba)
     woVVo += lib.einsum('NB,NmEj->mBEj', t1b, tmpbaba)
     wOvvO += lib.einsum('nb,nMeJ->MbeJ', t1a, tmpabab)
-    tmpabab = tmpbaba = tilab = None
+    tmpabab = tmpbaba = tilab = eris_ovOV = None
 
     Fova += fova
     Fovb += fovb
@@ -248,7 +257,8 @@ def update_amps(cc, t1, t2, eris):
     oovv = eris_oovv - eris_ovvo.transpose(0,3,2,1)
     u1a-= np.einsum('nf,niaf->ia', t1a, oovv)
     tmp1aa = lib.einsum('ie,mjbe->mbij', t1a, oovv)
-    u2aa += 2*lib.einsum('ma,mbij->ijab', t1a, tmp1aa)
+    tmp1aa *= 2
+    u2aa += lib.einsum('ma,mbij->ijab', t1a, tmp1aa)
     eris_ovvo = eris_oovv = oovv = tmp1aa = None
 
     eris_OOVV = np.asarray(eris.OOVV)
@@ -258,8 +268,9 @@ def update_amps(cc, t1, t2, eris):
     OOVV = eris_OOVV - eris_OVVO.transpose(0,3,2,1)
     u1b-= np.einsum('nf,niaf->ia', t1b, OOVV)
     tmp1bb = lib.einsum('ie,mjbe->mbij', t1b, OOVV)
-    u2bb += 2*lib.einsum('ma,mbij->ijab', t1b, tmp1bb)
-    eris_OVVO = eris_OOVV = OOVV = None
+    tmp1bb *= 2
+    u2bb += lib.einsum('ma,mbij->ijab', t1b, tmp1bb)
+    eris_OVVO = eris_OOVV = OOVV = tmp1bb = None
 
     eris_ooVV = np.asarray(eris.ooVV)
     eris_ovVO = np.asarray(eris.ovVO)
@@ -295,9 +306,9 @@ def update_amps(cc, t1, t2, eris):
 
     Ftmpa = Fvva - .5*lib.einsum('mb,me->be', t1a, Fova)
     Ftmpb = Fvvb - .5*lib.einsum('mb,me->be', t1b, Fovb)
-    u2aa += lib.einsum('ijae,be->ijab', t2aa, Ftmpa)
-    u2bb += lib.einsum('ijae,be->ijab', t2bb, Ftmpb)
-    u2ab += lib.einsum('iJaE,BE->iJaB', t2ab, Ftmpb)
+    lib.einsum('ijae,be->ijab', t2aa, Ftmpa, out=u2aa, beta=1)
+    lib.einsum('ijae,be->ijab', t2bb, Ftmpb, out=u2bb, beta=1)
+    lib.einsum('iJaE,BE->iJaB', t2ab, Ftmpb, out=u2ab, beta=1)
     u2ab += lib.einsum('iJeA,be->iJbA', t2ab, Ftmpa)
     Ftmpa = Fooa + 0.5*lib.einsum('je,me->mj', t1a, Fova)
     Ftmpb = Foob + 0.5*lib.einsum('je,me->mj', t1b, Fovb)
@@ -330,9 +341,9 @@ def update_amps(cc, t1, t2, eris):
     u1a /= eia_a
     u1b /= eia_b
 
-    u2aa /= lib.direct_sum('ia+jb->ijab', eia_a, eia_a)
-    u2ab /= lib.direct_sum('ia+jb->ijab', eia_a, eia_b)
-    u2bb /= lib.direct_sum('ia+jb->ijab', eia_b, eia_b)
+    _divide_by_doubles_denominator(u2aa, eia_a, eia_a)
+    _divide_by_doubles_denominator(u2ab, eia_a, eia_b)
+    _divide_by_doubles_denominator(u2bb, eia_b, eia_b)
 
     time0 = log.timer_debug1('update t1 t2', *time0)
     t1new = u1a, u1b
@@ -451,6 +462,23 @@ def _add_vvVV(mycc, t1, t2ab, eris, out=None):
     else:
         return eris._contract_vvVV_t2(mycc, t2ab, mycc.direct, out, log)
 
+def _contract_same_spin_vvvv(mycc, t2, contract):
+    nocc, nvir = t2.shape[1:3]
+    diagonal = np.arange(nocc)
+    if np.any(t2[diagonal, diagonal]):
+        # Preserve the general lower-triangle convention for supplied
+        # tensors that are not antisymmetric in their occupied indices.
+        tmp = contract(mycc, t2[np.tril_indices(nocc)], False, None)
+        return ccsd._unpack_t2_tril(tmp, nocc, nvir, None, 'jiba')
+    indices = np.tril_indices(nocc, -1)
+    result = np.zeros_like(t2)
+    if indices[0].size:
+        tmp = contract(mycc, t2[indices], False, None)
+        result[indices] = tmp
+        result[indices[1], indices[0]] = tmp.transpose(0, 2, 1)
+    return result
+
+
 def _add_vvvv(mycc, t1, t2, eris, out=None, with_ovvv=False, t2sym=None):
     time0 = logger.process_clock(), logger.perf_counter()
     log = logger.Logger(mycc.stdout, mycc.verbose)
@@ -521,12 +549,17 @@ def _add_vvvv(mycc, t1, t2, eris, out=None, with_ovvv=False, t2sym=None):
     else:
         assert (not with_ovvv)
         if t2sym is None:
-            tmp = eris._contract_vvvv_t2(mycc, t2aa[np.tril_indices(nocca)],
-                                         mycc.direct, None)
-            u2aa = ccsd._unpack_t2_tril(tmp, nocca, nvira, None, 'jiba')
-            tmp = eris._contract_VVVV_t2(mycc, t2bb[np.tril_indices(noccb)],
-                                         mycc.direct, None)
-            u2bb = ccsd._unpack_t2_tril(tmp, noccb, nvirb, None, 'jiba')
+            u2aa = _contract_same_spin_vvvv(mycc, t2aa, eris._contract_vvvv_t2)
+            if (getattr(mycc, '_closed_shell', False) and nocca == noccb
+                    and nvira == nvirb and np.array_equal(t2aa, t2bb)
+                    and isinstance(eris.vvvv, np.ndarray)
+                    and isinstance(eris.VVVV, np.ndarray)
+                    and np.array_equal(eris.vvvv, eris.VVVV)):
+                # Compare actual tau and integrals: RHF provenance alone
+                # does not constrain user-supplied orbitals or ERIs.
+                u2bb = u2aa.copy()
+            else:
+                u2bb = _contract_same_spin_vvvv(mycc, t2bb, eris._contract_VVVV_t2)
             u2ab = eris._contract_vvVV_t2(mycc, t2ab, mycc.direct, None)
         else:
             u2aa = eris._contract_vvvv_t2(mycc, t2aa, mycc.direct, None)
@@ -889,8 +922,13 @@ def _make_eris_incore(mycc, mo_coeff=None, ao2mofn=None):
         eri_ab = ao2mofn((moa,moa,mob,mob))
     else:
         eri_aa = ao2mo.restore(1, ao2mo.full(mycc._scf._eri, moa), nmoa)
-        eri_bb = ao2mo.restore(1, ao2mo.full(mycc._scf._eri, mob), nmob)
-        eri_ab = ao2mo.general(mycc._scf._eri, (moa,moa,mob,mob), compact=False)
+        if np.array_equal(moa, mob):
+            # Identical active orbitals require only one transformation.
+            # Stored spin blocks below remain independently writable copies.
+            eri_bb = eri_ab = eri_aa
+        else:
+            eri_bb = ao2mo.restore(1, ao2mo.full(mycc._scf._eri, mob), nmob)
+            eri_ab = ao2mo.general(mycc._scf._eri, (moa,moa,mob,mob), compact=False)
     eri_ba = eri_ab.reshape(nmoa,nmoa,nmob,nmob).transpose(2,3,0,1)
 
     eri_aa = eri_aa.reshape(nmoa,nmoa,nmoa,nmoa)
@@ -929,21 +967,26 @@ def _make_eris_incore(mycc, mo_coeff=None, ao2mofn=None):
     eris.OVvv = eri_ba[:noccb,noccb:,nocca:,nocca:].copy()
     #eris.VVvv = eri_ba[noccb:,noccb:,nocca:,nocca:].copy()
 
+    eri_aa = eri_bb = eri_ab = eri_ba = None
     if not callable(ao2mofn):
         ovvv = eris.ovvv.reshape(nocca*nvira,nvira,nvira)
         eris.ovvv = lib.pack_tril(ovvv).reshape(nocca,nvira,nvira*(nvira+1)//2)
+        ovvv = None
         eris.vvvv = ao2mo.restore(4, eris.vvvv, nvira)
 
         OVVV = eris.OVVV.reshape(noccb*nvirb,nvirb,nvirb)
         eris.OVVV = lib.pack_tril(OVVV).reshape(noccb,nvirb,nvirb*(nvirb+1)//2)
+        OVVV = None
         eris.VVVV = ao2mo.restore(4, eris.VVVV, nvirb)
 
         ovVV = eris.ovVV.reshape(nocca*nvira,nvirb,nvirb)
         eris.ovVV = lib.pack_tril(ovVV).reshape(nocca,nvira,nvirb*(nvirb+1)//2)
+        ovVV = None
         vvVV = eris.vvVV.reshape(nvira**2,nvirb**2)
         idxa = np.tril_indices(nvira)
         idxb = np.tril_indices(nvirb)
         eris.vvVV = lib.take_2d(vvVV, idxa[0]*nvira+idxa[1], idxb[0]*nvirb+idxb[1])
+        vvVV = None
 
         OVvv = eris.OVvv.reshape(noccb*nvirb,nvira,nvira)
         eris.OVvv = lib.pack_tril(OVvv).reshape(noccb,nvirb,nvira*(nvira+1)//2)

@@ -23,6 +23,63 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* Divide packed (antisymmetric) T3 residuals by spin-orbital denominators.
+ * The packed ordering is the lexicographic ordering used by np.triu_indices:
+ * (0,1),(0,2),... .  Operating directly on the packed storage avoids the
+ * large full six-index temporary used by the Python block implementation. */
+void divide_t3_aaa_tri_(double *restrict r3, const double *restrict eia,
+                        int64_t nocc, int64_t nvir)
+{
+    const int64_t no3 = nocc * (nocc - 1) * (nocc - 2) / 6;
+    const int64_t nv3 = nvir * (nvir - 1) * (nvir - 2) / 6;
+#pragma omp parallel for schedule(static)
+    for (int64_t oi = 0; oi < no3; ++oi) {
+        int64_t x = oi;
+        int64_t i = 0;
+        while (x >= (nocc-i-1)*(nocc-i-2)/2) {
+            x -= (nocc-i-1)*(nocc-i-2)/2;
+            ++i;
+        }
+        int64_t j = i + 1;
+        while (x >= nocc-j-1) { x -= nocc-j-1; ++j; }
+        int64_t k = j + 1 + x;
+        double *row = r3 + oi*nv3;
+        int64_t vi = 0;
+        for (int64_t a = 0; a < nvir-2; ++a)
+            for (int64_t b = a+1; b < nvir-1; ++b) {
+                const double eijab = eia[i*nvir+a] + eia[j*nvir+b];
+                for (int64_t c = b+1; c < nvir; ++c)
+                    row[vi++] /= eijab + eia[k*nvir+c];
+            }
+    }
+}
+
+void divide_t3_aab_tri_(double *restrict r3, const double *restrict eia,
+                        const double *restrict eib, int64_t nocc, int64_t nvir,
+                        int64_t nocc_minor, int64_t nvir_minor)
+{
+    const int64_t no2 = nocc * (nocc - 1) / 2;
+    const int64_t nv2 = nvir * (nvir - 1) / 2;
+#pragma omp parallel for collapse(2) schedule(static)
+    for (int64_t oi = 0; oi < no2; ++oi) {
+        for (int64_t vi = 0; vi < nv2; ++vi) {
+            int64_t i = 0;
+            int64_t x = oi;
+            while (x >= nocc-i-1) { x -= nocc-i-1; ++i; }
+            int64_t j = i + 1 + x;
+            int64_t a = 0;
+            int64_t y = vi;
+            while (y >= nvir-a-1) { y -= nvir-a-1; ++a; }
+            int64_t b = a + 1 + y;
+            double *row = r3 + (oi*nv2 + vi)*nocc_minor*nvir_minor;
+            const double eijab = eia[i*nvir+a] + eia[j*nvir+b];
+            for (int64_t k = 0; k < nocc_minor; ++k)
+                for (int64_t c = 0; c < nvir_minor; ++c)
+                    row[k*nvir_minor+c] /= eijab + eib[k*nvir_minor+c];
+        }
+    }
+}
+
 // Signs for 6-fold permutations
 const double sign6[6] = {1.0, -1.0, -1.0, 1.0, 1.0, -1.0};
 

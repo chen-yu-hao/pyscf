@@ -32,7 +32,7 @@ import ctypes
 from pyscf import lib
 from pyscf.lib import logger
 from pyscf.cc import rccsdt
-from pyscf.cc.rccsdt import (_einsum, t3_spin_summation_inplace_, symmetrize_tamps_tri_, purify_tamps_tri_,
+from pyscf.cc.rccsdt import (_einsum as _base_einsum, t3_spin_summation_inplace_, symmetrize_tamps_tri_, purify_tamps_tri_,
                             update_t1_fock_eris, intermediates_t1t2, compute_r1r2, r1r2_divide_e_,
                             intermediates_t3, kernel, _PhysicistsERIs, format_size)
 from pyscf.cc.rccsdt_highm import (t3_spin_summation, t3_perm_symmetrize_inplace_, purify_tamps_, r1r2_add_t3_,
@@ -41,6 +41,13 @@ from pyscf import __config__
 
 
 _libccsdt = lib.load_library('libccsdt')
+
+def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
+    '''Accumulate RCCSDTQ contractions without an extra scaled output copy.'''
+    if out is not None and beta == 1.0 and einsum_backend in ('numpy', 'pyscf'):
+        result = _base_einsum(einsum_backend, script, *tensors, alpha=alpha)
+        return np.add(result, out, out=out)
+    return _base_einsum(einsum_backend, script, *tensors, out=out, alpha=alpha, beta=beta)
 
 def t4_spin_summation_inplace_(A, nocc4, nvir, pattern, alpha=1.0, beta=0.0):
     assert A.dtype == np.float64 and A.flags['C_CONTIGUOUS'], "A must be a contiguous float64 array"

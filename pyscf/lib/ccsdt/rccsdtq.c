@@ -1833,18 +1833,6 @@ const int64_t tp_t4[24][4] = {
     {3, 2, 1, 0},
 };
 
-static inline int64_t src_idx_from_full4(const int64_t *restrict perm, int64_t v0, int64_t v1, int64_t v2, int64_t v3, int64_t nvir)
-{
-    int64_t src_abcd[4];
-
-    src_abcd[perm[0]] = v0;
-    src_abcd[perm[1]] = v1;
-    src_abcd[perm[2]] = v2;
-    src_abcd[perm[3]] = v3;
-
-    return (((src_abcd[0] * nvir + src_abcd[1]) * nvir + src_abcd[2]) * nvir + src_abcd[3]);
-}
-
 // Unpack triangular-stored T4 amplitudes into a full T4 block.
 //
 // This kernel reconstructs the full permutation-expanded T4 tensor block from the compressed triangular
@@ -1873,6 +1861,9 @@ void unpack_t4_tri2block_(const double *restrict t4_tri,
 #define MASK(sym, w, x, y, z) mask[((((sym) * nocc + (w)) * nocc + (x)) * nocc + (y)) * nocc + (z)]
 #define VIDX(a, b, c, d) ((((a) * nvir + (b)) * nvir + (c)) * nvir + (d))
 
+    const int64_t strides[4] = {nvir * nvir * nvir, nvir * nvir, nvir, 1};
+    const int64_t nvir4 = nvir * strides[0];
+
 #pragma omp parallel for collapse(5) schedule(dynamic)
     for (int64_t sym = 0; sym < 24; ++sym)
     {
@@ -1894,22 +1885,27 @@ void unpack_t4_tri2block_(const double *restrict t4_tri,
                         int64_t loc_k = k - k0;
                         int64_t loc_l = l - l0;
 
-                        int64_t src_base = MAP(sym, i, j, k, l) * nvir * nvir * nvir * nvir;
-                        int64_t dest_base = (((loc_i * blk_j + loc_j) * blk_k + loc_k) * blk_l + loc_l) * nvir * nvir * nvir * nvir;
-
+                        int64_t src_base = MAP(sym, i, j, k, l) * nvir4;
+                        int64_t dest_base = (((loc_i * blk_j + loc_j) * blk_k + loc_k) * blk_l + loc_l) * nvir4;
+                        if (sym == 0)
+                        {
+                            memcpy(t4_blk + dest_base, t4_tri + src_base, (size_t)nvir4 * sizeof(double));
+                            continue;
+                        }
+                        const int64_t s0 = strides[perm[0]], s1 = strides[perm[1]];
+                        const int64_t s2 = strides[perm[2]], s3 = strides[perm[3]];
                         for (int64_t a = 0; a < nvir; ++a)
                         {
+                            const int64_t src_a = src_base + a * s0;
                             for (int64_t b = 0; b < nvir; ++b)
                             {
+                                const int64_t src_ab = src_a + b * s1;
                                 for (int64_t c = 0; c < nvir; ++c)
                                 {
+                                    const double *src = t4_tri + src_ab + c * s2;
+                                    double *dest = t4_blk + dest_base + VIDX(a, b, c, 0);
                                     for (int64_t d = 0; d < nvir; ++d)
-                                    {
-                                        int64_t src = src_base + src_idx_from_full4(perm, a, b, c, d, nvir);
-                                        int64_t dest = dest_base + VIDX(a, b, c, d);
-
-                                        t4_blk[dest] = t4_tri[src];
-                                    }
+                                        dest[d] = src[d * s3];
                                 }
                             }
                         }
@@ -1941,7 +1937,8 @@ void unpack_t4_tri2block_triples_(const double *restrict t4_tri,
 #define MASK(sym, w, x, y, z) mask[((((sym) * nocc + (w)) * nocc + (x)) * nocc + (y)) * nocc + (z)]
 #define VIDX(a, b, c, d) ((((a) * nvir + (b)) * nvir + (c)) * nvir + (d))
 
-    const int64_t nvir4 = nvir * nvir * nvir * nvir;
+    const int64_t strides[4] = {nvir * nvir * nvir, nvir * nvir, nvir, 1};
+    const int64_t nvir4 = nvir * strides[0];
 
 #pragma omp parallel for collapse(5) schedule(dynamic)
     for (int64_t sym = 0; sym < 24; ++sym)
@@ -1958,6 +1955,8 @@ void unpack_t4_tri2block_triples_(const double *restrict t4_tri,
                             continue;
 
                         const int64_t *perm = tp_t4[sym];
+                        const int64_t s0 = strides[perm[0]], s1 = strides[perm[1]];
+                        const int64_t s2 = strides[perm[2]], s3 = strides[perm[3]];
 
                         const int64_t loc_i = i - i0;
                         const int64_t loc_j = j - j0;
@@ -1970,18 +1969,21 @@ void unpack_t4_tri2block_triples_(const double *restrict t4_tri,
 
                         for (int64_t a = 0; a < nvir; ++a)
                         {
+                            const int64_t src_a0 = src_base + a * s0;
+                            const int64_t src_a1 = src_base + a * s1;
                             for (int64_t b = 0; b < nvir; ++b)
                             {
+                                const int64_t src_ab0 = src_a0 + b * s1;
+                                const int64_t src_ab1 = src_a1 + b * s2;
+                                const int64_t src_ab2 = src_a1 + b * s3;
                                 for (int64_t c = 0; c < nvir; ++c)
                                 {
+                                    const double *src0 = t4_tri + src_ab0 + c * s2;
+                                    const double *src1 = t4_tri + src_ab1 + c * s0;
+                                    const double *src2 = t4_tri + src_ab2 + c * s2;
+                                    double *dest = t4_blk + dest_base + VIDX(a, b, c, 0);
                                     for (int64_t d = 0; d < nvir; ++d)
-                                    {
-                                        const int64_t src0 = src_base + src_idx_from_full4(perm, a, b, c, d, nvir);
-                                        const int64_t src1 = src_base + src_idx_from_full4(perm, c, a, b, d, nvir);
-                                        const int64_t src2 = src_base + src_idx_from_full4(perm, d, a, c, b, nvir);
-                                        const int64_t dest = dest_base + VIDX(a, b, c, d);
-                                        t4_blk[dest] = t4_tri[src0] + t4_tri[src1] + t4_tri[src2];
-                                    }
+                                        dest[d] = src0[d * s3] + src1[d * s3] + src2[d * s0];
                                 }
                             }
                         }

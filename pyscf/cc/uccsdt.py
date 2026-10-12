@@ -39,7 +39,8 @@ from pyscf.lib import logger
 from pyscf.mp.mp2 import get_e_hf
 from pyscf.mp.ump2 import get_nocc, get_nmo, get_frozen_mask
 from pyscf.cc import ccsd, _ccsd
-from pyscf.cc.rccsdt import _einsum, run_diis, _finalize, dump_flags, kernel, format_size
+from pyscf.cc.rccsdt import (_einsum, run_diis, _finalize, dump_flags, kernel, format_size,
+                             _dress_fock)
 from pyscf import __config__
 
 
@@ -479,11 +480,11 @@ def update_fock_uhf(mycc, xa, xb, ya, yb, t1, eris):
     t1_focka = focka + einsum('risa,ia->rs', erisaa[:, :nocca, :, nocca:], t1a)
     t1_focka += einsum('risa,ia->rs', erisab[:, :noccb, :, noccb:], t1b)
     t1_focka -= einsum('rias,ia->rs', erisaa[:, :nocca, nocca:, :], t1a)
-    t1_focka = xa @ t1_focka @ ya.T
+    t1_focka = _dress_fock(t1_focka, t1a, nocca)
     t1_fockb = fockb + einsum('risa,ia->rs', erisbb[:, :noccb, :, noccb:], t1b)
     t1_fockb += einsum('iras,ia->rs', erisab[:nocca, :, nocca:, :], t1a)
     t1_fockb -= einsum('rias,ia->rs', erisbb[:, :noccb, noccb:, :], t1b)
-    t1_fockb = xb @ t1_fockb @ yb.T
+    t1_fockb = _dress_fock(t1_fockb, t1b, noccb)
     return t1_focka, t1_fockb
 
 def update_eris_uhf(mycc, xa, xb, ya, yb, eris):
@@ -664,6 +665,8 @@ def compute_r1r2_uhf(mycc, imds, t2):
 
 def r1r2_add_t3_tri_uhf_(mycc, imds, r1, r2, t3):
     '''Add the T3 contributions to r1 and r2. T3 amplitudes are stored in triangular form.'''
+    if not any(x.size for x in t3):
+        return
     backend = mycc.einsum_backend
     einsum = functools.partial(_einsum, backend)
     nocca, noccb = mycc.nocc
@@ -1018,6 +1021,8 @@ def intermediates_t3_add_t3_tri_uhf(mycc, imds, t3):
     return imds
 
 def compute_r3aaa_tri_uhf(mycc, imds, t2, t3):
+    if t3[0].size == 0:
+        return np.zeros_like(t3[0])
     time1 = logger.process_clock(), logger.perf_counter()
     log = logger.Logger(mycc.stdout, mycc.verbose)
 
@@ -1253,6 +1258,8 @@ def compute_r3aaa_tri_uhf(mycc, imds, t2, t3):
     return r3aaa
 
 def compute_r3bbb_tri_uhf(mycc, imds, t2, t3):
+    if t3[3].size == 0:
+        return np.zeros_like(t3[3])
     time1 = logger.process_clock(), logger.perf_counter()
     log = logger.Logger(mycc.stdout, mycc.verbose)
 
@@ -1488,6 +1495,8 @@ def compute_r3bbb_tri_uhf(mycc, imds, t2, t3):
     return r3bbb
 
 def compute_r3aab_tri_uhf(mycc, imds, t2, t3):
+    if t3[1].size == 0:
+        return np.zeros_like(t3[1])
     time1 = logger.process_clock(), logger.perf_counter()
     log = logger.Logger(mycc.stdout, mycc.verbose)
 
@@ -1683,6 +1692,8 @@ def compute_r3aab_tri_uhf(mycc, imds, t2, t3):
     return r3aab
 
 def compute_r3bba_tri_uhf(mycc, imds, t2, t3):
+    if t3[2].size == 0:
+        return np.zeros_like(t3[2])
     time1 = logger.process_clock(), logger.perf_counter()
     log = logger.Logger(mycc.stdout, mycc.verbose)
     backend = mycc.einsum_backend
@@ -1893,7 +1904,7 @@ def compute_r3bba_tri_uhf(mycc, imds, t2, t3):
     time1 = log.timer_debug1('t3: r3bba', *time1)
     return r3bba
 
-def compute_r3_tri_uhf(mycc, imds, t2, t3):
+def _compute_r3_tri_uhf_legacy(mycc, imds, t2, t3):
     '''Compute r3 with triangular-stored T3 amplitudes; r3 is returned in triangular form as well.'''
     r3aaa = compute_r3aaa_tri_uhf(mycc, imds, t2, t3)
     r3bbb = compute_r3bbb_tri_uhf(mycc, imds, t2, t3)
@@ -1902,100 +1913,94 @@ def compute_r3_tri_uhf(mycc, imds, t2, t3):
     r3 = [r3aaa, r3aab, r3bba, r3bbb]
     return r3
 
+def _can_reuse_rhf_t3(mycc, imds, t2, t3, eris=None):
+    '''Certify exact RHF and spin-flip symmetry of the actual R3 operands.
+
+    No tolerance or averaging is used. Equal orbitals alone are insufficient:
+    independent integral transforms can differ by roundoff, or the caller may
+    supply spin-asymmetric amplitudes or intermediates.
+    '''
+    if mycc.nocc[0] != mycc.nocc[1] or mycc.nmo[0] != mycc.nmo[1]:
+        return False
+    coefficients, occupations = getattr(mycc, 'mo_coeff', None), getattr(mycc, 'mo_occ', None)
+    if coefficients is None or occupations is None:
+        return False
+    if not (np.array_equal(coefficients[0], coefficients[1]) and
+            np.array_equal(occupations[0], occupations[1])):
+        return False
+    masks = mycc.get_frozen_mask()
+    if not np.array_equal(masks[0], masks[1]):
+        return False
+    if eris is not None:
+        # Check the actual transformed active orbitals and energies too.
+        if getattr(eris, 'mo_coeff', None) is None:
+            return False
+        if not (np.array_equal(eris.mo_coeff[0], eris.mo_coeff[1]) and
+                np.array_equal(eris.mo_energy[0], eris.mo_energy[1])):
+            return False
+    if not (np.array_equal(t2[0], t2[2]) and
+            np.array_equal(t2[1], t2[1].transpose(2, 3, 0, 1)) and
+            np.array_equal(t3[0], t3[3]) and np.array_equal(t3[1], t3[2])):
+        return False
+    for alpha, beta in (('F_oo', 'F_OO'), ('F_vv', 'F_VV'),
+                        ('W_oooo', 'W_OOOO'), ('W_vvvv', 'W_VVVV'),
+                        ('W_vvvo', 'W_VVVO'), ('W_ovoo', 'W_OVOO'),
+                        ('W_voov', 'W_VOOV')):
+        if not np.array_equal(getattr(imds, alpha), getattr(imds, beta)):
+            return False
+    transpose = (1, 0, 3, 2)
+    for alpha, beta in (('W_vOoV', 'W_oVvO'), ('W_vVvO', 'W_vVoV'),
+                        ('W_oVoO', 'W_vOoO'), ('W_oVoV', 'W_vOvO'),
+                        ('W_vVvV', 'W_vVvV'), ('W_oOoO', 'W_oOoO')):
+        if not np.array_equal(getattr(imds, alpha), getattr(imds, beta).transpose(transpose)):
+            return False
+    return True
+
+def compute_r3_tri_uhf(mycc, imds, t2, t3, eris=None):
+    '''Compute compact T3 residuals, sharing gathered tiles and writeback.'''
+    backend = getattr(mycc, 't3_backend', 'fused')
+    if backend == 'legacy':
+        mycc._t3_spin_reused = False
+        return _compute_r3_tri_uhf_legacy(mycc, imds, t2, t3)
+    if backend != 'fused':
+        raise ValueError('t3_backend must be fused or legacy')
+    from pyscf.cc import _uccsdt_t3
+    reuse = (getattr(mycc, 't3_spin_reuse', True) and any(x.size for x in t3) and
+             _can_reuse_rhf_t3(mycc, imds, t2, t3, eris))
+    blocks = (0, 1) if reuse else (0, 1, 2, 3)
+    result = _uccsdt_t3.compute_r3(mycc, imds, t2, t3, spin_blocks=blocks)
+    if reuse:
+        result[2], result[3] = result[1].copy(), result[0].copy()
+    mycc._t3_spin_reused = bool(reuse)
+    return result
+
 def r3_tri_divide_e_uhf_(mycc, r3, mo_energy):
+    """Divide packed T3 in place, without full six-index temporary arrays."""
     nocca, noccb = mycc.nocc
-    nmoa, nmob = mycc.nmo
-    nvira, nvirb = nmoa - nocca, nmob - noccb
-    blksize_o_aaa, blksize_v_aaa = mycc.blksize_o_aaa, mycc.blksize_v_aaa
-    blksize_o_aab, blksize_v_aab = mycc.blksize_o_aab, mycc.blksize_v_aab
-    eia_a = mo_energy[0][:nocca, None] - mo_energy[0][None, nocca:] - mycc.level_shift
-    eia_b = mo_energy[1][:noccb, None] - mo_energy[1][None, noccb:] - mycc.level_shift
-
-    r3aaa, r3aab, r3bba, r3bbb = r3
-
-    r3_tmp = np.empty((blksize_o_aaa,) * 3 + (blksize_v_aaa,) * 3, dtype=r3aaa.dtype)
-    eijkabc_blk = np.empty((blksize_o_aaa,) * 3 + (blksize_v_aaa,) * 3, dtype=r3aaa.dtype)
-    for k0, k1 in lib.prange(0, nocca, blksize_o_aaa):
-        bk = k1 - k0
-        for j0, j1 in lib.prange(0, k1 - 1, blksize_o_aaa):
-            bj = j1 - j0
-            for i0, i1 in lib.prange(0, j1 - 1, blksize_o_aaa):
-                bi = i1 - i0
-                for c0, c1 in lib.prange(0, nvira, blksize_v_aaa):
-                    bc = c1 - c0
-                    for b0, b1 in lib.prange(0, c1 - 1, blksize_v_aaa):
-                        bb = b1 - b0
-                        for a0, a1 in lib.prange(0, b1 - 1, blksize_v_aaa):
-                            ba = a1 - a0
-                            _unp_aaa_(mycc, r3aaa, r3_tmp, i0, i1, j0, j1, k0, k1, a0, a1, b0, b1, c0, c1)
-                            eijkabc_blk = (eia_a[i0:i1, None, None, a0:a1, None, None]
-                                        + eia_a[None, j0:j1, None, None, b0:b1, None]
-                                        + eia_a[None, None, k0:k1, None, None, c0:c1])
-                            r3_tmp[:bi, :bj, :bk, :ba, :bb, :bc] /= eijkabc_blk
-                            _update_packed_aaa_(mycc, r3aaa, r3_tmp, i0, i1, j0, j1, k0, k1,
-                                                a0, a1, b0, b1, c0, c1, alpha=1.0, beta=0.0)
-    r3_tmp = None
-    eijkabc_blk = None
-
-    r3_tmp = np.empty((blksize_o_aaa,) * 3 + (blksize_v_aaa,) * 3, dtype=r3aaa.dtype)
-    eijkabc_blk = np.empty((blksize_o_aaa,) * 3 + (blksize_v_aaa,) * 3, dtype=r3aaa.dtype)
-    for k0, k1 in lib.prange(0, noccb, blksize_o_aaa):
-        bk = k1 - k0
-        for j0, j1 in lib.prange(0, k1 - 1, blksize_o_aaa):
-            bj = j1 - j0
-            for i0, i1 in lib.prange(0, j1 - 1, blksize_o_aaa):
-                bi = i1 - i0
-                for c0, c1 in lib.prange(0, nvirb, blksize_v_aaa):
-                    bc = c1 - c0
-                    for b0, b1 in lib.prange(0, c1 - 1, blksize_v_aaa):
-                        bb = b1 - b0
-                        for a0, a1 in lib.prange(0, b1 - 1, blksize_v_aaa):
-                            ba = a1 - a0
-                            _unp_bbb_(mycc, r3bbb, r3_tmp, i0, i1, j0, j1, k0, k1, a0, a1, b0, b1, c0, c1)
-                            eijkabc_blk = (eia_b[i0:i1, None, None, a0:a1, None, None]
-                                        + eia_b[None, j0:j1, None, None, b0:b1, None]
-                                        + eia_b[None, None, k0:k1, None, None, c0:c1])
-                            r3_tmp[:bi, :bj, :bk, :ba, :bb, :bc] /= eijkabc_blk
-                            _update_packed_bbb_(mycc, r3bbb, r3_tmp, i0, i1, j0, j1, k0, k1,
-                                                a0, a1, b0, b1, c0, c1, alpha=1.0, beta=0.0)
-    r3_tmp = None
-    eijkabc_blk = None
-
-    r3_tmp = np.empty((blksize_o_aab,) * 2 + (blksize_v_aab,) * 2 + (noccb,) + (nvirb,), dtype=r3aaa.dtype)
-    eijkabc_blk = np.empty((blksize_o_aab,) * 2 + (blksize_v_aab,) * 2 + (noccb,) + (nvirb,), dtype=r3aaa.dtype)
-    for j0, j1 in lib.prange(0, nocca, blksize_o_aab):
-        bj = j1 - j0
-        for i0, i1 in lib.prange(0, j1 - 1, blksize_o_aab):
-            bi = i1 - i0
-            for b0, b1 in lib.prange(0, nvira, blksize_v_aab):
-                bb = b1 - b0
-                for a0, a1 in lib.prange(0, b1 - 1, blksize_v_aab):
-                    ba = a1 - a0
-                    _unp_aab_(mycc, r3aab, r3_tmp, i0, i1, j0, j1, a0, a1, b0, b1)
-                    eijkabc_blk = (eia_a[i0:i1, None, a0:a1, None, None, None]
-                            + eia_a[None, j0:j1, None, b0:b1, None, None] + eia_b[None, None, None, None, :, :])
-                    r3_tmp[:bi, :bj, :ba, :bb] /= eijkabc_blk
-                    _update_packed_aab_(mycc, r3aab, r3_tmp, i0, i1, j0, j1, a0, a1, b0, b1)
-    r3_tmp = None
-    eijkabc_blk = None
-
-    r3_tmp = np.empty((blksize_o_aab,) * 2 + (blksize_v_aab,) * 2 + (nocca,) + (nvira,), dtype=r3aaa.dtype)
-    eijkabc_blk = np.empty((blksize_o_aab,) * 2 + (blksize_v_aab,) * 2 + (nocca,) + (nvira,), dtype=r3aaa.dtype)
-    for j0, j1 in lib.prange(0, noccb, blksize_o_aab):
-        bj = j1 - j0
-        for i0, i1 in lib.prange(0, j1 - 1, blksize_o_aab):
-            bi = i1 - i0
-            for b0, b1 in lib.prange(0, nvirb, blksize_v_aab):
-                bb = b1 - b0
-                for a0, a1 in lib.prange(0, b1 - 1, blksize_v_aab):
-                    ba = a1 - a0
-                    _unp_bba_(mycc, r3bba, r3_tmp, i0, i1, j0, j1, a0, a1, b0, b1)
-                    eijkabc_blk = (eia_b[i0:i1, None, a0:a1, None, None, None]
-                            + eia_b[None, j0:j1, None, b0:b1, None, None] + eia_a[None, None, None, None, :, :])
-                    r3_tmp[:bi, :bj, :ba, :bb] /= eijkabc_blk
-                    _update_packed_bba_(mycc, r3bba, r3_tmp, i0, i1, j0, j1, a0, a1, b0, b1)
-    r3_tmp = None
-    eijkabc_blk = None
+    eia = [np.ascontiguousarray(e[:nocc, None] - e[None, nocc:] - mycc.level_shift)
+           for e, nocc in zip(mo_energy, (nocca, noccb))]
+    for energies in eia:
+        assert energies.dtype == np.float64
+    ptr = ctypes.POINTER(ctypes.c_double)
+    for block, spin, mixed in zip(r3, (0, 0, 1, 1), (False, True, True, False)):
+        assert block.dtype == np.float64
+        if block.size == 0:
+            continue
+        packed = np.ascontiguousarray(block)
+        major = eia[spin]
+        nocc, nvir = major.shape
+        if mixed:
+            minor = eia[1 - spin]
+            _libccsdt.divide_t3_aab_tri_(
+                packed.ctypes.data_as(ptr), major.ctypes.data_as(ptr),
+                minor.ctypes.data_as(ptr), ctypes.c_int64(nocc), ctypes.c_int64(nvir),
+                ctypes.c_int64(minor.shape[0]), ctypes.c_int64(minor.shape[1]))
+        else:
+            _libccsdt.divide_t3_aaa_tri_(
+                packed.ctypes.data_as(ptr), major.ctypes.data_as(ptr),
+                ctypes.c_int64(nocc), ctypes.c_int64(nvir))
+        if packed is not block:
+            block[...] = packed
     return r3
 
 def update_amps_uccsdt_tri_(mycc, tamps, eris):
@@ -2030,11 +2035,16 @@ def update_amps_uccsdt_tri_(mycc, tamps, eris):
     time0 = log.timer_debug1('t1t2 total', *time0)
 
     # t3
-    intermediates_t3_uhf(mycc, imds, t2)
-    intermediates_t3_add_t3_tri_uhf(mycc, imds, t3)
+    # If no spin sector can host a triple excitation (for example H2),
+    # the T3 residual is identically zero.  Avoid creating any T3
+    # intermediates and six-index workspaces; this is exact and substantially
+    # lowers the small-electron-count memory footprint.
+    if any(x.size for x in t3):
+        intermediates_t3_uhf(mycc, imds, t2)
+        intermediates_t3_add_t3_tri_uhf(mycc, imds, t3)
     imds.t1_fock, imds.t1_eris = None, None
     time1 = log.timer_debug1('t3: update intermediates', *time0)
-    r3 = compute_r3_tri_uhf(mycc, imds, t2, t3)
+    r3 = compute_r3_tri_uhf(mycc, imds, t2, t3, eris=eris)
     imds = None
     time1 = log.timer_debug1('t3: compute r3', *time1)
     # divide by eijkabc
@@ -2221,10 +2231,14 @@ def _ao2mo_ucc(mycc, mo_coeff=None):
     elif getattr(mycc._scf, 'with_df', None):
         logger.note(mycc, '_make_df_eris_incore_' + mycc.__class__.__name__)
         return _make_df_eris_incore_ucc(mycc, mo_coeff)
-    else:
+    elif mycc.mol.nelectron == 1:
         # NOTE: Handle the special case of a single-electron system
         logger.note(mycc, '_make_empty_eris_' + mycc.__class__.__name__)
         return _make_empty_eris_ucc(mycc, mo_coeff)
+    else:
+        raise NotImplementedError('UCCSDT requires cached AO integrals or density fitting; '
+                                  'out-of-core AO2MO is not implemented. Supply precomputed '
+                                  'ERIs explicitly instead of using an empty integral tensor.')
 
 def restore_from_diis_(mycc, diis_file, inplace=True):
     '''Reuse an existed DIIS object in the CC calculation (UHF case).
@@ -2325,7 +2339,15 @@ def memory_estimate_log_uccsdt(mycc):
     log.info('    T1-ERIs memory          %8s', format_size(eris_memory))
     log.info('    Intermediates memory    %8s', format_size(eris_memory))
     if mycc.do_tri_max_t:
-        blk_memory = mycc.blksize_o_aab * mycc.blksize_v_aab * max(nocca, noccb)**2 * max(nvira, nvirb)**2 * 8
+        # The temporary shapes are (bo,bo,bv,bv,o,v) for each mixed-spin
+        # block and (bo,bo,bo,bv,bv,bv) for same-spin blocks.  The previous
+        # max(o)^2*max(v)^2 estimate omitted the spectator o,v axes of the
+        # mixed blocks and could under-report their workspace by 2x.
+        mixed = mycc.blksize_o_aab**2 * mycc.blksize_v_aab**2 * max(
+            noccb * nvirb, nocca * nvira)
+        same = max(mycc.blksize_o_aaa**3 * mycc.blksize_v_aaa**3,
+                   mycc.blksize_o_aaa**3 * mycc.blksize_v_aaa**3)
+        blk_memory = max(mixed, same) * 8
         log.info("    Block workspace         %8s", format_size(blk_memory))
     if mycc.incore_complete:
         if mycc.do_diis_max_t:
@@ -2337,7 +2359,7 @@ def memory_estimate_log_uccsdt(mycc):
         else:
             diis_memory = (nocca * (nocca - 1) // 2 * nvira * (nvira - 1) // 2
                         + nocca * nvira * noccb * nvirb
-                        + noccb * (nvirb - 1) // 2 * nvirb * (nvirb - 1) // 2) * 8 * mycc.diis_space * 2
+                        + noccb * (noccb - 1) // 2 * nvirb * (nvirb - 1) // 2) * 8 * mycc.diis_space * 2
         log.info('    DIIS memory             %8s', format_size(diis_memory))
     else:
         diis_memory = 0.0
@@ -2598,6 +2620,8 @@ class UCCSDT(ccsd.CCSDBase):
     blksize_o_aab = getattr(__config__, 'cc_uccsdt_UCCSDT_blksize_o_aab', 8)
     blksize_v_aab = getattr(__config__, 'cc_uccsdt_UCCSDT_blksize_v_aab', 64)
     einsum_backend = getattr(__config__, 'cc_uccsdt_UCCSDT_einsum_backend', 'numpy')
+    t3_backend = getattr(__config__, 'cc_uccsdt_UCCSDT_t3_backend', 'fused')
+    t3_spin_reuse = getattr(__config__, 'cc_uccsdt_UCCSDT_t3_spin_reuse', True)
 
     _keys = {
         'max_cycle', 'conv_tol', 'iterative_damping', 'conv_tol_normt', 'diis', 'diis_space', 'diis_file',
@@ -2607,7 +2631,7 @@ class UCCSDT(ccsd.CCSDBase):
         'blksize_o_aab', 'blksize_v_aab', 'einsum_backend', 'tamps', 'unique_tamps_map', 't2c_map_6f_oa',
         't2c_mask_6f_oa', 't2c_map_2f_oa', 't2c_mask_2f_oa', 't2c_map_6f_va', 't2c_mask_6f_va', 't2c_map_2f_va',
         't2c_mask_2f_va', 't2c_map_6f_ob', 't2c_mask_6f_ob', 't2c_map_2f_ob', 't2c_mask_2f_ob', 't2c_map_6f_vb',
-        't2c_mask_6f_vb', 't2c_map_2f_vb', 't2c_mask_2f_vb'
+        't2c_mask_6f_vb', 't2c_map_2f_vb', 't2c_mask_2f_vb', 't3_backend', 't3_spin_reuse'
     }
 
     @property
@@ -2722,8 +2746,10 @@ class UCCSDT(ccsd.CCSDBase):
         self._finalize()
         return self.e_corr, self.tamps
 
-    def ccsdt_q(self, tamps, eris=None):
-        raise NotImplementedError
+    def ccsdt_q(self, tamps=None, eris=None):
+        '''Return the [Q] and complete (Q) corrections to the CCSDT energy.'''
+        from pyscf.cc import uccsdt_q
+        return uccsdt_q.kernel(self, eris, tamps, self.verbose)
 
 
 class _PhysicistsERIs:
@@ -2782,27 +2808,28 @@ def _make_eris_incore_ucc(mycc, mo_coeff=None, ao2mofn=None):
 
     if callable(ao2mofn):
         eri_aa = ao2mofn(moa).reshape([nmoa]*4)
-        eri_bb = ao2mofn(mob).reshape([nmob]*4)
-        eri_ab = ao2mofn((moa, moa, mob, mob))
     else:
         eri_aa = ao2mo.restore(1, ao2mo.full(mycc._scf._eri, moa), nmoa)
+    # Finish each spin block before transforming the next. Keeping all
+    # chemists' tensors alive while copying their transposes doubles ERI
+    # storage at the end of the transformation.
+    eris.pppp = np.ascontiguousarray(eri_aa.reshape([nmoa]*4).transpose(0, 2, 1, 3))
+    del eri_aa
+
+    if callable(ao2mofn):
+        eri_bb = ao2mofn(mob).reshape([nmob]*4)
+    else:
         eri_bb = ao2mo.restore(1, ao2mo.full(mycc._scf._eri, mob), nmob)
+    eris.PPPP = np.ascontiguousarray(eri_bb.reshape([nmob]*4).transpose(0, 2, 1, 3))
+    del eri_bb
+
+    if callable(ao2mofn):
+        eri_ab = ao2mofn((moa, moa, mob, mob))
+    else:
         eri_ab = ao2mo.general(mycc._scf._eri, (moa, moa, mob, mob), compact=False)
-
-    eri_aa = eri_aa.reshape(nmoa, nmoa, nmoa, nmoa)
-    eri_ab = eri_ab.reshape(nmoa, nmoa, nmob, nmob)
-    eri_bb = eri_bb.reshape(nmob, nmob, nmob, nmob)
-
-    eris.pppp = eri_aa.transpose(0, 2, 1, 3)
-    eris.PPPP = eri_bb.transpose(0, 2, 1, 3)
-    eris.pPpP = eri_ab.transpose(0, 2, 1, 3)
-
-    if not eris.pppp.flags['C_CONTIGUOUS']:
-        eris.pppp = np.ascontiguousarray(eris.pppp)
-    if not eris.PPPP.flags['C_CONTIGUOUS']:
-        eris.PPPP = np.ascontiguousarray(eris.PPPP)
-    if not eris.pPpP.flags['C_CONTIGUOUS']:
-        eris.pPpP = np.ascontiguousarray(eris.pPpP)
+    eris.pPpP = np.ascontiguousarray(
+        eri_ab.reshape(nmoa, nmoa, nmob, nmob).transpose(0, 2, 1, 3))
+    del eri_ab
 
     logger.timer(mycc, mycc.__class__.__name__ + ' integral transformation', *cput0)
     return eris
