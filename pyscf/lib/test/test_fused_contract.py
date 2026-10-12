@@ -14,6 +14,7 @@
 
 import unittest
 from unittest import mock
+import warnings
 import numpy as np
 from pyscf.lib import numpy_helper as nh
 
@@ -46,6 +47,18 @@ class KnownValues(unittest.TestCase):
         for beta in (0, 1, -0.3):
             out = self.rng.random((3, 4, 6, 7))
             self.check_contract('ijk,klm->ijlm', a, b, out, True, beta=beta)
+
+    def test_fused_accumulation_with_warnings_as_errors(self):
+        a = self.rng.random((3, 4, 5))
+        b = self.rng.random((5, 6, 7))
+        with warnings.catch_warnings():
+            warnings.simplefilter('error')
+            out = self.rng.random((3, 4, 6, 7))
+            self.check_contract('ijk,klm->ijlm', a, b, out, True)
+            for order in ('C', 'F'):
+                out = np.array(self.rng.random((12, 42)), order=order)
+                self.check_contract('ik,kj->ij', a.reshape(12, 5),
+                                    b.reshape(5, 42), out, True)
 
     def test_transposed_and_fortran_matrix(self):
         a = self.rng.random((3, 4))

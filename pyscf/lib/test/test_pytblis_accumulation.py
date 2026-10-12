@@ -87,6 +87,48 @@ class KnownValues(unittest.TestCase):
         numpy_helper.einsum('ik,kj->ij', a, b, out=out, alpha=.5, beta=1)
         np.testing.assert_allclose(out, expected, rtol=1e-13, atol=1e-13)
 
+    def test_partial_trace_accumulation(self):
+        a = self.rng.random((24, 25))
+        b = self.rng.random((26, 25))
+        out = self.rng.random(25)
+        expected = .5 * np.einsum('ij,kj->j', a, b) + out.copy()
+        native_contract = pytblis.contract
+        supported = numpy_helper._pytblis_supports_partial_trace(native_contract)
+        with mock.patch.object(pytblis, 'contract', autospec=True, side_effect=native_contract) as contract:
+            result = numpy_helper.einsum('ij,kj->j', a, b, out=out, alpha=.5, beta=1)
+        self.assertIs(result, out)
+        if supported:
+            self.assertTrue(contract.call_args.kwargs['allow_partial_trace'])
+        else:
+            contract.assert_not_called()
+        np.testing.assert_allclose(out, expected, rtol=1e-13, atol=1e-13)
+
+    def test_legacy_contract_partial_trace_fallback(self):
+        def legacy_contract(script, a, b, alpha=1, beta=0, out=None):
+            raise AssertionError('Legacy TBLIS cannot handle a partial trace')
+
+        a = self.rng.random((24, 25))
+        b = self.rng.random((26, 25))
+        out = self.rng.random(25)
+        expected = .5 * np.einsum('ij,kj->j', a, b) + out.copy()
+        with mock.patch.object(pytblis, 'contract', legacy_contract):
+            result = numpy_helper.einsum('ij,kj->j', a, b, out=out, alpha=.5, beta=1)
+        self.assertIs(result, out)
+        np.testing.assert_allclose(out, expected, rtol=1e-13, atol=1e-13)
+
+    def test_legacy_multioperand_partial_trace_fallback(self):
+        def legacy_contract(script, a, b, alpha=1, beta=0, out=None):
+            raise AssertionError('Legacy TBLIS cannot handle a partial trace')
+
+        a = self.rng.random((1, 4, 3))
+        b = self.rng.random((3, 5))
+        c = self.rng.random((5, 4))
+        expected = np.einsum('iab,bc,cd->ad', a, b, c)
+        with mock.patch.object(pytblis, 'contract', legacy_contract), \
+                mock.patch.object(pytblis, 'einsum', side_effect=AssertionError('Legacy TBLIS')):
+            result = numpy_helper.einsum('iab,bc,cd->ad', a, b, c)
+        np.testing.assert_allclose(result, expected, rtol=1e-13, atol=1e-13)
+
     def test_custom_contract(self):
         a = self.rng.random((3, 4))
         b = self.rng.random((4, 5))

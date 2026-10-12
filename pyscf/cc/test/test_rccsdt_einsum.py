@@ -129,6 +129,8 @@ class KnownValues(unittest.TestCase):
             import pytblis
         except ImportError:
             self.skipTest('pytblis is optional')
+        if not rccsdt.lib.numpy_helper._pytblis_supports_partial_trace(pytblis.contract):
+            self.skipTest('pytblis lacks partial-trace support')
         rng = np.random.default_rng(426)
         left = np.asfortranarray(rng.normal(size=(3, 5)))
         right = rng.normal(size=(5, 4))[:, ::-1]
@@ -148,7 +150,7 @@ class KnownValues(unittest.TestCase):
                     return result
 
                 with self.subTest(dtype_a=a.dtype, dtype_b=b.dtype, alpha=alpha):
-                    with patch.object(pytblis, 'contract', side_effect=record) as call:
+                    with patch.object(pytblis, 'contract', autospec=True, side_effect=record) as call:
                         actual = rccsdt._einsum('pytblis', 'ik,kj->ij', a, b, alpha=alpha)
                     np.testing.assert_allclose(actual, alpha * product, atol=2e-13, rtol=2e-13)
                     self.assertEqual(call.call_args.kwargs['alpha'], alpha)
@@ -183,6 +185,57 @@ class KnownValues(unittest.TestCase):
                                    out=left, alpha=alpha, beta=beta)
             self.assertIs(actual, left)
             np.testing.assert_allclose(actual, expected, atol=2e-12, rtol=2e-12)
+
+    def test_pytblis_multiple_operands_and_partial_traces(self):
+        if rccsdt._get_pytblis() is None:
+            self.skipTest('pytblis is optional')
+        rng = np.random.default_rng(428)
+        cases = (
+            ('ij,jk,kl->il', tuple(rng.normal(size=(4, 4)) for _ in range(3))),
+            ('iab,bc->ac', (rng.normal(size=(1, 4, 3)), rng.normal(size=(3, 4)))),
+            ('iab,bc,cd->ad', (rng.normal(size=(1, 4, 3)),
+                              rng.normal(size=(3, 5)), rng.normal(size=(5, 4)))),
+            ('iab->ab', (rng.normal(size=(1, 4, 4)),)))
+        for script, tensors in cases:
+            tensors = tuple(tensor[..., ::-1] for tensor in tensors)
+            product = np.einsum(script, *tensors, optimize=True)
+            for alpha in (1., -.5, .25+.5j):
+                with self.subTest(script=script, alpha=alpha):
+                    actual = rccsdt._einsum('pytblis', script, *tensors, alpha=alpha)
+                    np.testing.assert_allclose(actual, alpha * product, atol=2e-13, rtol=2e-13)
+                    for beta in (0., 1., -.5):
+                        out = rng.normal(size=product.shape).astype(actual.dtype).T
+                        expected = alpha * product + beta * out.copy()
+                        returned = rccsdt._einsum('pytblis', script, *tensors,
+                                                  out=out, alpha=alpha, beta=beta)
+                        self.assertIs(returned, out)
+                        np.testing.assert_allclose(out, expected, atol=2e-13, rtol=2e-13)
+
+        left, middle, right = rng.normal(size=(3, 4, 4))
+        expected = -.5 * (left.copy() @ middle @ right) + .25 * left
+        actual = rccsdt._einsum('pytblis', 'ij,jk,kl->il', left, middle, right,
+                               out=left, alpha=-.5, beta=.25)
+        self.assertIs(actual, left)
+        np.testing.assert_allclose(actual, expected, atol=2e-13, rtol=2e-13)
+
+    def test_pytblis_legacy_partial_trace_fallback(self):
+        pytblis = rccsdt._get_pytblis()
+        if pytblis is None:
+            self.skipTest('pytblis is optional')
+
+        def legacy_contract(script, a, b, alpha=1., beta=0., out=None):
+            self.fail('A backend without partial-trace support must use NumPy')
+
+        legacy = SimpleNamespace(contract=legacy_contract, einsum=pytblis.einsum)
+        left = np.arange(12., dtype=float).reshape(1, 4, 3)
+        right = np.arange(12., dtype=float).reshape(3, 4)
+        out = np.full((4, 4), .5)
+        expected = -.25 * np.einsum('iab,bc->ac', left, right) + out
+        with patch.object(rccsdt, '_get_pytblis', return_value=legacy):
+            actual = rccsdt._einsum('pytblis', 'iab,bc->ac', left, right,
+                                   out=out, alpha=-.25, beta=1.)
+        self.assertIs(actual, out)
+        np.testing.assert_allclose(actual, expected, atol=2e-13, rtol=2e-13)
 
 
 if __name__ == '__main__':

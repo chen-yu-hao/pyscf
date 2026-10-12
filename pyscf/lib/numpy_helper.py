@@ -22,6 +22,8 @@ Extension to numpy and scipy
 
 import os
 import ctypes
+import functools
+import inspect
 import math
 import numpy
 import numpy as np
@@ -131,6 +133,14 @@ def _numpy_einsum(scripts, *tensors, alpha=1, beta=0, out=None, **kwargs):
         out += C
     return out
 
+@functools.lru_cache(maxsize=1)
+def _pytblis_supports_partial_trace(contract):
+    try:
+        parameters = inspect.signature(contract).parameters
+    except (TypeError, ValueError):
+        return False
+    return 'allow_partial_trace' in parameters
+
 def contract(subscripts, A, B, alpha=1, beta=0, out=None, **kwargs):
     '''
     Perform tensor contraction using einsum notation
@@ -159,9 +169,11 @@ def contract(subscripts, A, B, alpha=1, beta=0, out=None, **kwargs):
         # tensordot, and it requires the output to share the IEEE type of the
         # inputs. Route these cases through numpy instead.
         if ((out is not None and out.dtype != C_dtype) or
-                numpy.result_type(C_dtype, alpha, beta) != C_dtype):
+                numpy.result_type(C_dtype, alpha, beta) != C_dtype or
+                not _pytblis_supports_partial_trace(pytblis.contract)):
             return _numpy_einsum(idx_str, A, B, alpha=alpha, beta=beta, out=out)
-        return pytblis.contract(idx_str, A, B, alpha=alpha, beta=beta, out=out)
+        return pytblis.contract(idx_str, A, B, alpha=alpha, beta=beta, out=out,
+                                allow_partial_trace=True)
 
     if EINSUM_BACKEND =='pyscf-tblis' and C_dtype == numpy.double:
         # tblis is slow for complex type
@@ -282,14 +294,11 @@ def contract(subscripts, A, B, alpha=1, beta=0, out=None, **kwargs):
             out.flags.writeable and out.flags.aligned and
             not numpy.may_share_memory(out, A) and
             not numpy.may_share_memory(out, B)):
-        # Assigning shape to a view fails rather than allocating a temporary.
-        # The output must follow the same free-index grouping as the GEMM.
-        Ct = out.transpose([idxC.index(idx) for idx in idxCt]).view()
-        try:
-            Ct.shape = (At.shape[0], Bt.shape[1])
-        except AttributeError:
-            pass
-        else:
+        # Reshaping may copy if the free-index grouping does not match GEMM.
+        # Only fuse accumulation when the matrix still uses the out buffer.
+        Ct = out.transpose([idxC.index(idx) for idx in idxCt])
+        Ct = Ct.reshape(At.shape[0], Bt.shape[1])
+        if numpy.shares_memory(Ct, out):
             if Ct.flags.c_contiguous:
                 dot(At, Bt, alpha=alpha, c=Ct, beta=beta)
                 return out
@@ -319,7 +328,8 @@ def einsum(scripts, *tensors, **kwargs):
     and appears only twice (i.e. no 'ij,ik,il->jkl'). The output indices must
     be explicitly specified (i.e. 'ij,j->i' and not 'ij,j').
     '''
-    if EINSUM_BACKEND == 'pytblis':
+    if (EINSUM_BACKEND == 'pytblis' and
+            _pytblis_supports_partial_trace(pytblis.contract)):
         if len(tensors) == 2 and ('alpha' in kwargs or 'beta' in kwargs):
             # pytblis.einsum has no scaled-accumulation interface. Use the
             # two-operand helper, including its small-array and dtype guards.

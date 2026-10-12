@@ -163,16 +163,19 @@ class KnownValues(unittest.TestCase):
                 np.testing.assert_allclose(actual, expected, atol=1e-12, rtol=1e-10)
 
     def test_einsum_backends(self):
-        mycc, eris = random_native(2, compact=True)
-        expected = reference.kernel(mycc, eris)
         backends = ['numpy', 'pyscf']
         if importlib.util.find_spec('pytblis') is not None:
             backends.append('pytblis')
-        for backend in backends:
-            with self.subTest(backend=backend):
-                mycc.einsum_backend = backend
-                np.testing.assert_allclose(uccsdt_q._kernel_python(mycc, eris), expected,
-                                           atol=1e-11, rtol=1e-10)
+        for nalpha, compact in ((1, False), (2, True), (3, True)):
+            mycc, eris = random_native(nalpha, compact=compact)
+            expected = reference.kernel(mycc, eris)
+            np.testing.assert_allclose(uccsdt_q.kernel(mycc, eris), expected,
+                                       atol=1e-11, rtol=1e-10)
+            for backend in backends:
+                with self.subTest(backend=backend, nalpha=nalpha, compact=compact):
+                    mycc.einsum_backend = backend
+                    np.testing.assert_allclose(uccsdt_q._kernel_python(mycc, eris), expected,
+                                               atol=1e-11, rtol=1e-10)
 
     def test_alpha_beta_exchange(self):
         for compact in (False, True):

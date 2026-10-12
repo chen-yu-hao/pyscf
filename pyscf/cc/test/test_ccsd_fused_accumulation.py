@@ -3,10 +3,11 @@
 """Check direct residual accumulation against the independent RCCSD equations."""
 
 import unittest
+import warnings
 from unittest import mock
 import numpy as np
 
-from pyscf import gto, lib, scf
+from pyscf import cc, gto, lib, scf
 from pyscf.cc import ccsd, rccsd
 
 
@@ -26,6 +27,20 @@ def tearDownModule():
 
 
 class KnownValues(unittest.TestCase):
+    def test_rccsd_uccsd_run_with_warnings_as_errors(self):
+        energies = []
+        with mock.patch.object(lib.numpy_helper, 'EINSUM_BACKEND', None), \
+                warnings.catch_warnings():
+            warnings.simplefilter('error')
+            for factory in (cc.CCSD, cc.UCCSD):
+                with self.subTest(factory=factory.__name__):
+                    with mock.patch.object(lib.numpy_helper, 'dot', wraps=lib.numpy_helper.dot) as dot:
+                        solver = factory(mf).run(conv_tol=1e-10)
+                    self.assertTrue(solver.converged)
+                    self.assertTrue(any(call.kwargs.get('c') is not None for call in dot.call_args_list))
+                    energies.append(solver.e_tot)
+        self.assertAlmostEqual(*energies, places=9)
+
     def check_update(self, random_amplitudes, incore, blocked, async_io):
         optimized = ccsd.CCSD(mf)
         optimized.incore_complete = incore

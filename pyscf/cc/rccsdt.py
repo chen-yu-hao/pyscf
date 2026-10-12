@@ -54,7 +54,8 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
     '''Wrapper for einsum supporting pytblis, pyscf.lib.einsum, or numpy.einsum backends.'''
     if einsum_backend == 'pytblis':
         pytblis = _get_pytblis()
-        if pytblis is None:
+        if (pytblis is None or
+                not lib.numpy_helper._pytblis_supports_partial_trace(pytblis.contract)):
             einsum_backend = 'numpy'
     elif einsum_backend not in ('numpy', 'pyscf'):
         raise ValueError(f"Unknown einsum_backend: {einsum_backend}")
@@ -68,21 +69,27 @@ def _einsum(einsum_backend, script, *tensors, out=None, alpha=1.0, beta=0.0):
         return arr
 
     if einsum_backend == 'pytblis':
-        if out is None:
+        if len(tensors) != 2:
+            # Only contract accepts scaled accumulation, and it requires
+            # exactly two operands. Accumulate general einsum results below.
+            result = pytblis.einsum(script, *tensors, optimize='optimal')
+        elif out is None:
             # Apply real scaling while TBLIS writes its result instead of
             # allocating another output-sized NumPy array. Keep NumPy's
             # promotion behavior for complex or precision-changing alpha.
             if (not np.iscomplexobj(alpha) and
                     np.result_type(*tensors, alpha) == np.result_type(*tensors)):
-                return pytblis.contract(script, *tensors, alpha=alpha)
-            result = pytblis.contract(script, *tensors)
-        elif any(np.shares_memory(out, tensor) for tensor in tensors):
-            # TBLIS does not guarantee aliased input/output semantics.
-            result = pytblis.contract(script, *tensors)
+                return pytblis.contract(script, *tensors, alpha=alpha, allow_partial_trace=True)
+            result = pytblis.contract(script, *tensors, allow_partial_trace=True)
+        elif (any(np.shares_memory(out, tensor) for tensor in tensors) or
+                np.iscomplexobj(alpha) or np.iscomplexobj(beta) or
+                out.dtype != np.result_type(*tensors)):
+            # TBLIS does not guarantee aliasing or NumPy dtype promotion.
+            result = pytblis.contract(script, *tensors, allow_partial_trace=True)
         else:
             tensors = [_fix_strides_for_pytblis(x) for x in tensors]
             out = _fix_strides_for_pytblis(out)
-            pytblis.contract(script, *tensors, out=out, alpha=alpha, beta=beta)
+            pytblis.contract(script, *tensors, out=out, alpha=alpha, beta=beta, allow_partial_trace=True)
             return out
     elif einsum_backend == 'pyscf':
         # Call the two-operand contract directly: lib.einsum may dispatch to
