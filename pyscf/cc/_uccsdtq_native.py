@@ -125,7 +125,7 @@ def _renormalize_native(factors, mapping, rank_by_array):
     return sign, tuple(sorted(result))
 
 
-@lru_cache(maxsize=None)
+@lru_cache(None)
 def _descriptors(rank, nalpha):
     """Coalesce all external permutations and valid internal spin assignments."""
     # The same Hamiltonian/amplitude factors recur across many permutations.
@@ -153,7 +153,7 @@ def _descriptors(rank, nalpha):
             dummy_variants = [{}]
             for a, b in ((8, 9), (10, 11)):
                 if a in dummy and b in dummy and spins[a] == spins[b]:
-                    dummy_variants += [dict(m) | {a: b, b: a} for m in dummy_variants]
+                    dummy_variants += [{**m, a: b, b: a} for m in dummy_variants]
             for hp in permutations(range(rank)):
                 for vp in permutations(range(rank)):
                     rename = dict(zip(range(rank), hp))

@@ -391,7 +391,7 @@ class _Executor:
             shape = tuple(external[i][1] for i in rows+cols)
             result = np.zeros(shape)
             for internal in _tiles(shared, all_ranges, caps):
-                bounds = external | internal
+                bounds = {**external, **internal}
                 a = self._read(node.left, rows+shared, bounds, colors, dimensions)
                 b = self._read(node.right, shared+cols, bounds, colors, dimensions)
                 self._gemm(a, b, result, rows, cols, shared, bounds)

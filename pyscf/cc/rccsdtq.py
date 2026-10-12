@@ -32,7 +32,8 @@ import ctypes
 from pyscf import lib
 from pyscf.lib import logger
 from pyscf.cc import rccsdt
-from pyscf.cc.rccsdt import (_einsum as _base_einsum, t3_spin_summation_inplace_, symmetrize_tamps_tri_, purify_tamps_tri_,
+from pyscf.cc.rccsdt import (_einsum as _base_einsum, t3_spin_summation_inplace_,
+                            symmetrize_tamps_tri_, purify_tamps_tri_,
                             update_t1_fock_eris, intermediates_t1t2, compute_r1r2, r1r2_divide_e_,
                             intermediates_t3, kernel, _PhysicistsERIs, format_size)
 from pyscf.cc.rccsdt_highm import (t3_spin_summation, t3_perm_symmetrize_inplace_, purify_tamps_, r1r2_add_t3_,

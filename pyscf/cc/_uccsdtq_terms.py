@@ -28,10 +28,10 @@ from itertools import permutations
 import numpy as np
 
 TERMS = {2: (('V*T4/01', 1, 16, (('g', 'mnef'), ('t4', 'ijmnabef'))),),
- 3: (('F*T4/01', 1, 36, (('f', 'me'), ('t4', 'ijkmabce'))),
+    3: (('F*T4/01', 1, 36, (('f', 'me'), ('t4', 'ijkmabce'))),
      ('V*T4/01', 1, 24, (('g', 'amef'), ('t4', 'ijkmbcef'))),
      ('V*T4/02', 1, 24, (('g', 'mnei'), ('t4', 'jkmnabce')))),
- 4: (('F*T4/01', -1, 144, (('f', 'ae'), ('t4', 'ijklbcde'))),
+    4: (('F*T4/01', -1, 144, (('f', 'ae'), ('t4', 'ijklbcde'))),
      ('F*T4/02', 1, 144, (('f', 'mi'), ('t4', 'jklmabcd'))),
      ('F*T2*T3/01', -1, 24, (('f', 'me'), ('t2', 'ijae'), ('t3', 'klmbcd'))),
      ('F*T2*T3/02', -1, 24, (('f', 'me'), ('t2', 'imab'), ('t3', 'jklcde'))),

@@ -326,11 +326,13 @@ def memory_estimate(mycc, diis_space=None, include_t4_diis=None):
     parts = {}
     for rank in range(1, cc_order + 1):
         if rank == 4 and not getattr(mycc, 'do_tri_max_t', True):
-            count = sum(int(np.prod(block_shape(mycc, rank, b, compact=False), dtype=np.int64)) for b in range(rank + 1))
+            count = sum(int(np.prod(block_shape(mycc, rank, b, compact=False), dtype=np.int64))
+                        for b in range(rank + 1))
         elif rank == 4:
             count = sum(int(np.prod(block_shape(mycc, rank, b, compact=True), dtype=np.int64)) for b in range(rank + 1))
         else:
-            count = sum(int(np.prod(block_shape(mycc, rank, b, compact=False), dtype=np.int64)) for b in range(rank + 1))
+            count = sum(int(np.prod(block_shape(mycc, rank, b, compact=False), dtype=np.int64))
+                        for b in range(rank + 1))
         parts['T%d' % rank] = count * itemsize
     for rank in range(1, cc_order + 1):
         parts['R%d' % rank] = parts['T%d' % rank]
