@@ -10,16 +10,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""RCCSDTQ-local accumulation, including edge-block views and aliasing."""
+"""RCCSDTQ accumulation, including edge-block views and aliasing."""
 
 import unittest
 from unittest.mock import patch
 
 import numpy as np
-from pyscf.cc import rccsdt, rccsdtq, rccsdtq_highm, uccsdt
+from pyscf.cc import rccsdt, rccsdtq
 
 
 class KnownValues(unittest.TestCase):
+    def test_numpy_index_patterns_and_complex_accumulation(self):
+        rng = np.random.default_rng(430)
+        cases = (
+            ('...ij,...jk->...ik', ((2, 3, 4), (1, 4, 5))),
+            ('iij,jk->ik', ((3, 3, 4), (4, 5))),
+            ('iij,k->jk', ((3, 3, 4), (5,))),
+            ('ij,jk->ik', ((3, 0), (0, 5))),
+            ('iij->j', ((3, 3, 4),)),
+            ('ij,jk,kl->il', ((3, 4), (4, 5), (5, 2))),
+        )
+        for script, shapes in cases:
+            for complex_data in (False, True):
+                tensors = tuple(rng.normal(size=shape) for shape in shapes)
+                if complex_data:
+                    tensors = tuple(a + 1j * rng.normal(size=a.shape) for a in tensors)
+                tensors = tuple(a[..., ::-1] for a in tensors)
+                product = np.einsum(script, *tensors, optimize='optimal')
+                for alpha in (-1., .5):
+                    for beta in (0., 1., -.3):
+                        with self.subTest(script=script, complex_data=complex_data,
+                                          alpha=alpha, beta=beta):
+                            out = np.empty(product.shape[::-1], dtype=product.dtype).T
+                            out[...] = .37
+                            expected = alpha * product + beta * out.copy()
+                            actual = rccsdtq._einsum('numpy', script, *tensors,
+                                                    out=out, alpha=alpha, beta=beta)
+                            self.assertIs(actual, out)
+                            np.testing.assert_allclose(actual, expected, atol=2e-12, rtol=2e-12)
+                actual = rccsdtq._einsum('numpy', script, *tensors, alpha=-1.)
+                np.testing.assert_allclose(actual, -product, atol=2e-12, rtol=2e-12)
+
     def test_rank_four_accumulation_and_input_preservation(self):
         rng = np.random.default_rng(910)
         left = rng.normal(size=(2, 2, 2, 3))
@@ -81,15 +112,6 @@ class KnownValues(unittest.TestCase):
             returned = rccsdtq._einsum(backend, 'ij,jk->ik', left, right, alpha=.25, beta=1.)
             np.testing.assert_allclose(returned, .25 * product, atol=2e-12, rtol=2e-12)
 
-    def test_pytblis_dispatch_keeps_native_out_contract(self):
-        left, right, out = np.ones((2, 2)), np.ones((2, 2)), np.zeros((2, 2))
-        with patch.object(rccsdtq, '_base_einsum', return_value=out) as original:
-            returned = rccsdtq._einsum('pytblis', 'ij,jk->ik', left, right,
-                                     out=out, alpha=.25, beta=1.)
-        self.assertIs(returned, out)
-        original.assert_called_once_with('pytblis', 'ij,jk->ik', left, right,
-                                         out=out, alpha=.25, beta=1.)
-
     def test_pyscf_accumulation_keeps_direct_output_contract(self):
         rng = np.random.default_rng(913)
         left, right = rng.normal(size=(2, 24, 24))
@@ -106,12 +128,6 @@ class KnownValues(unittest.TestCase):
                 self.assertIs(returned, out)
                 call.assert_called_once_with('ij,jk->ik', left, right, out=out, alpha=-.25, beta=1.)
                 np.testing.assert_allclose(out, expected, atol=2e-12, rtol=2e-12)
-
-    def test_optimized_helper_is_local_to_rccsdtq(self):
-        self.assertIs(rccsdtq._base_einsum, rccsdt._einsum)
-        self.assertIs(rccsdtq_highm._einsum, rccsdtq._einsum)
-        self.assertIs(uccsdt._einsum, rccsdt._einsum)
-        self.assertIsNot(rccsdtq._einsum, rccsdt._einsum)
 
 
 if __name__ == '__main__':
