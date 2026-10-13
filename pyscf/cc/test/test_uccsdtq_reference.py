@@ -240,7 +240,7 @@ class BCHOracle(unittest.TestCase):
         ref[details['determinant_index'][details['reference_bits']]] = 1
         expected = linalg.expm(-matrix) @ details['h_normal'] @ linalg.expm(matrix) @ ref
         np.testing.assert_allclose(details['similarity'], expected, atol=2e-12)
-        ranks = np.array([(details['reference_bits'] & ~bits).bit_count()
+        ranks = np.array([reference._bit_count(details['reference_bits'] & ~bits)
                           for bits in details['determinants']])
         self.assertEqual(ranks.max(), 5)
         # CCSDTQ has no T5, but exp(T1+...+T4) contains disconnected rank-5

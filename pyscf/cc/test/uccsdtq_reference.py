@@ -25,6 +25,9 @@ from math import comb, factorial
 import numpy as np
 from scipy import sparse
 
+# int.bit_count is available only on Python 3.10 and newer.
+_bit_count = getattr(int, 'bit_count', lambda bits: bin(bits).count('1'))
+
 
 def _parity(order):
     return (-1) ** sum(order[i] > order[j]
@@ -38,14 +41,14 @@ def _apply(bits, holes, particles):
         mask = 1 << i
         if not bits & mask:
             return None
-        if (bits & (mask - 1)).bit_count() % 2:
+        if _bit_count(bits & (mask - 1)) % 2:
             sign = -sign
         bits ^= mask
     for a in reversed(particles):
         mask = 1 << a
         if bits & mask:
             return None
-        if (bits & (mask - 1)).bit_count() % 2:
+        if _bit_count(bits & (mask - 1)) % 2:
             sign = -sign
         bits |= mask
     return bits, sign

@@ -136,7 +136,7 @@ class ExpandedContractions(unittest.TestCase):
         energy, expected, details = reference.kernel(solver, eris, tamps, True)
         actual_native = uccsdtq.residuals(solver, tamps, eris)
         actual = reference.spinorbital_inputs(solver, eris, actual_native)['tamps']
-        ranks = np.array([(details['reference_bits'] & ~bits).bit_count()
+        ranks = np.array([reference._bit_count(details['reference_bits'] & ~bits)
                           for bits in details['determinants']])
         self.assertEqual(len(ranks), 735)
         self.assertEqual(ranks.max(), 5)

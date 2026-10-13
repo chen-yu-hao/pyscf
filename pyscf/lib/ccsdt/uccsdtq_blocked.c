@@ -53,12 +53,8 @@ int UCCSDTQomp_threads(void)
 #endif
 }
 
-#ifdef UCCSDTQ_HAVE_DLADDR
-#if defined(__APPLE__)
-extern int openblas_get_parallel(void) __attribute__((weak_import));
-#else
+#if defined(UCCSDTQ_HAVE_DLADDR) && !defined(__APPLE__)
 extern int openblas_get_parallel(void) __attribute__((weak));
-#endif
 #endif
 
 /* Query only the BLAS providing the actual dgemm symbol. Another OpenBLAS
@@ -66,12 +62,19 @@ extern int openblas_get_parallel(void) __attribute__((weak));
 int UCCSDTQblas_parallel(void)
 {
 #ifdef UCCSDTQ_HAVE_DLADDR
-    if (openblas_get_parallel) {
+#if defined(__APPLE__)
+    /* Accelerate and other BLAS providers need not export this optional API.
+     * A weak import still requires link-time resolution when building a dylib. */
+    int (*get_parallel)(void) = (int (*)(void))dlsym(RTLD_DEFAULT, "openblas_get_parallel");
+#else
+    int (*get_parallel)(void) = openblas_get_parallel;
+#endif
+    if (get_parallel) {
         Dl_info gemm_info, model_info;
         if (dladdr((void *)dgemm_, &gemm_info) &&
-            dladdr((void *)openblas_get_parallel, &model_info) &&
+            dladdr((void *)get_parallel, &model_info) &&
             gemm_info.dli_fbase == model_info.dli_fbase)
-            return openblas_get_parallel();
+            return get_parallel();
     }
 #endif
     return -1;
