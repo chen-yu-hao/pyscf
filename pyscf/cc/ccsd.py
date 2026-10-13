@@ -130,7 +130,10 @@ def update_amps(mycc, t1, t2, eris):
     fvv = fock[nocc:,nocc:] - numpy.diag(mo_e_v)
     fvv -= .5 * numpy.einsum('ia,ib->ab', t1, fock[:nocc,nocc:])
 
-    if mycc.incore_complete:
+    # Keep the two W intermediates in memory when they leave ample room for
+    # the blocked contractions. incore_complete still explicitly opts in.
+    max_memory = max(0, mycc.max_memory - lib.current_memory()[0])
+    if mycc.incore_complete or 2*t2.nbytes < max_memory * .1e6:
         fswap = None
     else:
         fswap = lib.H5TmpFile()
@@ -146,6 +149,12 @@ def update_amps(mycc, t1, t2, eris):
     log.debug1('max_memory %d MB,  nocc,nvir = %d,%d  blksize = %d',
                max_memory, nocc, nvir, blksize)
 
+    # Avoid short-lived thread pools for a single resident block. Keep
+    # background execution for disk-backed integrals and multiple blocks.
+    async_io = mycc.async_io and (blksize < nvir or fswap is not None or
+                                not all(isinstance(x, numpy.ndarray) for x in
+                                        (eris.ovoo, eris.oovv, eris.ovvo)))
+
     for p0, p1 in lib.prange(0, nvir, blksize):
         wVOov = fwVOov[p0:p1]
         wVooV = fwVooV[p0:p1]
@@ -153,7 +162,7 @@ def update_amps(mycc, t1, t2, eris):
         eris_oovv = numpy.empty((nocc,nocc,p1-p0,nvir))
         def load_oovv(p0, p1):
             eris_oovv[:] = eris.oovv[:,:,p0:p1]
-        with lib.call_in_background(load_oovv, sync=not mycc.async_io) as prefetch_oovv:
+        with lib.call_in_background(load_oovv, sync=not async_io) as prefetch_oovv:
             #:eris_oovv = eris.oovv[:,:,p0:p1]
             prefetch_oovv(p0, p1)
             foo += numpy.einsum('kc,kcji->ij', 2*t1[:,p0:p1], eris_ovoo)
@@ -172,7 +181,7 @@ def update_amps(mycc, t1, t2, eris):
         eris_ovvo = numpy.empty((nocc,p1-p0,nvir,nocc))
         def load_ovvo(p0, p1):
             eris_ovvo[:] = eris.ovvo[:,p0:p1]
-        with lib.call_in_background(load_ovvo, sync=not mycc.async_io) as prefetch_ovvo:
+        with lib.call_in_background(load_ovvo, sync=not async_io) as prefetch_ovvo:
             #:eris_ovvo = eris.ovvo[:,p0:p1]
             prefetch_ovvo(p0, p1)
             t1new[:,p0:p1] -= numpy.einsum('jb,jiab->ia', t1, eris_oovv)
@@ -208,7 +217,7 @@ def update_amps(mycc, t1, t2, eris):
         def update_wVooV(q0, q1, tau):
             lib.einsum('bkic,jkca->bija', eris_voov[:,:,:,q0:q1], tau,
                        out=wVooV, beta=1)
-        with lib.call_in_background(update_wVooV, sync=not mycc.async_io) as update_wVooV:
+        with lib.call_in_background(update_wVooV, sync=not async_io) as update_wVooV:
             for q0, q1 in lib.prange(0, nvir, blksize):
                 tau  = t2[:,:,q0:q1] * .5
                 tau += numpy.einsum('ia,jb->ijab', t1[:,q0:q1], t1)
@@ -219,7 +228,7 @@ def update_amps(mycc, t1, t2, eris):
             t2new[:,:,q0:q1] += tmp.transpose(2,0,1,3)
             tmp *= .5
             t2new[:,:,q0:q1] += tmp.transpose(0,2,1,3)
-        with lib.call_in_background(update_t2, sync=not mycc.async_io) as update_t2:
+        with lib.call_in_background(update_t2, sync=not async_io) as update_t2:
             for q0, q1 in lib.prange(0, nvir, blksize):
                 tmp = lib.einsum('jkca,ckib->jaib', t2[:,:,p0:p1,q0:q1], wVooV)
                 #:t2new[:,:,q0:q1] += tmp.transpose(2,0,1,3)
@@ -235,7 +244,7 @@ def update_amps(mycc, t1, t2, eris):
         def update_wVOov(q0, q1, tau):
             lib.einsum('aikc,kcjb->aijb', eris_VOov, tau,
                        out=wVOov[:,:,:,q0:q1], alpha=.5, beta=1)
-        with lib.call_in_background(update_wVOov, sync=not mycc.async_io) as update_wVOov:
+        with lib.call_in_background(update_wVOov, sync=not async_io) as update_wVOov:
             for q0, q1 in lib.prange(0, nvir, blksize):
                 tau  = t2[:,:,q0:q1].transpose(1,3,0,2) * 2
                 tau -= t2[:,:,q0:q1].transpose(0,3,1,2)
@@ -245,7 +254,7 @@ def update_amps(mycc, t1, t2, eris):
                 tau = None
         def update_t2(q0, q1, theta):
             t2new[:,:,q0:q1] += lib.einsum('kica,ckjb->ijab', theta, wVOov)
-        with lib.call_in_background(update_t2, sync=not mycc.async_io) as update_t2:
+        with lib.call_in_background(update_t2, sync=not async_io) as update_t2:
             for q0, q1 in lib.prange(0, nvir, blksize):
                 theta  = t2[:,:,p0:p1,q0:q1] * 2
                 theta -= t2[:,:,p0:p1,q0:q1].transpose(1,0,2,3)
@@ -316,7 +325,8 @@ def _add_ovvv_(mycc, t1, t2, eris, fvv, t1new, t2new, fswap):
             p1 = min(nvir, p0+blksize)
             buf[:p1-p0] = eris.ovvv[:,p0:p1].transpose(1,0,2)
 
-    with lib.call_in_background(load_ovvv, sync=not mycc.async_io) as prefetch:
+    with lib.call_in_background(load_ovvv,
+                                sync=not mycc.async_io or blksize >= nvir) as prefetch:
         buf = numpy.empty((blksize,nocc,nvir_pair))
         buf_prefetch = numpy.empty((blksize,nocc,nvir_pair))
 
@@ -337,13 +347,27 @@ def _add_ovvv_(mycc, t1, t2, eris, fvv, t1new, t2new, fswap):
             fvv += 2*numpy.einsum('kc,ckab->ab', t1[:,p0:p1], eris_vovv)
             fvv[:,p0:p1] -= numpy.einsum('kc,bkca->ab', t1, eris_vovv)
 
-            if not mycc.direct:
+            if not mycc.direct and nocc:
                 vvvo = eris_vovv.transpose(0,2,3,1).copy()
-                for i in range(nocc):
-                    tau = t2[i,:,p0:p1] + numpy.einsum('a,jb->jab', t1[i,p0:p1], t1)
-                    tmp = lib.einsum('jcd,cdbk->jbk', tau, vvvo)
-                    t2new[i] -= lib.einsum('ka,jbk->jab', t1, tmp)
-                    tau = tmp = None
+                # Batch occupied slices to reuse the same vvvo panel. Reserve
+                # half the available memory for backend packing and work arrays.
+                available = max(0, mycc.max_memory - lib.current_memory()[0])
+                unit = nocc*nvir*((p1-p0) + nocc + nvir)
+                occblksize = min(nocc, max(1, int(available*.5e6/8/unit)))
+                if occblksize == 1:
+                    for i in range(nocc):
+                        tau = t2[i,:,p0:p1] + numpy.einsum('a,jb->jab', t1[i,p0:p1], t1)
+                        tmp = lib.einsum('jcd,cdbk->jbk', tau, vvvo)
+                        t2new[i] -= lib.einsum('ka,jbk->jab', t1, tmp)
+                        tau = tmp = None
+                else:
+                    for i0, i1 in lib.prange(0, nocc, occblksize):
+                        tau = numpy.einsum('ia,jb->ijab', t1[i0:i1,p0:p1], t1)
+                        tau += t2[i0:i1,:,p0:p1]
+                        tmp = lib.einsum('ijcd,cdbk->ijbk', tau, vvvo)
+                        t2new[i0:i1] -= lib.einsum('ka,ijbk->ijab', t1, tmp)
+                        tau = tmp = None
+                vvvo = None
 
             wVOov[p0:p1] = lib.einsum('biac,jc->bija', eris_vovv, t1)
 
