@@ -960,17 +960,96 @@ def _tau_dot_sparse(bra, ket, wv, nbins, screen_index, pair_mask, ao_loc, out=No
     '''Similar to _tau_dot, while sparsity is explicitly considered. Note the
     return may have ~1e-13 difference to _tau_dot.
     '''
-    nao = bra.shape[1]
+    ngrids, nao = bra.shape[1:]
     if out is None:
         out = numpy.zeros((nao, nao), dtype=bra.dtype)
-    hermi = 1
-    _dot_ao_ao_sparse(bra[1], ket[1], wv, nbins, screen_index, pair_mask,
-                      ao_loc, hermi, out)
-    _dot_ao_ao_sparse(bra[2], ket[2], wv, nbins, screen_index, pair_mask,
-                      ao_loc, hermi, out)
-    _dot_ao_ao_sparse(bra[3], ket[3], wv, nbins, screen_index, pair_mask,
-                      ao_loc, hermi, out)
+    if (screen_index is None or pair_mask is None or wv is None or
+        ngrids % ALIGNMENT_UNIT != 0):
+        if (wv is not None and bra.dtype == ket.dtype == wv.dtype == out.dtype == numpy.double
+            and out.flags.c_contiguous and wv.flags.c_contiguous
+            and all(bra[i].flags.f_contiguous and ket[i].flags.f_contiguous
+                    for i in range(1, 4))):
+            done = libdft.VXCtau_dot_dense(
+                out.ctypes.data_as(ctypes.c_void_p),
+                bra[1].ctypes.data_as(ctypes.c_void_p),
+                ket[1].ctypes.data_as(ctypes.c_void_p),
+                wv.ctypes.data_as(ctypes.c_void_p),
+                ctypes.c_int(nao), ctypes.c_int(ngrids),
+                ctypes.c_ssize_t(bra.strides[0] // bra.itemsize),
+                ctypes.c_ssize_t(ket.strides[0] // ket.itemsize))
+            if done:
+                return out
+        for i in range(1, 4):
+            _dot_ao_ao_sparse(bra[i], ket[i], wv, nbins, screen_index,
+                              pair_mask, ao_loc, 1, out)
+        return out
+
+    assert all(bra[i].flags.f_contiguous and ket[i].flags.f_contiguous
+               for i in range(1, 4))
+    assert bra.dtype == ket.dtype == wv.dtype == numpy.double
+    nbas = screen_index.shape[1]
+    libdft.VXCtau_dot_sparse(
+        out.ctypes.data_as(ctypes.c_void_p),
+        bra[1].ctypes.data_as(ctypes.c_void_p),
+        ket[1].ctypes.data_as(ctypes.c_void_p),
+        wv.ctypes.data_as(ctypes.c_void_p),
+        ctypes.c_int(nao), ctypes.c_int(ngrids), ctypes.c_int(nbas),
+        ctypes.c_int(nbins), screen_index.ctypes.data_as(ctypes.c_void_p),
+        pair_mask.ctypes.data_as(ctypes.c_void_p),
+        ao_loc.ctypes.data_as(ctypes.c_void_p),
+        ctypes.c_ssize_t(bra.strides[0] // bra.itemsize),
+        ctypes.c_ssize_t(ket.strides[0] // ket.itemsize))
     return out
+
+def _xc_vmat(ao, wv, nbins, screen_index, pair_mask, ao_loc, out=None,
+              xctype='MGGA', hermi=1):
+    '''Add an XC potential using raw grid-weighted XC derivatives.'''
+    ngrids, nao = ao.shape[-2:]
+    ncomp = {'LDA': 1, 'GGA': 2, 'MGGA': 4}[xctype]
+    if out is None:
+        out = numpy.zeros((nao, nao), dtype=numpy.result_type(ao, wv))
+    sparse = screen_index is not None and ngrids % ALIGNMENT_UNIT == 0
+    if (ao.dtype == wv.dtype == out.dtype == numpy.double
+        and wv.flags.c_contiguous and out.flags.c_contiguous
+        and (ao.flags.f_contiguous if ncomp == 1 else
+             all(ao[i].flags.f_contiguous for i in range(4)))
+        and (ncomp != 1 or hermi in (0, 1))
+        and (not sparse or pair_mask is not None)):
+        done = libdft.VXCxc_vmat(
+            out.ctypes.data_as(ctypes.c_void_p),
+            ao.ctypes.data_as(ctypes.c_void_p),
+            wv.ctypes.data_as(ctypes.c_void_p),
+            ctypes.c_int(nao), ctypes.c_int(ngrids),
+            ctypes.c_int(len(ao_loc)-1), ctypes.c_int(nbins), ctypes.c_int(ncomp),
+            screen_index.ctypes.data_as(ctypes.c_void_p) if sparse else None,
+            pair_mask.ctypes.data_as(ctypes.c_void_p) if sparse else None,
+            ao_loc.ctypes.data_as(ctypes.c_void_p),
+            ctypes.c_ssize_t(0 if ncomp == 1 else ao.strides[0] // ao.itemsize))
+        if done:
+            return out
+
+    if ncomp == 1:
+        ao = numpy.asarray(ao, order='F')
+        out += _dot_ao_ao_sparse(ao, ao, wv, nbins, screen_index,
+                                 pair_mask, ao_loc, hermi=hermi)
+        return out
+    # The older sparse scaling kernel expects packed derivative components.
+    ao = numpy.asarray(ao.transpose(0, 2, 1), order='C').transpose(0, 2, 1)
+    wv = wv.copy()
+    wv[0] *= .5
+    if ncomp == 4:
+        wv[4] *= .5
+    aow = _scale_ao_sparse(ao[:4], wv[:4], screen_index, ao_loc)
+    mat = _dot_ao_ao_sparse(ao[0], aow, None, nbins, screen_index,
+                            pair_mask, ao_loc, hermi=0)
+    mat = lib.hermi_sum(mat)
+    if ncomp == 4:
+        mat += _tau_dot_sparse(ao, ao, wv[4], nbins, screen_index, pair_mask, ao_loc)
+    out += mat
+    return out
+
+def _mgga_vmat(ao, wv, nbins, screen_index, pair_mask, ao_loc, out=None):
+    return _xc_vmat(ao, wv, nbins, screen_index, pair_mask, ao_loc, out=out)
 
 def nr_vxc(mol, grids, xc_code, dms, spin=0, relativity=0, hermi=0,
            max_memory=2000, verbose=None):
@@ -1139,37 +1218,29 @@ def nr_rks(ni, mol, grids, xc_code, dms, relativity=0, hermi=1,
                 wv = weight * vxc
                 yield i, ao, mask, wv
 
-    aow = None
     pair_mask = mol.get_overlap_cond() < -numpy.log(ni.cutoff)
     if xctype == 'LDA':
         ao_deriv = 0
         for i, ao, mask, wv in block_loop(ao_deriv):
-            _dot_ao_ao_sparse(ao, ao, wv, nbins, mask, pair_mask, ao_loc,
-                              hermi, vmat[i])
+            if hermi == 2:
+                _dot_ao_ao_sparse(ao, ao, wv, nbins, mask, pair_mask, ao_loc,
+                                  hermi, vmat[i])
+            else:
+                _xc_vmat(ao, wv, nbins, mask, pair_mask, ao_loc,
+                           out=vmat[i], xctype='LDA', hermi=hermi)
 
     elif xctype == 'GGA':
         ao_deriv = 1
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[0] *= .5  # *.5 because vmat + vmat.T at the end
-            aow = _scale_ao_sparse(ao[:4], wv[:4], mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[i])
-        vmat = lib.hermi_sum(vmat, axes=(0,2,1))
+            _xc_vmat(ao, wv, nbins, mask, pair_mask, ao_loc,
+                       out=vmat[i], xctype='GGA')
 
     elif xctype == 'MGGA':
         if (any(x in xc_code.upper() for x in ('CC06', 'CS', 'BR89', 'MK00'))):
             raise NotImplementedError('laplacian in meta-GGA method')
         ao_deriv = 1
-        v1 = numpy.zeros_like(vmat)
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[0] *= .5  # *.5 for v+v.conj().T
-            wv[4] *= .5  # *.5 for 1/2 in tau
-            aow = _scale_ao_sparse(ao[:4], wv[:4], mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[i])
-            _tau_dot_sparse(ao, ao, wv[4], nbins, mask, pair_mask, ao_loc, out=v1[i])
-        vmat = lib.hermi_sum(vmat, axes=(0,2,1))
-        vmat += v1
+            _mgga_vmat(ao, wv, nbins, mask, pair_mask, ao_loc, out=vmat[i])
 
     elif xctype == 'HF':
         pass
@@ -1266,48 +1337,35 @@ def nr_uks(ni, mol, grids, xc_code, dms, relativity=0, hermi=1,
                 yield i, ao, mask, wv
 
     pair_mask = mol.get_overlap_cond() < -numpy.log(ni.cutoff)
-    aow = None
     if xctype == 'LDA':
         ao_deriv = 0
         for i, ao, mask, wv in block_loop(ao_deriv):
-            _dot_ao_ao_sparse(ao, ao, wv[0,0], nbins, mask, pair_mask, ao_loc,
-                              hermi, vmat[0,i])
-            _dot_ao_ao_sparse(ao, ao, wv[1,0], nbins, mask, pair_mask, ao_loc,
-                              hermi, vmat[1,i])
+            for spin in (0, 1):
+                if hermi == 2:
+                    _dot_ao_ao_sparse(ao, ao, wv[spin,0], nbins, mask, pair_mask, ao_loc,
+                                      hermi, vmat[spin,i])
+                else:
+                    _xc_vmat(ao, wv[spin,0], nbins, mask, pair_mask, ao_loc,
+                               out=vmat[spin,i], xctype='LDA', hermi=hermi)
 
     elif xctype == 'GGA':
         ao_deriv = 1
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[:,0] *= .5
             wva, wvb = wv
-            aow = _scale_ao_sparse(ao, wva, mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[0,i])
-            aow = _scale_ao_sparse(ao, wvb, mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[1,i])
-        vmat = lib.hermi_sum(vmat.reshape(-1,nao,nao), axes=(0,2,1)).reshape(2,nset,nao,nao)
+            _xc_vmat(ao, wva, nbins, mask, pair_mask, ao_loc,
+                       out=vmat[0,i], xctype='GGA')
+            _xc_vmat(ao, wvb, nbins, mask, pair_mask, ao_loc,
+                       out=vmat[1,i], xctype='GGA')
 
     elif xctype == 'MGGA':
         if (any(x in xc_code.upper() for x in ('CC06', 'CS', 'BR89', 'MK00'))):
             raise NotImplementedError('laplacian in meta-GGA method')
         assert not MGGA_DENSITY_LAPL
         ao_deriv = 1
-        v1 = numpy.zeros_like(vmat)
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[:,0] *= .5
-            wv[:,4] *= .5
             wva, wvb = wv
-            aow = _scale_ao_sparse(ao[:4], wva[:4], mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[0,i])
-            _tau_dot_sparse(ao, ao, wva[4], nbins, mask, pair_mask, ao_loc, out=v1[0,i])
-            aow = _scale_ao_sparse(ao[:4], wvb[:4], mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[1,i])
-            _tau_dot_sparse(ao, ao, wvb[4], nbins, mask, pair_mask, ao_loc, out=v1[1,i])
-        vmat = lib.hermi_sum(vmat.reshape(-1,nao,nao), axes=(0,2,1)).reshape(2,nset,nao,nao)
-        vmat += v1
+            _mgga_vmat(ao, wva, nbins, mask, pair_mask, ao_loc, out=vmat[0,i])
+            _mgga_vmat(ao, wvb, nbins, mask, pair_mask, ao_loc, out=vmat[1,i])
     elif xctype == 'HF':
         pass
     else:
@@ -1490,38 +1548,27 @@ def nr_rks_fxc(ni, mol, grids, xc_code, dm0, dms, relativity=0, hermi=0,
     nbins = NBINS * 2 - int(NBINS * numpy.log(cutoff) / numpy.log(grids.cutoff))
     pair_mask = mol.get_overlap_cond() < -numpy.log(ni.cutoff)
     vmat = numpy.zeros((nset,nao,nao))
-    aow = None
     if xctype == 'LDA':
         ao_deriv = 0
         for i, ao, mask, wv in block_loop(ao_deriv):
-            _dot_ao_ao_sparse(ao, ao, wv[0], nbins, mask, pair_mask, ao_loc,
-                              hermi, vmat[i])
+            if hermi == 2:
+                _dot_ao_ao_sparse(ao, ao, wv[0], nbins, mask, pair_mask, ao_loc,
+                                  hermi, vmat[i])
+            else:
+                _xc_vmat(ao, wv[0], nbins, mask, pair_mask, ao_loc,
+                           out=vmat[i], xctype='LDA', hermi=hermi)
 
     elif xctype == 'GGA':
         ao_deriv = 1
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[0] *= .5  # *.5 for v+v.conj().T
-            aow = _scale_ao_sparse(ao, wv, mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[i])
-
-        # For real orbitals, K_{ia,bj} = K_{ia,jb}. It simplifies real fxc_jb
-        # [(\nabla mu) nu + mu (\nabla nu)] * fxc_jb = ((\nabla mu) nu f_jb) + h.c.
-        vmat = lib.hermi_sum(vmat, axes=(0,2,1))
+            _xc_vmat(ao, wv, nbins, mask, pair_mask, ao_loc,
+                       out=vmat[i], xctype='GGA')
 
     elif xctype == 'MGGA':
         assert not MGGA_DENSITY_LAPL
         ao_deriv = 2 if MGGA_DENSITY_LAPL else 1
-        v1 = numpy.zeros_like(vmat)
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[0] *= .5  # *.5 for v+v.conj().T
-            wv[4] *= .5  # *.5 for 1/2 in tau
-            aow = _scale_ao_sparse(ao, wv[:4], mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[i])
-            _tau_dot_sparse(ao, ao, wv[4], nbins, mask, pair_mask, ao_loc, out=v1[i])
-        vmat = lib.hermi_sum(vmat, axes=(0,2,1))
-        vmat += v1
+            _mgga_vmat(ao, wv, nbins, mask, pair_mask, ao_loc, out=vmat[i])
 
     if isinstance(dms, numpy.ndarray) and dms.ndim == 2:
         vmat = vmat[0]
@@ -1766,49 +1813,33 @@ def nr_uks_fxc(ni, mol, grids, xc_code, dm0, dms, relativity=0, hermi=0,
     nbins = NBINS * 2 - int(NBINS * numpy.log(cutoff) / numpy.log(grids.cutoff))
     pair_mask = mol.get_overlap_cond() < -numpy.log(ni.cutoff)
     vmat = numpy.zeros((2,nset,nao,nao))
-    aow = None
     if xctype == 'LDA':
         ao_deriv = 0
         for i, ao, mask, wv in block_loop(ao_deriv):
-            _dot_ao_ao_sparse(ao, ao, wv[0,0], nbins, mask, pair_mask, ao_loc,
-                              hermi, vmat[0,i])
-            _dot_ao_ao_sparse(ao, ao, wv[1,0], nbins, mask, pair_mask, ao_loc,
-                              hermi, vmat[1,i])
+            for spin in (0, 1):
+                if hermi == 2:
+                    _dot_ao_ao_sparse(ao, ao, wv[spin,0], nbins, mask, pair_mask, ao_loc,
+                                      hermi, vmat[spin,i])
+                else:
+                    _xc_vmat(ao, wv[spin,0], nbins, mask, pair_mask, ao_loc,
+                               out=vmat[spin,i], xctype='LDA', hermi=hermi)
 
     elif xctype == 'GGA':
         ao_deriv = 1
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[:,0] *= .5
             wva, wvb = wv
-            aow = _scale_ao_sparse(ao, wva, mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[0,i])
-            aow = _scale_ao_sparse(ao, wvb, mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[1,i])
-
-        # For real orbitals, K_{ia,bj} = K_{ia,jb}. It simplifies real fxc_jb
-        # [(\nabla mu) nu + mu (\nabla nu)] * fxc_jb = ((\nabla mu) nu f_jb) + h.c.
-        vmat = lib.hermi_sum(vmat.reshape(-1,nao,nao), axes=(0,2,1)).reshape(2,nset,nao,nao)
+            _xc_vmat(ao, wva, nbins, mask, pair_mask, ao_loc,
+                       out=vmat[0,i], xctype='GGA')
+            _xc_vmat(ao, wvb, nbins, mask, pair_mask, ao_loc,
+                       out=vmat[1,i], xctype='GGA')
 
     elif xctype == 'MGGA':
         assert not MGGA_DENSITY_LAPL
         ao_deriv = 1
-        v1 = numpy.zeros_like(vmat)
         for i, ao, mask, wv in block_loop(ao_deriv):
-            wv[:,0] *= .5
-            wv[:,4] *= .5
             wva, wvb = wv
-            aow = _scale_ao_sparse(ao[:4], wva[:4], mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[0,i])
-            _tau_dot_sparse(ao, ao, wva[4], nbins, mask, pair_mask, ao_loc, out=v1[0,i])
-            aow = _scale_ao_sparse(ao[:4], wvb[:4], mask, ao_loc, out=aow)
-            _dot_ao_ao_sparse(ao[0], aow, None, nbins, mask, pair_mask, ao_loc,
-                              hermi=0, out=vmat[1,i])
-            _tau_dot_sparse(ao, ao, wvb[4], nbins, mask, pair_mask, ao_loc, out=v1[1,i])
-        vmat = lib.hermi_sum(vmat.reshape(-1,nao,nao), axes=(0,2,1)).reshape(2,nset,nao,nao)
-        vmat += v1
+            _mgga_vmat(ao, wva, nbins, mask, pair_mask, ao_loc, out=vmat[0,i])
+            _mgga_vmat(ao, wvb, nbins, mask, pair_mask, ao_loc, out=vmat[1,i])
 
     if isinstance(dma, numpy.ndarray) and dma.ndim == 2:
         vmat = vmat[:,0]
