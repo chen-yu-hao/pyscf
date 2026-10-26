@@ -49,6 +49,7 @@ def _gen_rhf_response(mf, mo_coeff=None, mo_occ=None, *, dm0=None,
         if mo_occ is None: mo_occ = mf.mo_occ
     mol = mf.mol
     if isinstance(mf, hf.KohnShamDFT):
+        from pyscf.dft import numint
         ni = mf._numint
         if grids is None:
             grids = getattr(mf, 'second_grids', None)
@@ -65,11 +66,16 @@ def _gen_rhf_response(mf, mo_coeff=None, mo_occ=None, *, dm0=None,
         else:
             spin = 1
         if mo_coeff is not None and mo_occ is not None:
-            rho0, vxc, fxc = ni.cache_xc_kernel(mol, grids, mf.xc,
-                                                mo_coeff, mo_occ, spin)
+            rho0, vxc, fxc = numint._cache_xc_kernel_response(
+                ni, mol, grids, mf.xc, mo_coeff, mo_occ, spin)
         else:
             rho0, vxc, fxc = ni.cache_xc_kernel1(mol, grids, mf.xc,
                                                  dm0, spin)
+        if singlet is not None:
+            if isinstance(fxc, numint._CompactXCKernel):
+                fxc = fxc.scaled(.5)
+            else:
+                fxc *= .5
 
         if max_memory is None:
             mem_now = lib.current_memory()[0]
@@ -119,7 +125,6 @@ def _gen_rhf_response(mf, mo_coeff=None, mo_occ=None, *, dm0=None,
                 return v1
 
         elif singlet:
-            fxc *= .5
             def vind(dm1):
                 if hermi == 2:
                     v1 = numpy.zeros_like(dm1)
@@ -158,7 +163,6 @@ def _gen_rhf_response(mf, mo_coeff=None, mo_occ=None, *, dm0=None,
                     v1 += mf.get_j(mol, dm1, hermi=hermi)
                 return v1
         else:  # triplet
-            fxc *= .5
             def vind(dm1):
                 if hermi == 2:
                     v1 = numpy.zeros_like(dm1)
@@ -210,6 +214,7 @@ def _gen_uhf_response(mf, mo_coeff=None, mo_occ=None, *, dm0=None,
         if mo_occ is None: mo_occ = mf.mo_occ
     mol = mf.mol
     if isinstance(mf, hf.KohnShamDFT):
+        from pyscf.dft import numint
         ni = mf._numint
         if grids is None:
             grids = getattr(mf, 'second_grids', None)
@@ -222,7 +227,8 @@ def _gen_uhf_response(mf, mo_coeff=None, mo_occ=None, *, dm0=None,
         hybrid = ni.libxc.is_hybrid_xc(mf.xc)
 
         if mo_coeff is not None and mo_occ is not None:
-            rho0, vxc, fxc = ni.cache_xc_kernel(mol, grids, mf.xc, mo_coeff, mo_occ, 1)
+            rho0, vxc, fxc = numint._cache_xc_kernel_response(
+                ni, mol, grids, mf.xc, mo_coeff, mo_occ, 1)
         else:
             rho0, vxc, fxc = ni.cache_xc_kernel1(mol, grids, mf.xc, dm0, 1)
 
