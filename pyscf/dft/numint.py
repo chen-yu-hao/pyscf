@@ -36,6 +36,7 @@ except (ImportError, OSError):
 
 from pyscf.dft.gen_grid import BLKSIZE, NBINS, CUTOFF, ALIGNMENT_UNIT, make_mask
 from pyscf.dft import xc_deriv
+from pyscf.dft.xc_cache import _CompactXCKernel
 from pyscf import __config__
 
 libdft = lib.load_library('libdft')
@@ -1600,6 +1601,7 @@ def nr_rks_fxc(ni, mol, grids, xc_code, dm0, dms, relativity=0, hermi=0,
     if fxc is None and xctype in ('LDA', 'GGA', 'MGGA'):
         fxc = ni.cache_xc_kernel1(mol, grids, xc_code, dm0, spin=0,
                                   max_memory=max_memory)[2]
+    compact = isinstance(fxc, _CompactXCKernel)
 
     make_rho1, nset, nao = ni._gen_rho_evaluator(mol, dms, hermi, False, grids)
 
@@ -1608,10 +1610,13 @@ def nr_rks_fxc(ni, mol, grids, xc_code, dm0, dms, relativity=0, hermi=0,
         for ao, mask, weight, coords \
                 in ni.block_loop(mol, grids, nao, ao_deriv, max_memory=max_memory):
             p0, p1 = p1, p1 + weight.size
-            _fxc = fxc[:,:,p0:p1]
+            if not compact:
+                _fxc = fxc[:,:,p0:p1]
             for i in range(nset):
                 rho1 = make_rho1(i, ao, mask, xctype)
-                if xctype == 'LDA':
+                if compact:
+                    wv = fxc.apply(rho1, p0, p1) * weight
+                elif xctype == 'LDA':
                     wv = weight * rho1 * _fxc[0]
                 else:
                     wv = numpy.einsum('yg,xyg,g->xg', rho1, _fxc, weight)
@@ -1662,7 +1667,9 @@ def nr_rks_fxc_st(ni, mol, grids, xc_code, dm0, dms_alpha, hermi=0, singlet=True
     if fxc is None:
         fxc = ni.cache_xc_kernel1(mol, grids, xc_code, dm0, spin=1,
                                   max_memory=max_memory)[2]
-    if singlet:
+    if isinstance(fxc, _CompactXCKernel):
+        fxc = fxc.projected(singlet)
+    elif singlet:
         fxc = fxc[0,:,0] + fxc[0,:,1]
     else:
         fxc = fxc[0,:,0] - fxc[0,:,1]
@@ -1859,6 +1866,7 @@ def nr_uks_fxc(ni, mol, grids, xc_code, dm0, dms, relativity=0, hermi=0,
     if fxc is None and xctype in ('LDA', 'GGA', 'MGGA'):
         fxc = ni.cache_xc_kernel1(mol, grids, xc_code, dm0, spin=1,
                                   max_memory=max_memory)[2]
+    compact = isinstance(fxc, _CompactXCKernel)
 
     dma, dmb = _format_uks_dm(dms)
     nao = dma.shape[-1]
@@ -1870,11 +1878,14 @@ def nr_uks_fxc(ni, mol, grids, xc_code, dm0, dms, relativity=0, hermi=0,
         for ao, mask, weight, coords \
                 in ni.block_loop(mol, grids, nao, ao_deriv, max_memory=max_memory):
             p0, p1 = p1, p1 + weight.size
-            _fxc = fxc[:,:,:,:,p0:p1]
+            if not compact:
+                _fxc = fxc[:,:,:,:,p0:p1]
             for i in range(nset):
                 rho1a = make_rhoa(i, ao, mask, xctype)
                 rho1b = make_rhob(i, ao, mask, xctype)
-                if xctype == 'LDA':
+                if compact:
+                    wv = fxc.apply((rho1a, rho1b), p0, p1)
+                elif xctype == 'LDA':
                     wv = rho1a * _fxc[0,0] + rho1b * _fxc[1,0]
                 else:
                     wv  = numpy.einsum('xg,xbyg->byg', rho1a, _fxc[0])
@@ -2640,7 +2651,8 @@ def nr_fxc(mol, grids, xc_code, dm0, dms, spin=0, relativity=0, hermi=0,
                      hermi, rho0, vxc, fxc, max_memory, verbose)
 
 
-def _cache_xc_kernel_blocks(ni, grids, xc_code, xctype, spin, rho_blocks):
+def _cache_xc_kernel_blocks(ni, grids, xc_code, xctype, spin, rho_blocks,
+                            compact=False):
     # Custom XC evaluators retain the single whole-grid callback.
     block_xc = (ni.libxc is libxc and libxc.__name__ == 'pyscf.dft.libxc'
                 and getattr(ni.eval_xc1, '__func__', None) is LibXCMixin.eval_xc1
@@ -2677,6 +2689,20 @@ def _cache_xc_kernel_blocks(ni, grids, xc_code, xctype, spin, rho_blocks):
         # Match the empty-grid error from the previous hstack implementation.
         numpy.hstack([])
     # Release AO buffers before allocating the full derivative caches.
+    if compact:
+        values = None
+        for p0, p1 in zip(offsets[:-1], offsets[1:]):
+            block = tuple(r[...,p0:p1] for r in rho) if tuple_rho else rho[...,p0:p1]
+            raw = ni.eval_xc1(xc_code, block, spin=spin, deriv=2)
+            if len(offsets) == 2:
+                values = raw
+            else:
+                if values is None:
+                    values = numpy.empty((raw.shape[0], ngrids), dtype=raw.dtype)
+                values[:,p0:p1] = raw
+            del raw
+        kernel = _CompactXCKernel(rho, values, xctype, spin)
+        return kernel.rho, None, kernel
     if not block_xc or len(offsets) == 2:
         vxc, fxc = ni.eval_xc_eff(xc_code, rho, deriv=2, xctype=xctype, spin=spin)[1:3]
     else:
@@ -2702,8 +2728,39 @@ def cache_xc_kernel(ni, mol, grids, xc_code, mo_coeff, mo_occ, spin=0,
                                spin, max_memory)
 
 
+def _cache_xc_kernel_response(ni, mol, grids, xc_code, mo_coeff, mo_occ, spin=0,
+                               max_memory=2000):
+    '''Use compact storage only for the unmodified real NumInt response path.'''
+    methods = {'cache_xc_kernel': cache_xc_kernel,
+               'eval_xc1': LibXCMixin.eval_xc1,
+               'eval_xc_eff': LibXCMixin.eval_xc_eff,
+               '_xc_type': LibXCMixin._xc_type,
+               '_gen_rho_evaluator': NumInt._gen_rho_evaluator,
+               'block_loop': NumInt.block_loop,
+               'eval_rho1': NumInt.eval_rho1,
+               'nr_rks_fxc': nr_rks_fxc,
+               'nr_rks_fxc_st': nr_rks_fxc_st,
+               'nr_uks_fxc': nr_uks_fxc}
+    use_compact = (type(ni) is NumInt and not MGGA_DENSITY_LAPL
+                   and ni.libxc is libxc and libxc.__name__ == 'pyscf.dft.libxc'
+                   and ni.eval_ao is eval_ao and ni.eval_rho is eval_rho
+                   and ni.eval_rho2 is eval_rho2
+                   and all(getattr(getattr(ni, name), '__func__', None) is fn
+                           for name, fn in methods.items())
+                   and all(numpy.asarray(c).dtype == numpy.double for c in
+                           ((mo_coeff,) if mo_coeff[0].ndim == 1 else mo_coeff))
+                   and all(numpy.asarray(o).dtype == numpy.double for o in
+                           ((mo_occ,) if mo_coeff[0].ndim == 1 else mo_occ))
+                   and ni._xc_type(xc_code) in ('GGA', 'MGGA'))
+    if use_compact:
+        return _cache_xc_kernel_mo(ni, mol, grids, xc_code, mo_coeff, mo_occ,
+                                   spin, max_memory, compact=True)
+    return ni.cache_xc_kernel(mol, grids, xc_code, mo_coeff, mo_occ,
+                               spin, max_memory)
+
+
 def _cache_xc_kernel_mo(ni, mol, grids, xc_code, mo_coeff, mo_occ, spin,
-                         max_memory):
+                         max_memory, compact=False):
     xctype = ni._xc_type(xc_code)
     if xctype == 'GGA':
         ao_deriv = 1
@@ -2734,7 +2791,7 @@ def _cache_xc_kernel_mo(ni, mol, grids, xc_code, mo_coeff, mo_occ, spin,
                 yield (ni.eval_rho2(mol, ao, mo_coeff[0], mo_occ[0], mask, xctype, with_lapl),
                        ni.eval_rho2(mol, ao, mo_coeff[1], mo_occ[1], mask, xctype, with_lapl))
     return _cache_xc_kernel_blocks(ni, grids, xc_code, xctype, spin,
-                                    rho_blocks())
+                                    rho_blocks(), compact)
 
 def cache_xc_kernel1(ni, mol, grids, xc_code, dm, spin=0, max_memory=2000):
     '''Compute the 0th order density, Vxc and fxc.  They can be used in TDDFT,
