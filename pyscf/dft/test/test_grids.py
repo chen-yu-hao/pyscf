@@ -178,6 +178,24 @@ class KnownValues(unittest.TestCase):
         idx = gen_grid.arg_group_grids(mol, coords)
         self.assertTrue(abs(ref - idx).max() == 0)
 
+    def test_arg_group_coords_stable_keys(self):
+        rng = numpy.random.RandomState(26)
+        atoms = h2o.atom_coords()
+        lower = atoms.min(axis=0) - gen_grid.GROUP_BOUNDARY_PENALTY
+        upper = atoms.max(axis=0) + gen_grid.GROUP_BOUNDARY_PENALTY
+        for npoints in (0, 1, 55, 224, 10001):
+            coords = rng.normal(size=(npoints, 3)) * 50
+            coords[::3] = 0  # Equal boxes must preserve the input order.
+            for box_size in (1.2, .4, 1e-6):
+                with self.subTest(npoints=npoints, box_size=box_size):
+                    boxes = ((upper - lower) / box_size).round().astype(int)
+                    ids = numpy.floor((coords - lower) * (boxes / (upper - lower))).astype(int)
+                    ids = numpy.clip(ids, -1, boxes)
+                    # Python tuple ordering neither encodes keys nor overflows.
+                    expected = sorted(range(npoints), key=lambda i: tuple(ids[i]))
+                    actual = gen_grid.arg_group_grids(h2o, coords, box_size)
+                    numpy.testing.assert_array_equal(actual, expected)
+
 class TreutlerAhlrichsGrids(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
