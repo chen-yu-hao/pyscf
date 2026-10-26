@@ -747,7 +747,12 @@ void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
         size_t Nao = nao;
         int shls_slice[2] = {0, nbas};
         int *box_l1_loc = malloc(sizeof(int) * (nbas+1));
-        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, BOXSIZE1_N);
+        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, 32);
+        int box_size = 0;
+        int ib;
+        for (ib = 0; ib < nbox_l1; ib++) {
+                box_size = MAX(box_size, ao_loc[box_l1_loc[ib+1]] - ao_loc[box_l1_loc[ib]]);
+        }
         int mask_l1_size = (ngrids + BOXSIZE1_M - 1)/BOXSIZE1_M * nbox_l1;
         uint8_t *mask_l1 = malloc(sizeof(uint8_t) * mask_l1_size);
         mask_l1_abstract(mask_l1, screen_index, box_l1_loc, nbox_l1, ngrids, nbas);
@@ -759,9 +764,9 @@ void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
         int ish0, ish1, jsh0, jsh1, i0, i1, j0, j1, ni, nj, i, j, n;
         double s;
         double *pout;
-        double *buf = malloc(sizeof(double) * (BOXSIZE1_N*BOXSIZE1_N*ALIGNMENT+ALIGNMENT));
+        double *buf = malloc(sizeof(double) * ((size_t)box_size*box_size*ALIGNMENT+ALIGNMENT));
         double *outbuf = (double *)((uintptr_t)(buf+ALIGNMENT-1) & (-(uintptr_t)(ALIGNMENT*sizeof(double))));
-#pragma omp for schedule(dynamic, 4) nowait
+#pragma omp for schedule(dynamic, 1) nowait
         for (ijb = 0; ijb < nbox_l1*nbox_l1; ijb++) {
                 ib = ijb / nbox_l1;
                 jb = ijb % nbox_l1;
@@ -1034,7 +1039,12 @@ void VXCdot_ao_ao_sparse(double *out, double *bra, double *ket,
         size_t Nao = nao;
         int shls_slice[2] = {0, nbas};
         int *box_l1_loc = malloc(sizeof(int) * (nbas+1));
-        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, BOXSIZE1_N);
+        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, 32);
+        int box_size = 0;
+        int ib;
+        for (ib = 0; ib < nbox_l1; ib++) {
+                box_size = MAX(box_size, ao_loc[box_l1_loc[ib+1]] - ao_loc[box_l1_loc[ib]]);
+        }
         int mask_l1_size = (ngrids + BOXSIZE1_M - 1)/BOXSIZE1_M * nbox_l1;
         uint8_t *mask_l1 = malloc(sizeof(uint8_t) * mask_l1_size);
         mask_l1_abstract(mask_l1, screen_index, box_l1_loc,
@@ -1047,9 +1057,9 @@ void VXCdot_ao_ao_sparse(double *out, double *bra, double *ket,
         int ish0, ish1, jsh0, jsh1, i0, i1, j0, j1, ni, nj, i, j, n;
         double s;
         double *pout;
-        double *buf = malloc(sizeof(double) * (BOXSIZE1_N*BOXSIZE1_N*ALIGNMENT+ALIGNMENT));
+        double *buf = malloc(sizeof(double) * ((size_t)box_size*box_size*ALIGNMENT+ALIGNMENT));
         double *outbuf = (double *)((uintptr_t)(buf+ALIGNMENT-1) & (-(uintptr_t)(ALIGNMENT*sizeof(double))));
-#pragma omp for schedule(dynamic, 4) nowait
+#pragma omp for schedule(dynamic, 1) nowait
         for (ijb = 0; ijb < nbox_l1*nbox_l1; ijb++) {
                 ib = ijb / nbox_l1;
                 jb = ijb % nbox_l1;
