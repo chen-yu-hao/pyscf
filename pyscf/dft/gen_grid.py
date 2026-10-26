@@ -464,6 +464,17 @@ def arg_group_grids(mol, coords, box_size=GROUP_BOX_SIZE):
     box_ids[box_ids[:,0] > boxes[0], 0] = boxes[0]
     box_ids[box_ids[:,1] > boxes[1], 1] = boxes[1]
     box_ids[box_ids[:,2] > boxes[2], 2] = boxes[2]
+    # A mixed-radix key has the same lexicographic order as the box IDs.
+    # Check its range with Python integers before NumPy int64 arithmetic.
+    widths = tuple(int(n) + 2 for n in boxes)
+    if (min(widths) >= 2 and
+        widths[0] * widths[1] * widths[2] <= numpy.iinfo(numpy.int64).max):
+        keys = box_ids[:,0].astype(numpy.int64) + 1
+        keys *= widths[1]
+        keys += box_ids[:,1] + 1
+        keys *= widths[2]
+        keys += box_ids[:,2] + 1
+        return keys.argsort(kind='stable')
     rev_idx, counts = numpy.unique(box_ids, axis=0, return_inverse=True,
                                    return_counts=True)[1:3]
     return rev_idx.ravel().argsort(kind='stable')
