@@ -226,7 +226,7 @@ int GTOcontract_exp1(double *ectr, double *coord, double *alpha, double *coeff,
                      int l, int nprim, int nctr, size_t ngrids, double fac)
 {
         size_t i, j, k;
-        double arr, eprim;
+        double arr, eprim[BLKSIZE];
         double rr[BLKSIZE];
         double *gridx = coord;
         double *gridy = coord+BLKSIZE;
@@ -250,14 +250,20 @@ int GTOcontract_exp1(double *ectr, double *coord, double *alpha, double *coeff,
         } }
 
         for (j = 0; j < nprim; j++) {
-        for (i = 0; i < ngrids; i++) {
-                arr = alpha[j] * rr[i];
-                eprim = exp(-arr) * fac;
-                for (k = 0; k < nctr; k++) {
-                        ectr   [k*BLKSIZE+i] += eprim * coeff  [k*nprim+j];
-                        ectr_2a[k*BLKSIZE+i] += eprim * coeff2a[k*nprim+j];
+                for (i = 0; i < ngrids; i++) {
+                        arr = alpha[j] * rr[i];
+                        eprim[i] = exp(-arr) * fac;
                 }
-        } }
+                for (k = 0; k < nctr; k++) {
+                        double c0 = coeff[k*nprim+j];
+                        double c1 = coeff2a[k*nprim+j];
+#pragma GCC ivdep
+                        for (i = 0; i < ngrids; i++) {
+                                ectr   [k*BLKSIZE+i] += eprim[i] * c0;
+                                ectr_2a[k*BLKSIZE+i] += eprim[i] * c1;
+                        }
+                }
+        }
         return 1;
 }
 
