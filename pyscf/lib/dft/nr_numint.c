@@ -18,8 +18,10 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "config.h"
 #include "gto/grid_ao_drv.h"
 #include "np_helper/np_helper.h"
@@ -378,6 +380,178 @@ void VXC_dcontract_rho(double *rho, double *bra, double *ket,
                 for (i = 1; i < nao; i++) {
                 for (j = b0; j < b1; j++) {
                         rho[j] += bra[i*Ngrids+j] * ket[i*Ngrids+j];
+                } }
+        }
+}
+}
+
+static int nonzero_ao_grid(const double *ao, int ng, ptrdiff_t stride)
+{
+        int active = 0;
+        int c, g;
+        for (c = 0; c < 4 && !active; c++) {
+                const double *src = ao + c*stride;
+                if (src[0] != 0.) {
+                        return 1;
+                }
+#pragma omp simd reduction(|:active)
+                for (g = 1; g < ng; g++) {
+                        active |= src[g] != 0.;
+                }
+        }
+        return active;
+}
+
+static int compact_mo_ao(const double *ao, int nao, int nocc, int ngrids,
+                         ptrdiff_t stride)
+{
+        if (nocc < 24 || ngrids == 0) {
+                return 0;
+        }
+        const int ntiles = (ngrids+111) / 112;
+        const int nr = MIN(nao, 32);
+        const int nt = MIN(ntiles, 5);
+        int t, r, tile, ig0, ng, i, active = 0;
+        for (t = 0; t < nt; t++) {
+                tile = nt == 1 ? 0 : (size_t)t*(ntiles-1)/(nt-1);
+                ig0 = tile * 112;
+                ng = MIN(112, ngrids-ig0);
+                for (r = 0; r < nr; r++) {
+                        i = nr == 1 ? 0 : (size_t)r*(nao-1)/(nr-1);
+                        active += nonzero_ao_grid(ao+(size_t)i*ngrids+ig0,
+                                                  ng, stride);
+                }
+        }
+        /* Sampling chooses an execution path only. Every omitted column is
+         * checked for exact zeros again when its grid block is processed. */
+        return (double)nocc*(nr*nt-active) >= 18.*nr*nt;
+}
+
+int VXCeval_rho_mgga_mo(double *rho, double *ao, double *coeff, double *sign,
+                        int nao, int nocc, int ngrids, ptrdiff_t ao_stride)
+{
+        int grid_tile = 512;
+        size_t thread_size = (size_t)4 * grid_tile * nocc;
+        int nthreads = 1;
+#ifdef _OPENMP
+        nthreads = omp_get_max_threads();
+#endif
+        if (thread_size * nthreads > (128*1024*1024) / sizeof(double)) {
+                return 0;
+        }
+        int compact = compact_mo_ao(ao, nao, nocc, ngrids, ao_stride);
+        const size_t compact_size = (size_t)4*112*(nao+nocc) + (size_t)nao*nocc;
+        if (compact && compact_size*nthreads*sizeof(double)+nao <= 128*1024*1024) {
+                grid_tile = 112;
+                thread_size = compact_size;
+        } else {
+                compact = 0;
+        }
+        double *scratch = malloc(thread_size * nthreads * sizeof(double));
+        uint8_t *nonfinite = compact ? malloc(nao) : NULL;
+        if (scratch == NULL || (compact && nonfinite == NULL)) {
+                free(scratch);
+                free(nonfinite);
+                return 0;
+        }
+        if (compact) {
+                int i, j;
+                for (i = 0; i < nao; i++) {
+                        nonfinite[i] = 0;
+                        for (j = 0; j < nocc; j++) {
+                                if (!isfinite(coeff[(size_t)i*nocc+j])) {
+                                        nonfinite[i] = 1;
+                                        break;
+                                }
+                        }
+                }
+        }
+#pragma omp parallel
+{
+        const char TRANS_N = 'N';
+        const char TRANS_T = 'T';
+        const double D0 = 0;
+        const double D1 = 1;
+        double *orb = scratch + thread_size * omp_get_thread_num();
+        double *packed = orb + (size_t)4*grid_tile*nocc;
+        double *gathered = compact ? packed+(size_t)4*grid_tile*nao : packed;
+        double *pc;
+        int ig0, ng, m, i, j, c, g, nactive;
+#pragma omp for schedule(static)
+        for (ig0 = 0; ig0 < ngrids; ig0 += grid_tile) {
+                ng = MIN(grid_tile, ngrids - ig0);
+                m = 4 * ng;
+                if (compact) {
+                        nactive = 0;
+                        for (i = 0; i < nao; i++) {
+                                const double *src = ao+(size_t)i*ngrids+ig0;
+                                if (nonfinite[i] || nonzero_ao_grid(src, ng, ao_stride)) {
+                                        for (c = 0; c < 4; c++) {
+                                                memcpy(packed+(size_t)nactive*m+c*ng,
+                                                       src+c*ao_stride, ng*sizeof(double));
+                                        }
+                                        memcpy(gathered+(size_t)nactive*nocc,
+                                               coeff+(size_t)i*nocc, nocc*sizeof(double));
+                                        nactive++;
+                                }
+                        }
+                        if (nactive) {
+                                dgemm_(&TRANS_N, &TRANS_T, &m, &nocc, &nactive,
+                                       &D1, packed, &m, gathered, &nocc, &D0, orb, &m);
+                        } else {
+                                memset(orb, 0, (size_t)m*nocc*sizeof(double));
+                        }
+                } else {
+                        for (c = 0; c < 4; c++) {
+                                dgemm_(&TRANS_N, &TRANS_T, &ng, &nocc, &nao,
+                                       &D1, ao+c*ao_stride+ig0, &ngrids, coeff, &nocc,
+                                       &D0, orb+c*ng, &m);
+                        }
+                }
+                for (c = 0; c < 5; c++) {
+                for (g = 0; g < ng; g++) {
+                        rho[(size_t)c*ngrids+ig0+g] = 0;
+                } }
+                for (j = 0; j < nocc; j++) {
+                        pc = orb + j*m;
+                        for (g = 0; g < ng; g++) {
+                                rho[ig0+g] += sign[j]*pc[g]*pc[g];
+                        }
+                        for (c = 1; c < 4; c++) {
+                        for (g = 0; g < ng; g++) {
+                                rho[(size_t)c*ngrids+ig0+g] += 2*sign[j]*pc[g]*pc[c*ng+g];
+                                rho[(size_t)4*ngrids+ig0+g] += .5*sign[j]*pc[c*ng+g]*pc[c*ng+g];
+                        } }
+                }
+        }
+}
+        free(scratch);
+        free(nonfinite);
+        return 1;
+}
+
+void VXC_dcontract_rho_grad_tau(double *rho, double *bra, double *ket,
+                               int nao, int ngrids)
+{
+        double *tau = rho + ngrids;
+#pragma omp parallel
+{
+        size_t Ngrids = ngrids;
+        int nthread = omp_get_num_threads();
+        int blksize = MAX((Ngrids+nthread-1) / nthread, 1);
+        int ib, b0, b1, i, j;
+#pragma omp for
+        for (ib = 0; ib < nthread; ib++) {
+                b0 = ib * blksize;
+                b1 = MIN(b0 + blksize, ngrids);
+                for (j = b0; j < b1; j++) {
+                        rho[j] = bra[j] * ket[j];
+                        tau[j] = ket[j] * ket[j];
+                }
+                for (i = 1; i < nao; i++) {
+                for (j = b0; j < b1; j++) {
+                        rho[j] += bra[i*Ngrids+j] * ket[i*Ngrids+j];
+                        tau[j] += ket[i*Ngrids+j] * ket[i*Ngrids+j];
                 } }
         }
 }

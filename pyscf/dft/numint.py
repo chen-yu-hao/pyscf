@@ -282,6 +282,28 @@ def eval_rho1(mol, ao, dm, screen_index=None, xctype='LDA', hermi=0,
         pair_mask = numpy.asarray(ovlp_cond < -numpy.log(cutoff), dtype=numpy.uint8)
 
     ao_loc = mol.ao_loc_nr()
+    if xctype in ('LDA', 'HF', 'GGA', 'NLC'):
+        lda = xctype in ('LDA', 'HF')
+        ao0 = ao if lda else ao[0]
+        if (screen_index is not None and ngrids % ALIGNMENT_UNIT == 0
+            and ao0.flags.f_contiguous and (lda or hermi == 1)
+            and screen_index.dtype == numpy.uint8 and screen_index.flags.c_contiguous
+            and pair_mask.dtype == numpy.uint8 and pair_mask.flags.c_contiguous):
+            nvar = 1 if lda else 4
+            rho = numpy.empty(ngrids if lda else (4, ngrids))
+            dm = numpy.asarray(dm, order='C')
+            libdft.VXCeval_rho_lda_gga_sparse(
+                rho.ctypes.data_as(ctypes.c_void_p),
+                ao.ctypes.data_as(ctypes.c_void_p),
+                dm.ctypes.data_as(ctypes.c_void_p),
+                ctypes.c_int(dm.shape[0]), ctypes.c_int(ngrids),
+                ctypes.c_int(screen_index.shape[1]), ctypes.c_int(nbins),
+                screen_index.ctypes.data_as(ctypes.c_void_p),
+                pair_mask.ctypes.data_as(ctypes.c_void_p),
+                ao_loc.ctypes.data_as(ctypes.c_void_p),
+                ctypes.c_ssize_t(0 if lda else ao.strides[0] // ao.itemsize),
+                ctypes.c_int(nvar))
+            return rho
     if xctype == 'LDA' or xctype == 'HF':
         c0 = _dot_ao_dm_sparse(ao, dm, nbins, screen_index, pair_mask, ao_loc)
         rho = _contract_rho_sparse(ao, c0, screen_index, ao_loc)
@@ -307,6 +329,20 @@ def eval_rho1(mol, ao, dm, screen_index=None, xctype='LDA', hermi=0,
         else:
             rho = numpy.empty((5,ngrids))
             tau_idx = 4
+            if (screen_index is not None and ngrids % ALIGNMENT_UNIT == 0
+                and all(ao[i].flags.f_contiguous for i in range(4))):
+                dm = numpy.asarray(dm, order='C')
+                libdft.VXCeval_rho_mgga_sparse(
+                    rho.ctypes.data_as(ctypes.c_void_p),
+                    ao.ctypes.data_as(ctypes.c_void_p),
+                    dm.ctypes.data_as(ctypes.c_void_p),
+                    ctypes.c_int(dm.shape[0]), ctypes.c_int(ngrids),
+                    ctypes.c_int(screen_index.shape[1]), ctypes.c_int(nbins),
+                    ctypes.c_int(hermi), screen_index.ctypes.data_as(ctypes.c_void_p),
+                    pair_mask.ctypes.data_as(ctypes.c_void_p),
+                    ao_loc.ctypes.data_as(ctypes.c_void_p),
+                    ctypes.c_ssize_t(ao.strides[0] // ao.itemsize))
+                return rho
         c0 = _dot_ao_dm_sparse(ao[0], dm, nbins, screen_index, pair_mask, ao_loc)
         rho[0] = _contract_rho_sparse(ao[0], c0, screen_index, ao_loc)
 
@@ -365,6 +401,28 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
     xctype = xctype.upper()
     ngrids, nao = ao.shape[-2:]
 
+    if (xctype == 'MGGA' and not with_lapl
+        and ao.dtype == mo_coeff.dtype == mo_occ.dtype == numpy.double
+        and (nao < SWITCH_SIZE or non0tab is None)
+        and all(ao[i].flags.f_contiguous for i in range(4))):
+        occupied = abs(mo_occ) > OCCDROP
+        if not numpy.any(occupied):
+            return numpy.zeros((5, ngrids))
+        coeff = numpy.asarray(mo_coeff[:,occupied] * numpy.sqrt(abs(mo_occ[occupied])),
+                              order='C')
+        sign = numpy.where(mo_occ[occupied] > 0, 1., -1.)
+        rho = numpy.empty((5, ngrids))
+        done = libdft.VXCeval_rho_mgga_mo(
+            rho.ctypes.data_as(ctypes.c_void_p),
+            ao.ctypes.data_as(ctypes.c_void_p),
+            coeff.ctypes.data_as(ctypes.c_void_p),
+            sign.ctypes.data_as(ctypes.c_void_p),
+            ctypes.c_int(nao), ctypes.c_int(coeff.shape[1]), ctypes.c_int(ngrids),
+            ctypes.c_ssize_t(ao.strides[0] // ao.itemsize))
+        if done:
+            return rho
+        del coeff
+
     shls_slice = (0, mol.nbas)
     ao_loc = mol.ao_loc_nr()
     pos = mo_occ > OCCDROP
@@ -400,8 +458,9 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
                 c1 = _dot_ao_dm(mol, ao[i], cpos, non0tab, shls_slice, ao_loc)
                 #:rho[i] = numpy.einsum('pi,pi->p', c0, c1) * 2 # *2 for +c.c.
                 #:rho[5] += numpy.einsum('pi,pi->p', c1, c1)
-                rho[i] = _contract_rho(c0, c1) * 2
-                rho[tau_idx] += _contract_rho(c1, c1)
+                rho_grad, rho_tau = _contract_rho_grad_tau(c0, c1)
+                rho[i] = rho_grad * 2
+                rho[tau_idx] += rho_tau
 
             if with_lapl:
                 if ao.shape[0] > 4:
@@ -451,8 +510,9 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
                 c1 = _dot_ao_dm(mol, ao[i], cneg, non0tab, shls_slice, ao_loc)
                 #:rho[i] -= numpy.einsum('pi,pi->p', c0, c1) * 2 # *2 for +c.c.
                 #:rho5 += numpy.einsum('pi,pi->p', c1, c1)
-                rho[i] -= _contract_rho(c0, c1) * 2 # *2 for +c.c.
-                rho5 += _contract_rho(c1, c1)
+                rho_grad, rho_tau = _contract_rho_grad_tau(c0, c1)
+                rho[i] -= rho_grad * 2 # *2 for +c.c.
+                rho5 += rho_tau
 
             if with_lapl:
                 if ao.shape[0] > 4:
@@ -799,6 +859,20 @@ def _contract_rho(bra, ket):
         rho  = numpy.einsum('ip,ip->p', bra.real, ket.real)
         rho += numpy.einsum('ip,ip->p', bra.imag, ket.imag)
     return rho
+
+def _contract_rho_grad_tau(bra, ket):
+    '''Real parts of bra.conj()*ket and ket.conj()*ket, summed over orbitals.'''
+    if (bra.dtype == ket.dtype == numpy.double and
+        bra.flags.f_contiguous and ket.flags.f_contiguous):
+        ngrids, nao = bra.shape
+        rho = numpy.empty((2, ngrids))
+        libdft.VXC_dcontract_rho_grad_tau(
+            rho.ctypes.data_as(ctypes.c_void_p),
+            bra.ctypes.data_as(ctypes.c_void_p),
+            ket.ctypes.data_as(ctypes.c_void_p),
+            ctypes.c_int(nao), ctypes.c_int(ngrids))
+        return rho
+    return _contract_rho(bra, ket), _contract_rho(ket, ket)
 
 def _tau_dot(mol, bra, ket, wv, mask, shls_slice, ao_loc):
     '''nabla_ao dot nabla_ao
@@ -2917,7 +2991,7 @@ class NumInt(lib.StreamObject, LibXCMixin):
         for ip0, ip1 in lib.prange(0, ngrids, blksize):
             coords = grids.coords[ip0:ip1]
             weight = grids.weights[ip0:ip1]
-            mask = screen_index[ip0//BLKSIZE:]
+            mask = screen_index[ip0//BLKSIZE:(ip1+BLKSIZE-1)//BLKSIZE]
             # TODO: pass grids.cutoff to eval_ao
             ao = self.eval_ao(mol, coords, deriv=deriv, non0tab=mask,
                               cutoff=grids.cutoff, out=buf)

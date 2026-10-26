@@ -102,6 +102,25 @@ class KnownValues(unittest.TestCase):
     def tearDownClass(cls):
         dft.radi.ATOM_SPECIFIC_TREUTLER_GRIDS = cls.original_grids
 
+    def test_block_loop_local_mask(self):
+        grids = dft.Grids(h2o)
+        grids.coords = numpy.zeros((3*numint.BLKSIZE+1, 3))
+        grids.coords[numint.BLKSIZE:] = 1e3
+        grids.weights = numpy.ones(len(grids.coords))
+        grids.non0tab = numpy.zeros((4, h2o.nbas), dtype=numpy.uint8)
+        grids.non0tab[0] = numint.NBINS + 1
+        ni = numint.NumInt()
+        ao_ref = ni.eval_ao(h2o, grids.coords)
+        for i, (ao, mask, weight, coords) in enumerate(
+                ni.block_loop(h2o, grids, blksize=numint.BLKSIZE)):
+            p0 = i * numint.BLKSIZE
+            numpy.testing.assert_allclose(ao, ao_ref[p0:p0+len(coords)])
+            if i == 0:
+                # Later sparse blocks must not affect this dense block.
+                self.assertIsNone(mask)
+            else:
+                numpy.testing.assert_array_equal(mask, grids.non0tab[i:i+1])
+
     def test_dot_ao_dm(self):
         dm = mf_h4.get_init_guess(key='minao')
         ao_loc = h4.ao_loc_nr()
