@@ -411,6 +411,26 @@ class KnownValues(unittest.TestCase):
         self.assertTrue(dft.libxc.test_deriv_order('pbe0', 3, True))
         self.assertRaises(KeyError, dft.libxc.test_deriv_order, 'OL2', 3, True)
 
+    def test_eval_xc_threaded(self):
+        rng = numpy.random.default_rng(12)
+        density = rng.random((2, 5, 37)) + .2
+        density[:, 1:4] *= .1
+        density[:, 4] += 1
+        cases = [('LDA_X + .2*LDA_C_VWN', 1),
+                 ('-.2*LDA_X + GGA_X_PBE + .3*GGA_C_PBE', 4),
+                 ('MGGA_X_TPSS + .2*LDA_X - .3*GGA_X_PBE', 5)]
+        for xc, nvar in cases:
+            for spin in (0, 1):
+                for ngrids in (1, 2, 37):
+                    rho = density[:spin+1, :nvar, :ngrids]
+                    for deriv in range(min(4, dft.libxc.max_deriv_order(xc)) + 1):
+                        with self.subTest(xc=xc, spin=spin, ngrids=ngrids, deriv=deriv):
+                            with lib.with_omp_threads(1):
+                                ref = dft.libxc.eval_xc1(xc, rho, spin, deriv)
+                            with lib.with_omp_threads(4):
+                                out = dft.libxc.eval_xc1(xc, rho, spin, deriv)
+                            numpy.testing.assert_allclose(out, ref, rtol=1e-13, atol=1e-13)
+
     def test_xc_type(self):
         self.assertEqual(dft.libxc.xc_type(416), 'GGA')
         self.assertEqual(dft.libxc.xc_type('hf'), 'HF')
