@@ -18,6 +18,8 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <math.h>
 #include "config.h"
 #include "np_helper/np_helper.h"
 #include "cint.h"
@@ -301,6 +303,145 @@ _dot_ao_dm_l1(out, ao, dm, nao, ngrids, nbas, ig0, ig1,
         }
         free(box_l1_loc);
         free(mask_l1);
+}
+
+static void eval_rho_sparse(double *rho, double *ao, double *dm,
+                             int nao, int ngrids, int nbas, int nbins, int hermi,
+                             uint8_t *screen_index, uint8_t *pair_mask,
+                             int *ao_loc, ptrdiff_t ao_stride, int nvar)
+{
+        int shls_slice[2] = {0, nbas};
+        int *box_loc = malloc(sizeof(int) * (nbas+1));
+        int nbox = CVHFshls_block_partition(box_loc, shls_slice, ao_loc, BOXSIZE1_N);
+        int box_size = 0;
+        for (int ib = 0; ib < nbox; ib++) {
+                box_size = MAX(box_size, ao_loc[box_loc[ib+1]] - ao_loc[box_loc[ib]]);
+        }
+        const int ncomp = nvar == 5 ? 4 : 1;
+        const size_t tile_size = ncomp * BLKSIZE * box_size;
+#pragma omp parallel
+{
+        const char TRANS_N = 'N';
+        const double D1 = 1;
+        int ig0, ng, m, ib, jb, ish, jsh, i, j, g, c, ni, nj, bin, active;
+        int ia[box_size], ja[box_size];
+        int ibin[box_size], jbin[box_size];
+        int ishell[box_size], jshell[box_size];
+        size_t addr;
+        uint8_t *screen;
+        double *buf = malloc(sizeof(double) * (2*tile_size + (size_t)box_size*box_size));
+        double *aobuf = buf;
+        double *cbuf = aobuf + tile_size;
+        double *dmbuf = cbuf + tile_size;
+        double *pao, *pc;
+#pragma omp for schedule(dynamic)
+        for (ig0 = 0; ig0 < ngrids; ig0 += BLKSIZE) {
+                ng = MIN(BLKSIZE, ngrids - ig0);
+                m = ncomp * ng;
+                screen = screen_index + (ig0 / BLKSIZE) * nbas;
+                for (c = 0; c < nvar; c++) {
+                for (g = 0; g < ng; g++) {
+                        rho[(size_t)c*ngrids+ig0+g] = 0;
+                } }
+                for (jb = 0; jb < nbox; jb++) {
+                        nj = 0;
+                        for (jsh = box_loc[jb]; jsh < box_loc[jb+1]; jsh++) {
+                                if (screen[jsh] == 0) {
+                                        continue;
+                                }
+                                for (j = ao_loc[jsh]; j < ao_loc[jsh+1]; j++) {
+                                        ja[nj] = j;
+                                        jbin[nj] = screen[jsh];
+                                        jshell[nj++] = jsh;
+                                }
+                        }
+                        if (nj == 0) {
+                                continue;
+                        }
+                        for (i = 0; i < m*nj; i++) {
+                                cbuf[i] = 0;
+                        }
+                        for (ib = 0; ib < nbox; ib++) {
+                                ni = 0;
+                                for (ish = box_loc[ib]; ish < box_loc[ib+1]; ish++) {
+                                        if (screen[ish] == 0) {
+                                                continue;
+                                        }
+                                        for (i = ao_loc[ish]; i < ao_loc[ish+1]; i++) {
+                                                ia[ni] = i;
+                                                ibin[ni] = screen[ish];
+                                                ishell[ni++] = ish;
+                                        }
+                                }
+                                active = 0;
+                                for (j = 0; j < nj; j++) {
+                                        bin = MAX(1, nbins - jbin[j]);
+                                        for (i = 0; i < ni; i++) {
+                                                if (ibin[i] >= bin && pair_mask[ishell[i]*nbas+jshell[j]]) {
+                                                        dmbuf[j*ni+i] = dm[(size_t)ia[i]*nao+ja[j]];
+                                                        active = 1;
+                                                } else {
+                                                        dmbuf[j*ni+i] = 0;
+                                                }
+                                        }
+                                }
+                                if (!active) {
+                                        continue;
+                                }
+                                for (i = 0; i < ni; i++) {
+                                for (c = 0; c < ncomp; c++) {
+                                        pao = ao + c*ao_stride + (size_t)ia[i]*ngrids + ig0;
+                                        for (g = 0; g < ng; g++) {
+                                                aobuf[i*m+c*ng+g] = pao[g];
+                                        }
+                                } }
+                                dgemm_(&TRANS_N, &TRANS_N, &m, &nj, &ni,
+                                       &D1, aobuf, &m, dmbuf, &ni, &D1, cbuf, &m);
+                        }
+                        for (j = 0; j < nj; j++) {
+                                addr = (size_t)ja[j]*ngrids + ig0;
+                                pc = cbuf + j*m;
+                                for (g = 0; g < ng; g++) {
+                                        rho[ig0+g] += ao[addr+g] * pc[g];
+                                }
+                                for (c = 1; c < MIN(nvar, 4); c++) {
+                                        pao = ao + c*ao_stride + addr;
+                                        for (g = 0; g < ng; g++) {
+                                                rho[(size_t)c*ngrids+ig0+g] +=
+                                                        hermi ? 2*pao[g]*pc[g] :
+                                                        pao[g]*pc[g] + ao[addr+g]*pc[c*ng+g];
+                                                if (nvar == 5) {
+                                                        rho[(size_t)4*ngrids+ig0+g] +=
+                                                                .5*pao[g]*pc[c*ng+g];
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+        free(buf);
+}
+        free(box_loc);
+}
+
+void VXCeval_rho_mgga_sparse(double *rho, double *ao, double *dm,
+                             int nao, int ngrids, int nbas, int nbins, int hermi,
+                             uint8_t *screen_index, uint8_t *pair_mask,
+                             int *ao_loc, ptrdiff_t ao_stride)
+{
+        eval_rho_sparse(rho, ao, dm, nao, ngrids, nbas, nbins, hermi,
+                        screen_index, pair_mask, ao_loc, ao_stride, 5);
+}
+
+/* GGA requires hermi=1: the nonsymmetric legacy path contracts D and D^T
+ * with the same (potentially asymmetric) shell-pair mask. */
+void VXCeval_rho_lda_gga_sparse(double *rho, double *ao, double *dm,
+                                int nao, int ngrids, int nbas, int nbins,
+                                uint8_t *screen_index, uint8_t *pair_mask,
+                                int *ao_loc, ptrdiff_t ao_stride, int nvar)
+{
+        eval_rho_sparse(rho, ao, dm, nao, ngrids, nbas, nbins, 1,
+                        screen_index, pair_mask, ao_loc, ao_stride, nvar);
 }
 
 static void _dot_aow_ao_l1(double *out, double *bra, double *ket, double *wv,
@@ -599,15 +740,137 @@ void VXCdot_aow_ao_dense(double *out, double *bra, double *ket, double *wv,
 }
 }
 
+int VXCtau_dot_dense(double *out, double *bra, double *ket, double *wv,
+                     int nao, int ngrids, ptrdiff_t bra_stride, ptrdiff_t ket_stride)
+{
+        const int grid_tile = 256;
+        const int symmetric = bra == ket && bra_stride == ket_stride;
+        const size_t nao2 = (size_t)nao * nao;
+        const size_t tile_size = (size_t)nao * grid_tile * 3;
+        const size_t thread_size = nao2 + (symmetric ? 1 : 2) * tile_size;
+        int nthreads = 1;
+#ifdef _OPENMP
+        nthreads = omp_get_max_threads();
+#endif
+        /* Bound the total scratch, independently of the grid size. Larger
+         * matrices retain the existing dense contraction path. */
+        if (thread_size * nthreads > (128*1024*1024) / sizeof(double)) {
+                return 0;
+        }
+        double *scratch = malloc(thread_size * nthreads * sizeof(double));
+        if (scratch == NULL) {
+                return 0;
+        }
+#pragma omp parallel
+{
+        const char TRANS_T = 'T';
+        const char TRANS_N = 'N';
+        const char UPLO_U = 'U';
+        const double D1 = 1;
+        const double DM1 = -1;
+        const int thread_id = omp_get_thread_num();
+        const int team_size = omp_get_num_threads();
+        double *partial = scratch + thread_size * thread_id;
+        double *braw = partial + nao2;
+        double *ketbuf = braw + tile_size;
+        size_t g0, g1, ig0, ij, src;
+        int i, ic, g, ng, nk, t, npos, nneg, kp, kn, j;
+        int grid_order[grid_tile];
+        double sqrt_weight[grid_tile];
+        double sum;
+        for (ij = 0; ij < nao2; ij++) {
+                partial[ij] = 0;
+        }
+        NPomp_split(&g0, &g1, ngrids);
+        for (ig0 = g0; ig0 < g1; ig0 += grid_tile) {
+                ng = MIN(grid_tile, g1 - ig0);
+                nk = ng * 3;
+                if (symmetric) {
+                        /* Each signed quadrature weight contributes to one
+                         * Gram matrix. SYRK computes only one triangle. */
+                        npos = 0;
+                        for (g = 0; g < ng; g++) {
+                                sqrt_weight[g] = sqrt(fabs(wv[ig0+g]));
+                                if (wv[ig0+g] >= 0) {
+                                        grid_order[npos++] = g;
+                                }
+                        }
+                        j = npos;
+                        for (g = 0; g < ng; g++) {
+                                if (!(wv[ig0+g] >= 0)) {
+                                        grid_order[j++] = g;
+                                }
+                        }
+                        nneg = ng - npos;
+                        kp = npos * 3;
+                        kn = nneg * 3;
+                        for (i = 0; i < nao; i++) {
+                        for (ic = 0; ic < 3; ic++) {
+                                const double *pbra = bra + ic*bra_stride + (size_t)i*ngrids + ig0;
+                                for (j = 0; j < npos; j++) {
+                                        g = grid_order[j];
+                                        braw[(size_t)i*nk+ic*npos+j] = pbra[g] * sqrt_weight[g];
+                                }
+                                for (j = 0; j < nneg; j++) {
+                                        g = grid_order[npos+j];
+                                        braw[(size_t)i*nk+kp+ic*nneg+j] = pbra[g] * sqrt_weight[g];
+                                }
+                        } }
+                        if (kp > 0) {
+                                dsyrk_(&UPLO_U, &TRANS_T, &nao, &kp,
+                                       &D1, braw, &nk, &D1, partial, &nao);
+                        }
+                        if (kn > 0) {
+                                dsyrk_(&UPLO_U, &TRANS_T, &nao, &kn,
+                                       &DM1, braw+kp, &nk, &D1, partial, &nao);
+                        }
+                        continue;
+                }
+                for (i = 0; i < nao; i++) {
+                for (ic = 0; ic < 3; ic++) {
+                        const double *pbra = bra + ic*bra_stride + (size_t)i*ngrids + ig0;
+                        const double *pket = ket + ic*ket_stride + (size_t)i*ngrids + ig0;
+                        for (g = 0; g < ng; g++) {
+                                braw[(size_t)i*nk+ic*ng+g] = pbra[g] * wv[ig0+g];
+                                ketbuf[(size_t)i*nk+ic*ng+g] = pket[g];
+                        }
+                } }
+                dgemm_(&TRANS_T, &TRANS_N, &nao, &nao, &nk,
+                       &D1, ketbuf, &nk, braw, &nk, &D1, partial, &nao);
+        }
+#pragma omp barrier
+#pragma omp for schedule(static)
+        for (ij = 0; ij < nao2; ij++) {
+                src = ij;
+                if (symmetric && ij / nao < ij % nao) {
+                        src = (ij % nao) * nao + ij / nao;
+                }
+                sum = 0;
+                for (t = 0; t < team_size; t++) {
+                        sum += scratch[thread_size*t+src];
+                }
+                out[ij] += sum;
+        }
+}
+        free(scratch);
+        return 1;
+}
+
 /* vv[nao,nao] = bra[i,nao] * ket[i,nao] */
-void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
-                          int nao, int ngrids, int nbas, int hermi, int nbins,
-                          uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc)
+static void _dot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
+                              int nao, int ngrids, int nbas, int hermi, int nbins,
+                              uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc,
+                              int ncomp, ptrdiff_t bra_stride, ptrdiff_t ket_stride)
 {
         size_t Nao = nao;
         int shls_slice[2] = {0, nbas};
         int *box_l1_loc = malloc(sizeof(int) * (nbas+1));
-        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, BOXSIZE1_N);
+        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, 32);
+        int box_size = 0;
+        int ib;
+        for (ib = 0; ib < nbox_l1; ib++) {
+                box_size = MAX(box_size, ao_loc[box_l1_loc[ib+1]] - ao_loc[box_l1_loc[ib]]);
+        }
         int mask_l1_size = (ngrids + BOXSIZE1_M - 1)/BOXSIZE1_M * nbox_l1;
         uint8_t *mask_l1 = malloc(sizeof(uint8_t) * mask_l1_size);
         mask_l1_abstract(mask_l1, screen_index, box_l1_loc, nbox_l1, ngrids, nbas);
@@ -616,12 +879,12 @@ void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
 #pragma omp parallel
 {
         int ijb, ib, jb, ib0, jb0, ib1, jb1, ig0, ig1, ig_box2;
-        int ish0, ish1, jsh0, jsh1, i0, i1, j0, j1, ni, nj, i, j, n;
+        int ish0, ish1, jsh0, jsh1, i0, i1, j0, j1, ni, nj, i, j, n, ic;
         double s;
         double *pout;
-        double *buf = malloc(sizeof(double) * (BOXSIZE1_N*BOXSIZE1_N*ALIGNMENT+ALIGNMENT));
+        double *buf = malloc(sizeof(double) * ((size_t)box_size*box_size*ALIGNMENT+ALIGNMENT));
         double *outbuf = (double *)((uintptr_t)(buf+ALIGNMENT-1) & (-(uintptr_t)(ALIGNMENT*sizeof(double))));
-#pragma omp for schedule(dynamic, 4) nowait
+#pragma omp for schedule(dynamic, 1) nowait
         for (ijb = 0; ijb < nbox_l1*nbox_l1; ijb++) {
                 ib = ijb / nbox_l1;
                 jb = ijb % nbox_l1;
@@ -651,16 +914,22 @@ void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
                         ig_box2 = ig0 / BOXSIZE1_M;
                         if (mask_l1[ig_box2 * nbox_l1 + jb] &&
                             mask_l1[ig_box2 * nbox_l1 + ib]) {
-_dot_aow_ao_l1(outbuf, bra, ket, wv, nao, ngrids, nbas, ig0, ig1,
+                        for (ic = 0; ic < ncomp; ic++) {
+_dot_aow_ao_l1(outbuf, bra + ic*bra_stride, ket + ic*ket_stride,
+               wv, nao, ngrids, nbas, ig0, ig1,
                ish0, ish1, jsh0, jsh1, nj, i0, j0, nbins, screen_index,
                pair_mask, ao_loc);
                         }
+                        }
                 }
                 if (ngrids_align_down < ngrids) {
-                        _dot_aow_ao_frac(outbuf, bra, ket, wv, nao, ngrids, nbas,
+                        for (ic = 0; ic < ncomp; ic++) {
+                        _dot_aow_ao_frac(outbuf, bra + ic*bra_stride,
+                                         ket + ic*ket_stride, wv, nao, ngrids, nbas,
                                          ngrids_align_down, ish0, ish1, jsh0, jsh1,
                                          nj, i0, j0, nbins, screen_index,
                                          pair_mask, ao_loc);
+                        }
                 }
 
                 for (i = 0; i < ni; i++) {
@@ -681,6 +950,26 @@ _dot_aow_ao_l1(outbuf, bra, ket, wv, nao, ngrids, nbas, ig0, ig1,
         if (hermi != 0) {
                 NPdsymm_triu(nao, out, hermi);
         }
+}
+
+void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
+                          int nao, int ngrids, int nbas, int hermi, int nbins,
+                          uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc)
+{
+        _dot_aow_ao_sparse(out, bra, ket, wv, nao, ngrids, nbas, hermi, nbins,
+                           screen_index, pair_mask, ao_loc, 1, 0, 0);
+}
+
+void VXCtau_dot_sparse(double *out, double *bra, double *ket, double *wv,
+                       int nao, int ngrids, int nbas, int nbins,
+                       uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc,
+                       ptrdiff_t bra_stride, ptrdiff_t ket_stride)
+{
+        /* Share the screening metadata, output tiles and parallel region
+         * across the three Cartesian derivatives. */
+        _dot_aow_ao_sparse(out, bra, ket, wv, nao, ngrids, nbas, 1, nbins,
+                           screen_index, pair_mask, ao_loc, 3,
+                           bra_stride, ket_stride);
 }
 
 static void _dot_ao_ao_l1(double *out, double *bra, double *ket,
@@ -894,7 +1183,12 @@ void VXCdot_ao_ao_sparse(double *out, double *bra, double *ket,
         size_t Nao = nao;
         int shls_slice[2] = {0, nbas};
         int *box_l1_loc = malloc(sizeof(int) * (nbas+1));
-        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, BOXSIZE1_N);
+        int nbox_l1 = CVHFshls_block_partition(box_l1_loc, shls_slice, ao_loc, 32);
+        int box_size = 0;
+        int ib;
+        for (ib = 0; ib < nbox_l1; ib++) {
+                box_size = MAX(box_size, ao_loc[box_l1_loc[ib+1]] - ao_loc[box_l1_loc[ib]]);
+        }
         int mask_l1_size = (ngrids + BOXSIZE1_M - 1)/BOXSIZE1_M * nbox_l1;
         uint8_t *mask_l1 = malloc(sizeof(uint8_t) * mask_l1_size);
         mask_l1_abstract(mask_l1, screen_index, box_l1_loc,
@@ -907,9 +1201,9 @@ void VXCdot_ao_ao_sparse(double *out, double *bra, double *ket,
         int ish0, ish1, jsh0, jsh1, i0, i1, j0, j1, ni, nj, i, j, n;
         double s;
         double *pout;
-        double *buf = malloc(sizeof(double) * (BOXSIZE1_N*BOXSIZE1_N*ALIGNMENT+ALIGNMENT));
+        double *buf = malloc(sizeof(double) * ((size_t)box_size*box_size*ALIGNMENT+ALIGNMENT));
         double *outbuf = (double *)((uintptr_t)(buf+ALIGNMENT-1) & (-(uintptr_t)(ALIGNMENT*sizeof(double))));
-#pragma omp for schedule(dynamic, 4) nowait
+#pragma omp for schedule(dynamic, 1) nowait
         for (ijb = 0; ijb < nbox_l1*nbox_l1; ijb++) {
                 ib = ijb / nbox_l1;
                 jb = ijb % nbox_l1;

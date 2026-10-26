@@ -33,7 +33,6 @@
 #include "config.h"
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
-#define MAX_THREADS     256
 
 // TODO: register python signal
 #define raise_error     return
@@ -867,13 +866,12 @@ static const int xc_nvar5_offsets[] = {0, 1, 6, 21, 56, 126};
 static const int xc_nvar7_offsets[] = {0, 1, 8, 36, 120, 330};
 
 static void axpy(double *restrict dst, double *restrict src, const double fac,
-                 const int np, const int nsrc)
+                 const int np, const int nsrc, const int ld_dst)
 {
         int i, j;
         for (j = 0; j < nsrc; j++) {
-                #pragma omp parallel for schedule(static)
                 for (i = 0; i < np; i++) {
-                        dst[j*np+i] += fac * src[i*nsrc+j];
+                        dst[j*ld_dst+i] += fac * src[i*nsrc+j];
                 }
         }
 }
@@ -885,9 +883,9 @@ static const int *seg1[] = {NULL, vseg1, fseg1, kseg1, lseg1};
 
 static void merge_xc(double *restrict dst, double *restrict ebuf, const double fac,
                      const int spin, const int deriv, const int nvar, const int np,
-                     const int outlen, const int type)
+                     const int ld_dst, const int type)
 {
-        int order, nsrc, i;
+        int order, nsrc, i, j;
         for (i = 0; i < np; i++) {
                 dst[i] += fac * ebuf[i];
         }
@@ -925,12 +923,13 @@ static void merge_xc(double *restrict dst, double *restrict ebuf, const double f
                 }
 
                 for (order = 1; order <= deriv; order++) {
-                        pout = dst + offsets1[order] * np;
+                        pout = dst + offsets1[order] * ld_dst;
                         pin = ebuf + offsets0[order] * np;
                         nsrc = offsets0[order+1] - offsets0[order];
-                        #pragma omp parallel for schedule(static)
-                        for (i = 0; i < np * nsrc; i++) {
-                                pout[i] += fac * pin[i];
+                        for (j = 0; j < nsrc; j++) {
+                                for (i = 0; i < np; i++) {
+                                        pout[j*ld_dst+i] += fac * pin[j*np+i];
+                                }
                         }
                 }
                 return;
@@ -953,13 +952,13 @@ static void merge_xc(double *restrict dst, double *restrict ebuf, const double f
         pin = ebuf + np;
         for (order = 1; order <= deriv; order++) {
                 pseg1 = seg1[order];
-                pout = dst + offsets1[order] * np;
+                pout = dst + offsets1[order] * ld_dst;
                 terms = offsets0[order+1] - offsets0[order];
                 for (i = 0; i < terms; i++) {
                         nsrc = pseg1[i];
-                        axpy(pout, pin, fac, np, nsrc);
+                        axpy(pout, pin, fac, np, nsrc, ld_dst);
                         pin += np * nsrc;
-                        pout += np * nsrc;
+                        pout += ld_dst * nsrc;
                 }
         }
 }
@@ -970,56 +969,34 @@ void LIBXC_eval_xc(const int nfn, xc_func_type *fn_obj, const double *fac, const
                    double *restrict rho_u, double *restrict output)
 {
         assert(deriv <= 4);
-        double *ebuf = malloc(sizeof(double) * np * outlen);
-
-        double *rhobufs[MAX_THREADS];
-        int offsets[MAX_THREADS+1];
 #pragma omp parallel
 {
         const int iblk = omp_get_thread_num();
         const int nblk = omp_get_num_threads();
-        assert(nblk <= MAX_THREADS);
 
         int blksize = np / nblk;
-        int ioff = iblk * blksize;
         const int np_mod = np % nblk;
+        const int ioff = iblk * blksize + MIN(iblk, np_mod);
         if (iblk < np_mod) {
-            blksize += 1;
-        }
-        if (np_mod > 0) {
-            ioff += MIN(iblk, np_mod);
-        }
-        offsets[iblk] = ioff;
-        if (iblk == nblk-1) {
-            offsets[nblk] = np;
-            assert(ioff + blksize == np);
+                blksize += 1;
         }
 
-        double *rho_priv = malloc(sizeof(double) * blksize * 7);
-        rhobufs[iblk] = rho_priv;
-        _eval_rho(rho_priv, rho_u+ioff, spin, nvar, blksize, np);
-}
-
-        int i;
-        xc_func_type *func = fn_obj;
-        for (i = 0; i < nfn; i++) {
-#pragma omp parallel
-{
-                const int iblk = omp_get_thread_num();
-                const int offset = offsets[iblk];
-                const int blksize = offsets[iblk+1] - offset;
-                _eval_xc(func, spin, deriv, np, rhobufs[iblk], ebuf, offset, blksize);
-}
-
-                merge_xc(output, ebuf, fac[i],
-                         spin, deriv, nvar, np, outlen, func->info->family);
-                ++func;
+        if (blksize > 0) {
+                // Keep evaluation and accumulation on the same grid slice.
+                // Each thread owns these points in every output component.
+                double *rho_priv = malloc(sizeof(double) * blksize * 7);
+                double *ebuf = malloc(sizeof(double) * blksize * outlen);
+                _eval_rho(rho_priv, rho_u+ioff, spin, nvar, blksize, np);
+                int i;
+                for (i = 0; i < nfn; i++) {
+                        xc_func_type *func = fn_obj + i;
+                        _eval_xc(func, spin, deriv, blksize, rho_priv, ebuf, 0, blksize);
+                        merge_xc(output+ioff, ebuf, fac[i],
+                                 spin, deriv, nvar, blksize, np, func->info->family);
+                }
+                free(ebuf);
+                free(rho_priv);
         }
-        free(ebuf);
-#pragma omp parallel
-{
-        const int iblk = omp_get_thread_num();
-        free(rhobufs[iblk]);
 }
 }
 
