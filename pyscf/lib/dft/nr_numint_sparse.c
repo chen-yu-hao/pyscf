@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <math.h>
 #include "config.h"
 #include "np_helper/np_helper.h"
 #include "cint.h"
@@ -739,10 +740,127 @@ void VXCdot_aow_ao_dense(double *out, double *bra, double *ket, double *wv,
 }
 }
 
+int VXCtau_dot_dense(double *out, double *bra, double *ket, double *wv,
+                     int nao, int ngrids, ptrdiff_t bra_stride, ptrdiff_t ket_stride)
+{
+        const int grid_tile = 256;
+        const int symmetric = bra == ket && bra_stride == ket_stride;
+        const size_t nao2 = (size_t)nao * nao;
+        const size_t tile_size = (size_t)nao * grid_tile * 3;
+        const size_t thread_size = nao2 + (symmetric ? 1 : 2) * tile_size;
+        int nthreads = 1;
+#ifdef _OPENMP
+        nthreads = omp_get_max_threads();
+#endif
+        /* Bound the total scratch, independently of the grid size. Larger
+         * matrices retain the existing dense contraction path. */
+        if (thread_size * nthreads > (128*1024*1024) / sizeof(double)) {
+                return 0;
+        }
+        double *scratch = malloc(thread_size * nthreads * sizeof(double));
+        if (scratch == NULL) {
+                return 0;
+        }
+#pragma omp parallel
+{
+        const char TRANS_T = 'T';
+        const char TRANS_N = 'N';
+        const char UPLO_U = 'U';
+        const double D1 = 1;
+        const double DM1 = -1;
+        const int thread_id = omp_get_thread_num();
+        const int team_size = omp_get_num_threads();
+        double *partial = scratch + thread_size * thread_id;
+        double *braw = partial + nao2;
+        double *ketbuf = braw + tile_size;
+        size_t g0, g1, ig0, ij, src;
+        int i, ic, g, ng, nk, t, npos, nneg, kp, kn, j;
+        int grid_order[grid_tile];
+        double sqrt_weight[grid_tile];
+        double sum;
+        for (ij = 0; ij < nao2; ij++) {
+                partial[ij] = 0;
+        }
+        NPomp_split(&g0, &g1, ngrids);
+        for (ig0 = g0; ig0 < g1; ig0 += grid_tile) {
+                ng = MIN(grid_tile, g1 - ig0);
+                nk = ng * 3;
+                if (symmetric) {
+                        /* Each signed quadrature weight contributes to one
+                         * Gram matrix. SYRK computes only one triangle. */
+                        npos = 0;
+                        for (g = 0; g < ng; g++) {
+                                sqrt_weight[g] = sqrt(fabs(wv[ig0+g]));
+                                if (wv[ig0+g] >= 0) {
+                                        grid_order[npos++] = g;
+                                }
+                        }
+                        j = npos;
+                        for (g = 0; g < ng; g++) {
+                                if (!(wv[ig0+g] >= 0)) {
+                                        grid_order[j++] = g;
+                                }
+                        }
+                        nneg = ng - npos;
+                        kp = npos * 3;
+                        kn = nneg * 3;
+                        for (i = 0; i < nao; i++) {
+                        for (ic = 0; ic < 3; ic++) {
+                                const double *pbra = bra + ic*bra_stride + (size_t)i*ngrids + ig0;
+                                for (j = 0; j < npos; j++) {
+                                        g = grid_order[j];
+                                        braw[(size_t)i*nk+ic*npos+j] = pbra[g] * sqrt_weight[g];
+                                }
+                                for (j = 0; j < nneg; j++) {
+                                        g = grid_order[npos+j];
+                                        braw[(size_t)i*nk+kp+ic*nneg+j] = pbra[g] * sqrt_weight[g];
+                                }
+                        } }
+                        if (kp > 0) {
+                                dsyrk_(&UPLO_U, &TRANS_T, &nao, &kp,
+                                       &D1, braw, &nk, &D1, partial, &nao);
+                        }
+                        if (kn > 0) {
+                                dsyrk_(&UPLO_U, &TRANS_T, &nao, &kn,
+                                       &DM1, braw+kp, &nk, &D1, partial, &nao);
+                        }
+                        continue;
+                }
+                for (i = 0; i < nao; i++) {
+                for (ic = 0; ic < 3; ic++) {
+                        const double *pbra = bra + ic*bra_stride + (size_t)i*ngrids + ig0;
+                        const double *pket = ket + ic*ket_stride + (size_t)i*ngrids + ig0;
+                        for (g = 0; g < ng; g++) {
+                                braw[(size_t)i*nk+ic*ng+g] = pbra[g] * wv[ig0+g];
+                                ketbuf[(size_t)i*nk+ic*ng+g] = pket[g];
+                        }
+                } }
+                dgemm_(&TRANS_T, &TRANS_N, &nao, &nao, &nk,
+                       &D1, ketbuf, &nk, braw, &nk, &D1, partial, &nao);
+        }
+#pragma omp barrier
+#pragma omp for schedule(static)
+        for (ij = 0; ij < nao2; ij++) {
+                src = ij;
+                if (symmetric && ij / nao < ij % nao) {
+                        src = (ij % nao) * nao + ij / nao;
+                }
+                sum = 0;
+                for (t = 0; t < team_size; t++) {
+                        sum += scratch[thread_size*t+src];
+                }
+                out[ij] += sum;
+        }
+}
+        free(scratch);
+        return 1;
+}
+
 /* vv[nao,nao] = bra[i,nao] * ket[i,nao] */
-void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
-                          int nao, int ngrids, int nbas, int hermi, int nbins,
-                          uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc)
+static void _dot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
+                              int nao, int ngrids, int nbas, int hermi, int nbins,
+                              uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc,
+                              int ncomp, ptrdiff_t bra_stride, ptrdiff_t ket_stride)
 {
         size_t Nao = nao;
         int shls_slice[2] = {0, nbas};
@@ -761,7 +879,7 @@ void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
 #pragma omp parallel
 {
         int ijb, ib, jb, ib0, jb0, ib1, jb1, ig0, ig1, ig_box2;
-        int ish0, ish1, jsh0, jsh1, i0, i1, j0, j1, ni, nj, i, j, n;
+        int ish0, ish1, jsh0, jsh1, i0, i1, j0, j1, ni, nj, i, j, n, ic;
         double s;
         double *pout;
         double *buf = malloc(sizeof(double) * ((size_t)box_size*box_size*ALIGNMENT+ALIGNMENT));
@@ -796,16 +914,22 @@ void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
                         ig_box2 = ig0 / BOXSIZE1_M;
                         if (mask_l1[ig_box2 * nbox_l1 + jb] &&
                             mask_l1[ig_box2 * nbox_l1 + ib]) {
-_dot_aow_ao_l1(outbuf, bra, ket, wv, nao, ngrids, nbas, ig0, ig1,
+                        for (ic = 0; ic < ncomp; ic++) {
+_dot_aow_ao_l1(outbuf, bra + ic*bra_stride, ket + ic*ket_stride,
+               wv, nao, ngrids, nbas, ig0, ig1,
                ish0, ish1, jsh0, jsh1, nj, i0, j0, nbins, screen_index,
                pair_mask, ao_loc);
                         }
+                        }
                 }
                 if (ngrids_align_down < ngrids) {
-                        _dot_aow_ao_frac(outbuf, bra, ket, wv, nao, ngrids, nbas,
+                        for (ic = 0; ic < ncomp; ic++) {
+                        _dot_aow_ao_frac(outbuf, bra + ic*bra_stride,
+                                         ket + ic*ket_stride, wv, nao, ngrids, nbas,
                                          ngrids_align_down, ish0, ish1, jsh0, jsh1,
                                          nj, i0, j0, nbins, screen_index,
                                          pair_mask, ao_loc);
+                        }
                 }
 
                 for (i = 0; i < ni; i++) {
@@ -826,6 +950,26 @@ _dot_aow_ao_l1(outbuf, bra, ket, wv, nao, ngrids, nbas, ig0, ig1,
         if (hermi != 0) {
                 NPdsymm_triu(nao, out, hermi);
         }
+}
+
+void VXCdot_aow_ao_sparse(double *out, double *bra, double *ket, double *wv,
+                          int nao, int ngrids, int nbas, int hermi, int nbins,
+                          uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc)
+{
+        _dot_aow_ao_sparse(out, bra, ket, wv, nao, ngrids, nbas, hermi, nbins,
+                           screen_index, pair_mask, ao_loc, 1, 0, 0);
+}
+
+void VXCtau_dot_sparse(double *out, double *bra, double *ket, double *wv,
+                       int nao, int ngrids, int nbas, int nbins,
+                       uint8_t *screen_index, uint8_t *pair_mask, int *ao_loc,
+                       ptrdiff_t bra_stride, ptrdiff_t ket_stride)
+{
+        /* Share the screening metadata, output tiles and parallel region
+         * across the three Cartesian derivatives. */
+        _dot_aow_ao_sparse(out, bra, ket, wv, nao, ngrids, nbas, 1, nbins,
+                           screen_index, pair_mask, ao_loc, 3,
+                           bra_stride, ket_stride);
 }
 
 static void _dot_ao_ao_l1(double *out, double *bra, double *ket,
