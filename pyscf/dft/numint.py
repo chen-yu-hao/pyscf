@@ -2640,11 +2640,70 @@ def nr_fxc(mol, grids, xc_code, dm0, dms, spin=0, relativity=0, hermi=0,
                      hermi, rho0, vxc, fxc, max_memory, verbose)
 
 
+def _cache_xc_kernel_blocks(ni, grids, xc_code, xctype, spin, rho_blocks):
+    # Custom XC evaluators retain the single whole-grid callback.
+    block_xc = (ni.libxc is libxc and libxc.__name__ == 'pyscf.dft.libxc'
+                and getattr(ni.eval_xc1, '__func__', None) is LibXCMixin.eval_xc1
+                and getattr(ni.eval_xc_eff, '__func__', None) is LibXCMixin.eval_xc_eff)
+    rho = vxc = fxc = None
+    p0 = 0
+    offsets = [0]
+    for rho_block in rho_blocks:
+        tuple_rho = isinstance(rho_block, tuple)
+        ngrids = grids.coords.shape[0]
+        block_size = rho_block[0].shape[-1] if tuple_rho else rho_block.shape[-1]
+        p1 = p0 + block_size
+        offsets.append(p1)
+        if p0 == 0 and p1 == ngrids:
+            # No copy is needed when the AO loop has just one block.
+            rho = rho_block
+            p0 = p1
+            continue
+        blocks = rho_block if tuple_rho else (rho_block,)
+        if rho is None:
+            arrays = [numpy.empty(b.shape[:-1] + (ngrids,), dtype=b.dtype) for b in blocks]
+        else:
+            arrays = list(rho) if tuple_rho else [rho]
+        for i, block in enumerate(blocks):
+            dtype = numpy.result_type(arrays[i].dtype, block.dtype)
+            if dtype != arrays[i].dtype:
+                promoted = numpy.empty(arrays[i].shape, dtype=dtype)
+                promoted[...,:p0] = arrays[i][...,:p0]
+                arrays[i] = promoted
+            arrays[i][...,p0:p1] = block
+        rho = tuple(arrays) if tuple_rho else arrays[0]
+        p0 = p1
+    if rho is None:
+        # Match the empty-grid error from the previous hstack implementation.
+        numpy.hstack([])
+    # Release AO buffers before allocating the full derivative caches.
+    if not block_xc or len(offsets) == 2:
+        vxc, fxc = ni.eval_xc_eff(xc_code, rho, deriv=2, xctype=xctype, spin=spin)[1:3]
+    else:
+        for p0, p1 in zip(offsets[:-1], offsets[1:]):
+            block = tuple(r[...,p0:p1] for r in rho) if tuple_rho else rho[...,p0:p1]
+            vb, fb = ni.eval_xc_eff(xc_code, block, deriv=2,
+                                     xctype=xctype, spin=spin)[1:3]
+            if vxc is None:
+                vxc = numpy.empty(vb.shape[:-1] + (ngrids,), dtype=vb.dtype)
+                fxc = numpy.empty(fb.shape[:-1] + (ngrids,), dtype=fb.dtype)
+            vxc[...,p0:p1] = vb
+            fxc[...,p0:p1] = fb
+            del vb, fb
+    return rho, vxc, fxc
+
+
 def cache_xc_kernel(ni, mol, grids, xc_code, mo_coeff, mo_occ, spin=0,
                     max_memory=2000):
     '''Compute the 0th order density, Vxc and fxc.  They can be used in TDDFT,
     DFT hessian module etc.
     '''
+    return _cache_xc_kernel_mo(ni, mol, grids, xc_code, mo_coeff, mo_occ,
+                               spin, max_memory)
+
+
+def _cache_xc_kernel_mo(ni, mol, grids, xc_code, mo_coeff, mo_occ, spin,
+                         max_memory):
     xctype = ni._xc_type(xc_code)
     if xctype == 'GGA':
         ao_deriv = 1
@@ -2654,29 +2713,28 @@ def cache_xc_kernel(ni, mol, grids, xc_code, mo_coeff, mo_occ, spin=0,
         ao_deriv = 0
     with_lapl = MGGA_DENSITY_LAPL
 
-    if mo_coeff[0].ndim == 1:  # RKS
+    is_rks = mo_coeff[0].ndim == 1
+    if is_rks:
         nao = mo_coeff.shape[0]
-        rho = []
-        for ao, mask, weight, coords \
-                in ni.block_loop(mol, grids, nao, ao_deriv, max_memory=max_memory):
-            rho.append(ni.eval_rho2(mol, ao, mo_coeff, mo_occ, mask, xctype, with_lapl))
-        rho = numpy.hstack(rho)
-        if spin == 1:  # RKS with nr_rks_fxc_st
-            rho *= .5
-            rho = numpy.repeat(rho[numpy.newaxis], 2, axis=0)
     else:  # UKS
         assert mo_coeff[0].ndim == 2
         assert spin == 1
         nao = mo_coeff[0].shape[0]
-        rhoa = []
-        rhob = []
+
+    def rho_blocks():
         for ao, mask, weight, coords \
                 in ni.block_loop(mol, grids, nao, ao_deriv, max_memory=max_memory):
-            rhoa.append(ni.eval_rho2(mol, ao, mo_coeff[0], mo_occ[0], mask, xctype, with_lapl))
-            rhob.append(ni.eval_rho2(mol, ao, mo_coeff[1], mo_occ[1], mask, xctype, with_lapl))
-        rho = (numpy.hstack(rhoa), numpy.hstack(rhob))
-    vxc, fxc = ni.eval_xc_eff(xc_code, rho, deriv=2, xctype=xctype, spin=spin)[1:3]
-    return rho, vxc, fxc
+            if is_rks:
+                rho = ni.eval_rho2(mol, ao, mo_coeff, mo_occ, mask, xctype, with_lapl)
+                if spin == 1:  # RKS with nr_rks_fxc_st
+                    rho *= .5
+                    rho = numpy.repeat(rho[numpy.newaxis], 2, axis=0)
+                yield rho
+            else:
+                yield (ni.eval_rho2(mol, ao, mo_coeff[0], mo_occ[0], mask, xctype, with_lapl),
+                       ni.eval_rho2(mol, ao, mo_coeff[1], mo_occ[1], mask, xctype, with_lapl))
+    return _cache_xc_kernel_blocks(ni, grids, xc_code, xctype, spin,
+                                    rho_blocks())
 
 def cache_xc_kernel1(ni, mol, grids, xc_code, dm, spin=0, max_memory=2000):
     '''Compute the 0th order density, Vxc and fxc.  They can be used in TDDFT,
@@ -2693,27 +2751,23 @@ def cache_xc_kernel1(ni, mol, grids, xc_code, dm, spin=0, max_memory=2000):
 
     hermi = 1
     make_rho, nset, nao = ni._gen_rho_evaluator(mol, dm, hermi, False, grids)
-    if dm[0].ndim == 1:  # RKS
-        rho = []
-        for ao, mask, weight, coords \
-                in ni.block_loop(mol, grids, nao, ao_deriv, max_memory=max_memory):
-            rho.append(make_rho(0, ao, mask, xctype))
-        rho = numpy.hstack(rho)
-        if spin == 1:  # RKS with nr_rks_fxc_st
-            rho *= .5
-            rho = numpy.repeat(rho[numpy.newaxis], 2, axis=0)
-    else:  # UKS
+    is_rks = dm[0].ndim == 1
+    if not is_rks:  # UKS
         assert dm[0].ndim == 2
         assert spin == 1
-        rhoa = []
-        rhob = []
+
+    def rho_blocks():
         for ao, mask, weight, coords \
-                in ni.block_loop(mol, grids, nao, ao_deriv, max_memory):
-            rhoa.append(make_rho(0, ao, mask, xctype))
-            rhob.append(make_rho(1, ao, mask, xctype))
-        rho = (numpy.hstack(rhoa), numpy.hstack(rhob))
-    vxc, fxc = ni.eval_xc_eff(xc_code, rho, deriv=2, xctype=xctype, spin=spin)[1:3]
-    return rho, vxc, fxc
+                in ni.block_loop(mol, grids, nao, ao_deriv, max_memory=max_memory):
+            if is_rks:
+                rho = make_rho(0, ao, mask, xctype)
+                if spin == 1:  # RKS with nr_rks_fxc_st
+                    rho *= .5
+                    rho = numpy.repeat(rho[numpy.newaxis], 2, axis=0)
+                yield rho
+            else:
+                yield (make_rho(0, ao, mask, xctype), make_rho(1, ao, mask, xctype))
+    return _cache_xc_kernel_blocks(ni, grids, xc_code, xctype, spin, rho_blocks())
 
 def get_rho(ni, mol, dm, grids, max_memory=2000):
     '''Density in real space
