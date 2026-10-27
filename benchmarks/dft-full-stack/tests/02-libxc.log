@@ -1,0 +1,7 @@
+......s........Possible xc_code ['GGA_X_APBE', 'GGA_K_APBE'] matches APBE. XC parser takes GGA_X_APBE
+You can add prefix to APBE for a specific functional (e.g. GGA_X_APBE, HYB_MGGA_X_APBE)
+.....
+----------------------------------------------------------------------
+Ran 20 tests in 0.641s
+
+OK (skipped=1)

@@ -1,0 +1,16 @@
+...WARN: n_ang 11 for atom 0 O is not the supported Lebedev angular grids. Set n_ang to 50
+WARN: n_ang 11 for atom 1 H is not the supported Lebedev angular grids. Set n_ang to 50
+.............s........Possible xc_code ['GGA_K_APBE', 'GGA_X_APBE'] matches APBE. XC parser takes GGA_X_APBE
+You can add prefix to APBE for a specific functional (e.g. GGA_X_APBE, HYB_MGGA_X_APBE)
+.........WARN: eval_rho1 does not support complex density, eval_rho is called instead
+...../home/lyl/soft/pyscf-stack-20261027/09-response/pyscf/dft/numint.py:698: UserWarning: Note the output of libxc.eval_xc cannot be directly used in eval_mat.
+vsigma from eval_xc should be restructured as (vsigma[:,0],vsigma[:,1])
+
+  warnings.warn('Note the output of libxc.eval_xc cannot be '
+......................................................................
+----------------------------------------------------------------------
+Ran 109 tests in 15.423s
+
+OK (skipped=1)
+output file: /dev/null
+output file: /dev/null

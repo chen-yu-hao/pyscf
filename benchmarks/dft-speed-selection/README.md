@@ -1,3 +1,5 @@
+> **Superseded by the complete-implementation stack:** [nine cumulative steps and full-SCF incremental measurements](../dft-full-stack/README.md). The three-change recommendation below is retained as historical evidence from isolated XC selection; the current plan preserves the complete implementation and evaluates parent-to-child full workloads.
+
 # Measured DFT speed improvements selected for review
 
 The recommended code contributions are **DFT-grid**, **DFT-sparse-tiles**, and **DFT-density-dm**. These are independent branches based on upstream `44313dfb457b93358918c391fc66285fa44153ef`. The last branch removes all MO optimizations from the earlier density proposal. The actual new head `a5d33360cd0fd9c16e48fed7e752690b98a78b61` was rebuilt and remeasured.

@@ -1,0 +1,189 @@
+{
+  "case": "o2",
+  "basis": "cc-pvtz",
+  "xc": "MN15",
+  "spin": 2,
+  "cores": 8,
+  "python": "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+  "pyscf_path": "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/__init__.py",
+  "version": "2.14.0",
+  "affinity": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "energy": -150.2251093047508,
+  "kernel_wall_s": 3.4420443810522556,
+  "cycles": 10,
+  "polish_cycles": 0,
+  "strict": true,
+  "history": [
+    {
+      "cycle": 1,
+      "density_rms": 0.00692929772635567,
+      "density_max": 0.0681875300930987,
+      "energy_delta": 0.18558699039670046,
+      "gradient": 0.503659137373026
+    },
+    {
+      "cycle": 2,
+      "density_rms": 0.0046122099584784025,
+      "density_max": 0.07615415763672942,
+      "energy_delta": 0.037341312480748456,
+      "gradient": 0.3398707110308917
+    },
+    {
+      "cycle": 3,
+      "density_rms": 0.001997647129047754,
+      "density_max": 0.03742259272401044,
+      "energy_delta": 0.03432618900060902,
+      "gradient": 0.02159946302344716
+    },
+    {
+      "cycle": 4,
+      "density_rms": 0.00016573917398113997,
+      "density_max": 0.0037019015480204698,
+      "energy_delta": 0.000132965084674197,
+      "gradient": 0.002734172576623036
+    },
+    {
+      "cycle": 5,
+      "density_rms": 1.9836940063926396e-05,
+      "density_max": 0.00029213664511790194,
+      "energy_delta": 2.394741756006624e-06,
+      "gradient": 0.00029099551133711436
+    },
+    {
+      "cycle": 6,
+      "density_rms": 2.4344507083529574e-06,
+      "density_max": 4.302745182493961e-05,
+      "energy_delta": 3.91853802739206e-08,
+      "gradient": 3.06070495893728e-05
+    },
+    {
+      "cycle": 7,
+      "density_rms": 2.465143719147221e-07,
+      "density_max": 6.124401643103905e-06,
+      "energy_delta": 4.4798298404202797e-10,
+      "gradient": 3.117375452023122e-06
+    },
+    {
+      "cycle": 8,
+      "density_rms": 3.4709209921327816e-08,
+      "density_max": 6.214378885927019e-07,
+      "energy_delta": 5.6843418860808015e-12,
+      "gradient": 3.084542514777746e-07
+    },
+    {
+      "cycle": 9,
+      "density_rms": 4.32732738684856e-09,
+      "density_max": 6.166334792778727e-08,
+      "energy_delta": 2.5579538487363607e-13,
+      "gradient": 3.5417299655255964e-08
+    },
+    {
+      "cycle": 10,
+      "density_rms": 2.8769889319617126e-10,
+      "density_max": 6.874185221050766e-09,
+      "energy_delta": 2.2737367544323206e-13,
+      "gradient": 1.55775345418844e-09
+    },
+    {
+      "cycle": 10,
+      "density_rms": 1.820616368598931e-11,
+      "density_max": 3.3347691968943494e-10,
+      "energy_delta": 2.5579538487363607e-13,
+      "gradient": 4.5654700086747446e-10
+    }
+  ],
+  "grid_nominal": [
+    99,
+    590
+  ],
+  "grid_points": 116824,
+  "nonzero_weight_points": 116658,
+  "cutoff": 1e-10,
+  "numint_cutoff": 1e-08,
+  "nelec_overlap": [
+    9.000000000000002,
+    7.0
+  ],
+  "nao": 60,
+  "cpu_seconds": 14.652386,
+  "peak_rss_kib": 386748,
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "version": "0.3.23.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "version": "0.3.29.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "version": null,
+      "threading_layer": "disabled",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgomp.so.1.0.0",
+      "version": null
+    }
+  ],
+  "native_maps": [
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/deps/lib/libcint.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/deps/lib/libxc.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/deps/lib64/libxcfun.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libao2mo.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libcgto.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libcvhf.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libdft.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libnp_helper.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libpbc.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libri.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libxc_itrf.so",
+    "/home/lyl/soft/pyscf-stack-20261027/05-density-mo/pyscf/lib/libxcfun_itrf.so"
+  ],
+  "spin_square": [
+    2.004652119152528,
+    3.0030998112966727
+  ],
+  "grid_coords_digest": "834256e617c17bc73b0d5a67e2410a3d559dcb7764ac68e6c191b081491fcec7",
+  "grid_weights_digest": "a6e93eb910fd975169f8b029c02132489a2da431da9501178650c8d013f4288d"
+}

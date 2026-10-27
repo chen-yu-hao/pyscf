@@ -1,0 +1,189 @@
+{
+  "case": "o2",
+  "basis": "cc-pvtz",
+  "xc": "MN15",
+  "spin": 2,
+  "cores": 8,
+  "python": "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+  "pyscf_path": "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/__init__.py",
+  "version": "2.14.0",
+  "affinity": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "energy": -150.22510930475056,
+  "kernel_wall_s": 3.470777863636613,
+  "cycles": 10,
+  "polish_cycles": 0,
+  "strict": true,
+  "history": [
+    {
+      "cycle": 1,
+      "density_rms": 0.006929297726356045,
+      "density_max": 0.06818753009309494,
+      "energy_delta": 0.18558699039658677,
+      "gradient": 0.5036591373730225
+    },
+    {
+      "cycle": 2,
+      "density_rms": 0.004612209958478216,
+      "density_max": 0.07615415763673516,
+      "energy_delta": 0.037341312480748456,
+      "gradient": 0.3398707110308846
+    },
+    {
+      "cycle": 3,
+      "density_rms": 0.0019976471290477603,
+      "density_max": 0.03742259272401857,
+      "energy_delta": 0.0343261890005806,
+      "gradient": 0.021599463023451112
+    },
+    {
+      "cycle": 4,
+      "density_rms": 0.0001657391739812372,
+      "density_max": 0.0037019015480259654,
+      "energy_delta": 0.00013296508495841408,
+      "gradient": 0.0027341725766218336
+    },
+    {
+      "cycle": 5,
+      "density_rms": 1.983694006436608e-05,
+      "density_max": 0.0002921366451237861,
+      "energy_delta": 2.3947413865244016e-06,
+      "gradient": 0.0002909955113372226
+    },
+    {
+      "cycle": 6,
+      "density_rms": 2.4344507080964047e-06,
+      "density_max": 4.3027451856414434e-05,
+      "energy_delta": 3.9185636069305474e-08,
+      "gradient": 3.060704958360772e-05
+    },
+    {
+      "cycle": 7,
+      "density_rms": 2.4651437300105115e-07,
+      "density_max": 6.124401735752016e-06,
+      "energy_delta": 4.4789771891373675e-10,
+      "gradient": 3.117375437446348e-06
+    },
+    {
+      "cycle": 8,
+      "density_rms": 3.47092205992616e-08,
+      "density_max": 6.214382936575724e-07,
+      "energy_delta": 5.7127635955112055e-12,
+      "gradient": 3.0845378573474704e-07
+    },
+    {
+      "cycle": 9,
+      "density_rms": 4.327188603214647e-09,
+      "density_max": 6.166191499068496e-08,
+      "energy_delta": 1.1368683772161603e-13,
+      "gradient": 3.542184413019101e-08
+    },
+    {
+      "cycle": 10,
+      "density_rms": 2.8779376687428996e-10,
+      "density_max": 6.8759084745351196e-09,
+      "energy_delta": 2.2737367544323206e-13,
+      "gradient": 1.558060717631806e-09
+    },
+    {
+      "cycle": 10,
+      "density_rms": 1.8211375974010338e-11,
+      "density_max": 3.3346485989182995e-10,
+      "energy_delta": 1.1368683772161603e-13,
+      "gradient": 4.630613141247324e-10
+    }
+  ],
+  "grid_nominal": [
+    99,
+    590
+  ],
+  "grid_points": 116824,
+  "nonzero_weight_points": 116658,
+  "cutoff": 1e-10,
+  "numint_cutoff": 1e-08,
+  "nelec_overlap": [
+    9.000000000000004,
+    7.0000000000000036
+  ],
+  "nao": 60,
+  "cpu_seconds": 14.563809,
+  "peak_rss_kib": 383744,
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "version": "0.3.23.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "version": "0.3.29.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "version": null,
+      "threading_layer": "disabled",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgomp.so.1.0.0",
+      "version": null
+    }
+  ],
+  "native_maps": [
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/deps/lib/libcint.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/deps/lib/libxc.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/deps/lib64/libxcfun.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libao2mo.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libcgto.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libcvhf.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libdft.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libnp_helper.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libpbc.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libri.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libxc_itrf.so",
+    "/home/lyl/soft/pyscf-stack-20261027/01-grid/pyscf/lib/libxcfun_itrf.so"
+  ],
+  "spin_square": [
+    2.0046521191525315,
+    3.0030998112966754
+  ],
+  "grid_coords_digest": "834256e617c17bc73b0d5a67e2410a3d559dcb7764ac68e6c191b081491fcec7",
+  "grid_weights_digest": "a6e93eb910fd975169f8b029c02132489a2da431da9501178650c8d013f4288d"
+}

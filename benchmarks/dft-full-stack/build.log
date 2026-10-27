@@ -1,0 +1,10 @@
+BUILT 00-base 44313dfb457b93358918c391fc66285fa44153ef [] 1.45
+BUILT 01-grid 8ee7cc3ea223d1b6e46913306b4a522c04746e98 [] 1.22
+BUILT 02-libxc a52b05e3afa58345ba95a17a07b782d2d5a5a090 ['xc_itrf'] 3.23
+BUILT 03-ao 87505fe4200e3115ce7f38e3c53a4c15f46ccc2d ['cgto'] 7.71
+BUILT 04-density-dm 343beca98c837ae2b6edb28e39f74e88b40a8971 ['dft'] 18.18
+BUILT 05-density-mo 35eb265e4017fffab2d015bf2449e5b790c38e46 ['dft'] 17.96
+BUILT 06-sparse-tiles 9c18323670177880b3925e53fc7dbb6e230b46af ['dft'] 18.48
+BUILT 07-potential 560f88db00b6f9d37b3d66140e0c3cc43d9ec39d ['dft'] 18.15
+BUILT 08-cache-blocks f50e82b1501fcda646bf35d49d9eed1f58d09a1e [] 1.34
+BUILT 09-response ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb [] 1.16

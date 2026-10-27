@@ -1,0 +1,54 @@
+[
+  {
+    "command": [
+      "/home/lyl/soft/pyscf-pr-tools/python/bin/ruff",
+      "check",
+      "--config",
+      ".ruff.toml",
+      "pyscf/dft",
+      "pyscf/lib",
+      "pyscf/scf",
+      "pyscf/gto"
+    ],
+    "returncode": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "/home/lyl/soft/pyscf-pr-tools/python/bin/ruff",
+      "check",
+      "--select",
+      "NPY",
+      "--ignore",
+      "NPY002",
+      "pyscf/dft",
+      "pyscf/scf",
+      "pyscf/gto"
+    ],
+    "returncode": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "flake8",
+      "--config",
+      ".flake8",
+      "pyscf/dft",
+      "pyscf/scf",
+      "pyscf/gto"
+    ],
+    "returncode": 0,
+    "output": ""
+  },
+  {
+    "command": [
+      "pycodestyle",
+      "--select=E111,W191,W293",
+      "pyscf/dft",
+      "pyscf/scf",
+      "pyscf/gto"
+    ],
+    "returncode": 0,
+    "output": ""
+  }
+]

@@ -1,0 +1,100 @@
+START water12-rks-LDA_VWN-t8-parent-r0
+DONE 1/48 water12-rks-LDA_VWN-t8-parent-r0 3.672s
+START water12-rks-LDA_VWN-t8-dm-r0
+DONE 2/48 water12-rks-LDA_VWN-t8-dm-r0 2.870s
+START water12-rks-LDA_VWN-t8-dm-r1
+DONE 3/48 water12-rks-LDA_VWN-t8-dm-r1 2.821s
+START water12-rks-LDA_VWN-t8-parent-r1
+DONE 4/48 water12-rks-LDA_VWN-t8-parent-r1 3.623s
+START water12-rks-LDA_VWN-t8-parent-r2
+DONE 5/48 water12-rks-LDA_VWN-t8-parent-r2 3.522s
+START water12-rks-LDA_VWN-t8-dm-r2
+DONE 6/48 water12-rks-LDA_VWN-t8-dm-r2 2.821s
+START water12-rks-PBE-t8-parent-r0
+DONE 7/48 water12-rks-PBE-t8-parent-r0 5.076s
+START water12-rks-PBE-t8-dm-r0
+DONE 8/48 water12-rks-PBE-t8-dm-r0 4.275s
+START water12-rks-PBE-t8-dm-r1
+DONE 9/48 water12-rks-PBE-t8-dm-r1 4.324s
+START water12-rks-PBE-t8-parent-r1
+DONE 10/48 water12-rks-PBE-t8-parent-r1 4.876s
+START water12-rks-PBE-t8-parent-r2
+DONE 11/48 water12-rks-PBE-t8-parent-r2 5.126s
+START water12-rks-PBE-t8-dm-r2
+DONE 12/48 water12-rks-PBE-t8-dm-r2 4.324s
+START water12-rks-MN15-t8-parent-r0
+DONE 13/48 water12-rks-MN15-t8-parent-r0 10.440s
+START water12-rks-MN15-t8-dm-r0
+DONE 14/48 water12-rks-MN15-t8-dm-r0 7.231s
+START water12-rks-MN15-t8-dm-r1
+DONE 15/48 water12-rks-MN15-t8-dm-r1 7.131s
+START water12-rks-MN15-t8-parent-r1
+DONE 16/48 water12-rks-MN15-t8-parent-r1 10.590s
+START water12-rks-MN15-t8-parent-r2
+DONE 17/48 water12-rks-MN15-t8-parent-r2 10.541s
+START water12-rks-MN15-t8-dm-r2
+DONE 18/48 water12-rks-MN15-t8-dm-r2 7.182s
+START water11oh-uks-LDA_VWN-t8-parent-r0
+DONE 19/48 water11oh-uks-LDA_VWN-t8-parent-r0 5.175s
+START water11oh-uks-LDA_VWN-t8-dm-r0
+DONE 20/48 water11oh-uks-LDA_VWN-t8-dm-r0 3.670s
+START water11oh-uks-LDA_VWN-t8-dm-r1
+DONE 21/48 water11oh-uks-LDA_VWN-t8-dm-r1 3.971s
+START water11oh-uks-LDA_VWN-t8-parent-r1
+DONE 22/48 water11oh-uks-LDA_VWN-t8-parent-r1 4.927s
+START water11oh-uks-LDA_VWN-t8-parent-r2
+DONE 23/48 water11oh-uks-LDA_VWN-t8-parent-r2 5.174s
+START water11oh-uks-LDA_VWN-t8-dm-r2
+DONE 24/48 water11oh-uks-LDA_VWN-t8-dm-r2 3.856s
+START water11oh-uks-PBE-t8-parent-r0
+DONE 25/48 water11oh-uks-PBE-t8-parent-r0 7.480s
+START water11oh-uks-PBE-t8-dm-r0
+DONE 26/48 water11oh-uks-PBE-t8-dm-r0 6.074s
+START water11oh-uks-PBE-t8-dm-r1
+DONE 27/48 water11oh-uks-PBE-t8-dm-r1 6.224s
+START water11oh-uks-PBE-t8-parent-r1
+DONE 28/48 water11oh-uks-PBE-t8-parent-r1 7.778s
+START water11oh-uks-PBE-t8-parent-r2
+DONE 29/48 water11oh-uks-PBE-t8-parent-r2 7.531s
+START water11oh-uks-PBE-t8-dm-r2
+DONE 30/48 water11oh-uks-PBE-t8-dm-r2 6.177s
+START water11oh-uks-MN15-t8-parent-r0
+DONE 31/48 water11oh-uks-MN15-t8-parent-r0 17.906s
+START water11oh-uks-MN15-t8-dm-r0
+DONE 32/48 water11oh-uks-MN15-t8-dm-r0 11.692s
+START water11oh-uks-MN15-t8-dm-r1
+DONE 33/48 water11oh-uks-MN15-t8-dm-r1 11.742s
+START water11oh-uks-MN15-t8-parent-r1
+DONE 34/48 water11oh-uks-MN15-t8-parent-r1 18.107s
+START water11oh-uks-MN15-t8-parent-r2
+DONE 35/48 water11oh-uks-MN15-t8-parent-r2 17.957s
+START water11oh-uks-MN15-t8-dm-r2
+DONE 36/48 water11oh-uks-MN15-t8-dm-r2 11.791s
+START water20-rks-MN15-t16-parent-r0
+DONE 37/48 water20-rks-MN15-t16-parent-r0 32.441s
+START water20-rks-MN15-t16-dm-r0
+DONE 38/48 water20-rks-MN15-t16-dm-r0 19.208s
+START water20-rks-MN15-t16-dm-r1
+DONE 39/48 water20-rks-MN15-t16-dm-r1 18.914s
+START water20-rks-MN15-t16-parent-r1
+DONE 40/48 water20-rks-MN15-t16-parent-r1 32.444s
+START water20-rks-MN15-t16-parent-r2
+DONE 41/48 water20-rks-MN15-t16-parent-r2 32.294s
+START water20-rks-MN15-t16-dm-r2
+DONE 42/48 water20-rks-MN15-t16-dm-r2 18.862s
+START water19oh-uks-MN15-t16-parent-r0
+DONE 43/48 water19oh-uks-MN15-t16-parent-r0 60.913s
+START water19oh-uks-MN15-t16-dm-r0
+DONE 44/48 water19oh-uks-MN15-t16-dm-r0 34.350s
+START water19oh-uks-MN15-t16-dm-r1
+DONE 45/48 water19oh-uks-MN15-t16-dm-r1 34.289s
+START water19oh-uks-MN15-t16-parent-r1
+DONE 46/48 water19oh-uks-MN15-t16-parent-r1 59.558s
+START water19oh-uks-MN15-t16-parent-r2
+DONE 47/48 water19oh-uks-MN15-t16-parent-r2 60.398s
+START water19oh-uks-MN15-t16-dm-r2
+DONE 48/48 water19oh-uks-MN15-t16-dm-r2 34.490s
+{"accepted": true, "expected": 48, "completed": 48, "numerically_validated": 48, "failures": []}
+{"accepted": true, "checked": 48, "errors": []}
+Rendered full report,27 incremental rows,30 measured stage cells and9 PR fact drafts.
+All90 SCFs,18 CPKS runs and48 direct-DM API processes accepted; reports regenerated.

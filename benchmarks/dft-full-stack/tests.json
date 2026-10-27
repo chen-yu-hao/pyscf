@@ -1,0 +1,188 @@
+[
+  {
+    "label": "01-grid",
+    "head": "8ee7cc3ea223d1b6e46913306b4a522c04746e98",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_grids"
+    ],
+    "returncode": 0,
+    "tests": 10,
+    "skipped": 0,
+    "duration_s": 0.8991020154207945
+  },
+  {
+    "label": "02-libxc",
+    "head": "a52b05e3afa58345ba95a17a07b782d2d5a5a090",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_libxc"
+    ],
+    "returncode": 0,
+    "tests": 20,
+    "skipped": 1,
+    "duration_s": 1.1176902018487453
+  },
+  {
+    "label": "03-ao",
+    "head": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.gto.test.test_grid_exp1"
+    ],
+    "returncode": 0,
+    "tests": 2,
+    "skipped": 0,
+    "duration_s": 0.6023727599531412
+  },
+  {
+    "label": "04-density-dm",
+    "head": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_numint",
+      "pyscf.dft.test.test_numint_rho_fused"
+    ],
+    "returncode": 0,
+    "tests": 32,
+    "skipped": 0,
+    "duration_s": 14.431643115356565
+  },
+  {
+    "label": "05-density-mo",
+    "head": "35eb265e4017fffab2d015bf2449e5b790c38e46",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_numint_rho",
+      "pyscf.dft.test.test_numint_rho_stream"
+    ],
+    "returncode": 0,
+    "tests": 9,
+    "skipped": 0,
+    "duration_s": 0.618467079475522
+  },
+  {
+    "label": "06-sparse-tiles",
+    "head": "9c18323670177880b3925e53fc7dbb6e230b46af",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_numint_pair_tiles"
+    ],
+    "returncode": 0,
+    "tests": 2,
+    "skipped": 0,
+    "duration_s": 1.0557808578014374
+  },
+  {
+    "label": "07-potential",
+    "head": "560f88db00b6f9d37b3d66140e0c3cc43d9ec39d",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_numint_mgga_vmat",
+      "pyscf.dft.test.test_numint_tau",
+      "pyscf.dft.test.test_numint_xc_response_assembly"
+    ],
+    "returncode": 0,
+    "tests": 18,
+    "skipped": 0,
+    "duration_s": 1.6889356598258018
+  },
+  {
+    "label": "08-cache-blocks",
+    "head": "f50e82b1501fcda646bf35d49d9eed1f58d09a1e",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_numint_cache_blocks"
+    ],
+    "returncode": 0,
+    "tests": 7,
+    "skipped": 0,
+    "duration_s": 0.7560340203344822
+  },
+  {
+    "label": "09-response",
+    "head": "ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_xc_cache"
+    ],
+    "returncode": 0,
+    "tests": 9,
+    "skipped": 0,
+    "duration_s": 1.3790617622435093
+  },
+  {
+    "label": "full-combination",
+    "head": "ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb",
+    "command": [
+      "taskset",
+      "-c",
+      "20-23",
+      "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+      "-m",
+      "unittest",
+      "pyscf.dft.test.test_grids",
+      "pyscf.dft.test.test_libxc",
+      "pyscf.gto.test.test_grid_exp1",
+      "pyscf.dft.test.test_numint",
+      "pyscf.dft.test.test_numint_rho_fused",
+      "pyscf.dft.test.test_numint_rho",
+      "pyscf.dft.test.test_numint_rho_stream",
+      "pyscf.dft.test.test_numint_pair_tiles",
+      "pyscf.dft.test.test_numint_mgga_vmat",
+      "pyscf.dft.test.test_numint_tau",
+      "pyscf.dft.test.test_numint_xc_response_assembly",
+      "pyscf.dft.test.test_numint_cache_blocks",
+      "pyscf.dft.test.test_xc_cache"
+    ],
+    "returncode": 0,
+    "tests": 109,
+    "skipped": 1,
+    "duration_s": 16.00673340447247
+  }
+]

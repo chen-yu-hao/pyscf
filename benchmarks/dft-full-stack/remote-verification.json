@@ -1,0 +1,16 @@
+{
+  "remote": "git@github.com:chen-yu-hao/pyscf.git",
+  "verified_heads": {
+    "DFT-stack-01-grid": "8ee7cc3ea223d1b6e46913306b4a522c04746e98",
+    "DFT-stack-02-libxc": "a52b05e3afa58345ba95a17a07b782d2d5a5a090",
+    "DFT-stack-03-ao": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+    "DFT-stack-04-density-dm": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+    "DFT-stack-05-density-mo": "35eb265e4017fffab2d015bf2449e5b790c38e46",
+    "DFT-stack-06-sparse-tiles": "9c18323670177880b3925e53fc7dbb6e230b46af",
+    "DFT-stack-07-potential": "560f88db00b6f9d37b3d66140e0c3cc43d9ec39d",
+    "DFT-stack-08-cache-blocks": "f50e82b1501fcda646bf35d49d9eed1f58d09a1e",
+    "DFT-stack-09-response": "ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb",
+    "DFT-full-stack": "ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb"
+  },
+  "all_heads_match_ls_remote": true
+}

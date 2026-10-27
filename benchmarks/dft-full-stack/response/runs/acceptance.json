@@ -1,0 +1,586 @@
+{
+  "schema": 1,
+  "accepted": true,
+  "completed": 18,
+  "expected": 18,
+  "errors": [],
+  "groups": [
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "baseline",
+      "commit": "560f88db00b6f9d37b3d66140e0c3cc43d9ec39d",
+      "repeats": 3,
+      "cache_type": [
+        "ndarray"
+      ],
+      "cache_bytes": [
+        37741760
+      ],
+      "response_wall_s": {
+        "median": 12.648853287100792,
+        "min": 12.362000675871968,
+        "max": 12.859974252060056
+      },
+      "cache_wall_s": {
+        "median": 0.21617718786001205,
+        "min": 0.21112148836255074,
+        "max": 0.21720460429787636
+      },
+      "solver_wall_s": {
+        "median": 12.437731798738241,
+        "min": 12.145823488011956,
+        "max": 12.64276964776218
+      },
+      "sampled_peak_rss_mib": {
+        "median": 610.41015625,
+        "min": 610.40234375,
+        "max": 620.76953125
+      },
+      "sampled_rss_increment_mib": {
+        "median": 506.19140625,
+        "min": 503.33203125,
+        "max": 506.2109375
+      },
+      "process_hwm_mib": {
+        "median": 608.0546875,
+        "min": 606.765625,
+        "max": 618.0234375
+      },
+      "solver_action_calls": [
+        13,
+        13,
+        13
+      ],
+      "speedup_vs_base": 1.0,
+      "speedup_vs_parent": 1.0
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "commit": "f50e82b1501fcda646bf35d49d9eed1f58d09a1e",
+      "repeats": 3,
+      "cache_type": [
+        "ndarray"
+      ],
+      "cache_bytes": [
+        37741760
+      ],
+      "response_wall_s": {
+        "median": 12.552927000448108,
+        "min": 12.540096286684275,
+        "max": 12.671278949826956
+      },
+      "cache_wall_s": {
+        "median": 0.23349269665777683,
+        "min": 0.22095992416143417,
+        "max": 0.2481244020164013
+      },
+      "solver_wall_s": {
+        "median": 12.331967076286674,
+        "min": 12.306603590026498,
+        "max": 12.423154547810555
+      },
+      "sampled_peak_rss_mib": {
+        "median": 605.53125,
+        "min": 604.796875,
+        "max": 615.625
+      },
+      "sampled_rss_increment_mib": {
+        "median": 500.8203125,
+        "min": 498.015625,
+        "max": 501.28125
+      },
+      "process_hwm_mib": {
+        "median": 603.28515625,
+        "min": 601.44921875,
+        "max": 613.0078125
+      },
+      "solver_action_calls": [
+        13,
+        13,
+        13
+      ],
+      "speedup_vs_base": 1.0076417465543501,
+      "speedup_vs_parent": 1.0076417465543501
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "compact",
+      "commit": "ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb",
+      "repeats": 3,
+      "cache_type": [
+        "_CompactXCKernel"
+      ],
+      "cache_bytes": [
+        16175040
+      ],
+      "response_wall_s": {
+        "median": 12.618228251114488,
+        "min": 12.374362502247095,
+        "max": 12.78401761688292
+      },
+      "cache_wall_s": {
+        "median": 0.1666386015713215,
+        "min": 0.16484433971345425,
+        "max": 0.17622646130621433
+      },
+      "solver_wall_s": {
+        "median": 12.453383911401033,
+        "min": 12.19813604094088,
+        "max": 12.617379015311599
+      },
+      "sampled_peak_rss_mib": {
+        "median": 584.296875,
+        "min": 583.64453125,
+        "max": 585.609375
+      },
+      "sampled_rss_increment_mib": {
+        "median": 480.00390625,
+        "min": 479.546875,
+        "max": 481.38671875
+      },
+      "process_hwm_mib": {
+        "median": 581.39453125,
+        "min": 580.98046875,
+        "max": 583.1640625
+      },
+      "solver_action_calls": [
+        13,
+        13,
+        13
+      ],
+      "speedup_vs_base": 1.002427047234908,
+      "speedup_vs_parent": 0.994824847881428
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "baseline",
+      "commit": "560f88db00b6f9d37b3d66140e0c3cc43d9ec39d",
+      "repeats": 3,
+      "cache_type": [
+        "ndarray"
+      ],
+      "cache_bytes": [
+        119984640
+      ],
+      "response_wall_s": {
+        "median": 27.2893407586962,
+        "min": 27.017965398728848,
+        "max": 27.332707084715366
+      },
+      "cache_wall_s": {
+        "median": 0.49225718528032303,
+        "min": 0.4893213603645563,
+        "max": 0.5125329121947289
+      },
+      "solver_wall_s": {
+        "median": 26.77680784650147,
+        "min": 26.525708213448524,
+        "max": 26.84338572435081
+      },
+      "sampled_peak_rss_mib": {
+        "median": 660.02734375,
+        "min": 657.5234375,
+        "max": 660.99609375
+      },
+      "sampled_rss_increment_mib": {
+        "median": 556.1953125,
+        "min": 553.58203125,
+        "max": 556.87890625
+      },
+      "process_hwm_mib": {
+        "median": 656.84765625,
+        "min": 655.1796875,
+        "max": 657.9375
+      },
+      "solver_action_calls": [
+        15,
+        15,
+        15
+      ],
+      "speedup_vs_base": 1.0,
+      "speedup_vs_parent": 1.0
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "commit": "f50e82b1501fcda646bf35d49d9eed1f58d09a1e",
+      "repeats": 3,
+      "cache_type": [
+        "ndarray"
+      ],
+      "cache_bytes": [
+        119984640
+      ],
+      "response_wall_s": {
+        "median": 27.222016636282206,
+        "min": 27.07226837053895,
+        "max": 27.48327438533306
+      },
+      "cache_wall_s": {
+        "median": 0.5388180185109377,
+        "min": 0.5227180030196905,
+        "max": 0.5546741150319576
+      },
+      "solver_wall_s": {
+        "median": 26.683198617771268,
+        "min": 26.54955036751926,
+        "max": 26.928600270301104
+      },
+      "sampled_peak_rss_mib": {
+        "median": 674.875,
+        "min": 674.6953125,
+        "max": 675.81640625
+      },
+      "sampled_rss_increment_mib": {
+        "median": 570.95703125,
+        "min": 570.8125,
+        "max": 571.9375
+      },
+      "process_hwm_mib": {
+        "median": 671.98046875,
+        "min": 671.82421875,
+        "max": 673.546875
+      },
+      "solver_action_calls": [
+        15,
+        15,
+        15
+      ],
+      "speedup_vs_base": 1.0024731497050172,
+      "speedup_vs_parent": 1.0024731497050172
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "compact",
+      "commit": "ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb",
+      "repeats": 3,
+      "cache_type": [
+        "_CompactXCKernel"
+      ],
+      "cache_bytes": [
+        45994112
+      ],
+      "response_wall_s": {
+        "median": 27.22832622937858,
+        "min": 26.93637577071786,
+        "max": 27.313973935320973
+      },
+      "cache_wall_s": {
+        "median": 0.2825547941029072,
+        "min": 0.2691544983536005,
+        "max": 0.29549101553857327
+      },
+      "solver_wall_s": {
+        "median": 26.95917173102498,
+        "min": 26.640884755179286,
+        "max": 27.031419141218066
+      },
+      "sampled_peak_rss_mib": {
+        "median": 604.0703125,
+        "min": 603.83984375,
+        "max": 611.8671875
+      },
+      "sampled_rss_increment_mib": {
+        "median": 500.06640625,
+        "min": 500.03515625,
+        "max": 507.93359375
+      },
+      "process_hwm_mib": {
+        "median": 600.94921875,
+        "min": 599.79296875,
+        "max": 609.05859375
+      },
+      "solver_action_calls": [
+        15,
+        15,
+        15
+      ],
+      "speedup_vs_base": 1.0022408475939217,
+      "speedup_vs_parent": 0.9997682709894387
+    }
+  ],
+  "adjacent_pairs": [
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "repeat": 0,
+      "reference": "baseline",
+      "candidate": "cacheblocks",
+      "polarizability_max_abs_au": 2.842170943040401e-14,
+      "accepted": true
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "repeat": 0,
+      "reference": "cacheblocks",
+      "candidate": "compact",
+      "polarizability_max_abs_au": 2.842170943040401e-14,
+      "accepted": true
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "repeat": 1,
+      "reference": "baseline",
+      "candidate": "cacheblocks",
+      "polarizability_max_abs_au": 1.4210854715202004e-14,
+      "accepted": true
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "repeat": 1,
+      "reference": "cacheblocks",
+      "candidate": "compact",
+      "polarizability_max_abs_au": 3.907985046680551e-14,
+      "accepted": true
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "repeat": 2,
+      "reference": "baseline",
+      "candidate": "cacheblocks",
+      "polarizability_max_abs_au": 7.105427357601002e-15,
+      "accepted": true
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "repeat": 2,
+      "reference": "cacheblocks",
+      "candidate": "compact",
+      "polarizability_max_abs_au": 1.4210854715202004e-14,
+      "accepted": true
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "repeat": 0,
+      "reference": "baseline",
+      "candidate": "cacheblocks",
+      "polarizability_max_abs_au": 2.1316282072803006e-14,
+      "accepted": true
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "repeat": 0,
+      "reference": "cacheblocks",
+      "candidate": "compact",
+      "polarizability_max_abs_au": 2.842170943040401e-14,
+      "accepted": true
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "repeat": 1,
+      "reference": "baseline",
+      "candidate": "cacheblocks",
+      "polarizability_max_abs_au": 1.865174681370263e-14,
+      "accepted": true
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "repeat": 1,
+      "reference": "cacheblocks",
+      "candidate": "compact",
+      "polarizability_max_abs_au": 1.4210854715202004e-14,
+      "accepted": true
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "repeat": 2,
+      "reference": "baseline",
+      "candidate": "cacheblocks",
+      "polarizability_max_abs_au": 1.8762769116165146e-14,
+      "accepted": true
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "repeat": 2,
+      "reference": "cacheblocks",
+      "candidate": "compact",
+      "polarizability_max_abs_au": 1.8318679906315083e-14,
+      "accepted": true
+    }
+  ],
+  "cpu_diagnostics": [
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "baseline",
+      "repeat": 0,
+      "monitored_busy_cpu_s": 69.2,
+      "child_cpu_s": 67.06619399999998,
+      "busy_minus_child_cpu_s": 2.133806000000021
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "repeat": 0,
+      "monitored_busy_cpu_s": 70.41,
+      "child_cpu_s": 68.416899,
+      "busy_minus_child_cpu_s": 1.9931009999999958
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "compact",
+      "repeat": 0,
+      "monitored_busy_cpu_s": 69.05,
+      "child_cpu_s": 67.357573,
+      "busy_minus_child_cpu_s": 1.692426999999995
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "repeat": 1,
+      "monitored_busy_cpu_s": 69.75,
+      "child_cpu_s": 67.17893999999998,
+      "busy_minus_child_cpu_s": 2.571060000000017
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "compact",
+      "repeat": 1,
+      "monitored_busy_cpu_s": 68.96,
+      "child_cpu_s": 66.72832400000001,
+      "busy_minus_child_cpu_s": 2.231675999999979
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "baseline",
+      "repeat": 1,
+      "monitored_busy_cpu_s": 70.76,
+      "child_cpu_s": 68.68236400000002,
+      "busy_minus_child_cpu_s": 2.077635999999984
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "compact",
+      "repeat": 2,
+      "monitored_busy_cpu_s": 69.94,
+      "child_cpu_s": 68.19278199999998,
+      "busy_minus_child_cpu_s": 1.747218000000018
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "baseline",
+      "repeat": 2,
+      "monitored_busy_cpu_s": 69.72,
+      "child_cpu_s": 67.94871399999998,
+      "busy_minus_child_cpu_s": 1.7712860000000177
+    },
+    {
+      "case": "water4-rks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "repeat": 2,
+      "monitored_busy_cpu_s": 68.72999999999999,
+      "child_cpu_s": 67.11459099999999,
+      "busy_minus_child_cpu_s": 1.6154089999999997
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "baseline",
+      "repeat": 0,
+      "monitored_busy_cpu_s": 141.89000000000007,
+      "child_cpu_s": 137.552553,
+      "busy_minus_child_cpu_s": 4.337447000000083
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "repeat": 0,
+      "monitored_busy_cpu_s": 140.63000000000002,
+      "child_cpu_s": 136.56020700000005,
+      "busy_minus_child_cpu_s": 4.069792999999976
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "compact",
+      "repeat": 0,
+      "monitored_busy_cpu_s": 141.59,
+      "child_cpu_s": 136.3599820000001,
+      "busy_minus_child_cpu_s": 5.230017999999916
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "repeat": 1,
+      "monitored_busy_cpu_s": 142.9,
+      "child_cpu_s": 137.71137499999998,
+      "busy_minus_child_cpu_s": 5.18862500000003
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "compact",
+      "repeat": 1,
+      "monitored_busy_cpu_s": 143.60999999999999,
+      "child_cpu_s": 137.163292,
+      "busy_minus_child_cpu_s": 6.446707999999973
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "baseline",
+      "repeat": 1,
+      "monitored_busy_cpu_s": 141.64999999999998,
+      "child_cpu_s": 136.53298799999988,
+      "busy_minus_child_cpu_s": 5.117012000000102
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "compact",
+      "repeat": 2,
+      "monitored_busy_cpu_s": 141.24999999999997,
+      "child_cpu_s": 136.736803,
+      "busy_minus_child_cpu_s": 4.513196999999963
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "baseline",
+      "repeat": 2,
+      "monitored_busy_cpu_s": 142.10000000000002,
+      "child_cpu_s": 138.19091400000002,
+      "busy_minus_child_cpu_s": 3.909086000000002
+    },
+    {
+      "case": "oh-water3-uks",
+      "threads": 8,
+      "version": "cacheblocks",
+      "repeat": 2,
+      "monitored_busy_cpu_s": 143.84000000000003,
+      "child_cpu_s": 138.51637899999992,
+      "busy_minus_child_cpu_s": 5.3236210000001165
+    }
+  ],
+  "max_adjacent_polarizability_delta_au": 3.907985046680551e-14,
+  "memory_caveat": "VmRSS sampled every 5 ms can miss brief transients; process HWM includes imports and input loading",
+  "cpu_caveat": "Shared host. Busy CPU seconds on selected cores and SMT siblings minus child CPU seconds are a diagnostic, not proof of exclusive occupancy."
+}

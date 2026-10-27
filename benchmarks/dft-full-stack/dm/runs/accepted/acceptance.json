@@ -1,0 +1,318 @@
+{
+  "accepted": true,
+  "expected": 48,
+  "completed": 48,
+  "numerically_validated": 48,
+  "failures": [],
+  "comparisons": [
+    {
+      "case": "water12-rks",
+      "xc": "LDA,VWN",
+      "threads": 8,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 0.5697144474834204,
+      "candidate_seconds_median": 0.3777676858007908,
+      "baseline_seconds_range": [
+        0.5578417833894491,
+        0.5724014081060886
+      ],
+      "candidate_seconds_range": [
+        0.37371297366917133,
+        0.3780884463340044
+      ],
+      "speedup": 1.5081079427843105,
+      "baseline_peak_rss_mib_median": 404.5390625,
+      "candidate_peak_rss_mib_median": 255.8125,
+      "baseline_peak_rss_mib_range": [
+        403.25390625,
+        404.90625
+      ],
+      "candidate_peak_rss_mib_range": [
+        255.6328125,
+        258.1796875
+      ],
+      "max_absolute_errors": {
+        "nelec": 0.0,
+        "exc": 0.0,
+        "vxc": 4.440892098500626e-16
+      }
+    },
+    {
+      "case": "water12-rks",
+      "xc": "PBE",
+      "threads": 8,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 0.9226250387728214,
+      "candidate_seconds_median": 0.7407767549157143,
+      "baseline_seconds_range": [
+        0.9018127676099539,
+        0.9335199221968651
+      ],
+      "candidate_seconds_range": [
+        0.7370873522013426,
+        0.7522654607892036
+      ],
+      "speedup": 1.2454832480236206,
+      "baseline_peak_rss_mib_median": 950.8046875,
+      "candidate_peak_rss_mib_median": 827.4921875,
+      "baseline_peak_rss_mib_range": [
+        950.390625,
+        952.1875
+      ],
+      "candidate_peak_rss_mib_range": [
+        826.671875,
+        827.984375
+      ],
+      "max_absolute_errors": {
+        "nelec": 0.0,
+        "exc": 0.0,
+        "vxc": 4.440892098500626e-16
+      }
+    },
+    {
+      "case": "water12-rks",
+      "xc": "MN15",
+      "threads": 8,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 2.2871758583933115,
+      "candidate_seconds_median": 1.4904271196573973,
+      "baseline_seconds_range": [
+        2.284008424729109,
+        2.2978995367884636
+      ],
+      "candidate_seconds_range": [
+        1.483457550406456,
+        1.4958943203091621
+      ],
+      "speedup": 1.5345774565072743,
+      "baseline_peak_rss_mib_median": 1231.3359375,
+      "candidate_peak_rss_mib_median": 835.1328125,
+      "baseline_peak_rss_mib_range": [
+        1230.6875,
+        1231.91015625
+      ],
+      "candidate_peak_rss_mib_range": [
+        835.03515625,
+        836.703125
+      ],
+      "max_absolute_errors": {
+        "nelec": 0.0,
+        "exc": 0.0,
+        "vxc": 4.440892098500626e-16
+      }
+    },
+    {
+      "case": "water11oh-uks",
+      "xc": "LDA,VWN",
+      "threads": 8,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 0.9489036705344915,
+      "candidate_seconds_median": 0.6230066511780024,
+      "baseline_seconds_range": [
+        0.9193124249577522,
+        0.9681718088686466
+      ],
+      "candidate_seconds_range": [
+        0.5998958237469196,
+        0.643684284761548
+      ],
+      "speedup": 1.5231035956683157,
+      "baseline_peak_rss_mib_median": 407.578125,
+      "candidate_peak_rss_mib_median": 262.015625,
+      "baseline_peak_rss_mib_range": [
+        407.34765625,
+        407.67578125
+      ],
+      "candidate_peak_rss_mib_range": [
+        260.671875,
+        263.6484375
+      ],
+      "max_absolute_errors": {
+        "nelec": 0.0,
+        "exc": 0.0,
+        "vxc": 8.881784197001252e-16
+      }
+    },
+    {
+      "case": "water11oh-uks",
+      "xc": "PBE",
+      "threads": 8,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 1.5627617370337248,
+      "candidate_seconds_median": 1.2042784802615643,
+      "baseline_seconds_range": [
+        1.5431306138634682,
+        1.603994932025671
+      ],
+      "candidate_seconds_range": [
+        1.1883971765637398,
+        1.2079067174345255
+      ],
+      "speedup": 1.2976747178063828,
+      "baseline_peak_rss_mib_median": 951.89453125,
+      "candidate_peak_rss_mib_median": 834.7578125,
+      "baseline_peak_rss_mib_range": [
+        951.78515625,
+        952.01171875
+      ],
+      "candidate_peak_rss_mib_range": [
+        834.70703125,
+        835.015625
+      ],
+      "max_absolute_errors": {
+        "nelec": 0.0,
+        "exc": 0.0,
+        "vxc": 8.881784197001252e-16
+      }
+    },
+    {
+      "case": "water11oh-uks",
+      "xc": "MN15",
+      "threads": 8,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 4.142750192433596,
+      "candidate_seconds_median": 2.6227368842810392,
+      "baseline_seconds_range": [
+        4.128306671977043,
+        4.163279037922621
+      ],
+      "candidate_seconds_range": [
+        2.556095777079463,
+        2.6279515363276005
+      ],
+      "speedup": 1.5795523436843844,
+      "baseline_peak_rss_mib_median": 1240.3046875,
+      "candidate_peak_rss_mib_median": 849.109375,
+      "baseline_peak_rss_mib_range": [
+        1240.14453125,
+        1241.1484375
+      ],
+      "candidate_peak_rss_mib_range": [
+        847.86328125,
+        849.40234375
+      ],
+      "max_absolute_errors": {
+        "nelec": 0.0,
+        "exc": 0.0,
+        "vxc": 4.440892098500626e-16
+      }
+    },
+    {
+      "case": "water20-rks",
+      "xc": "MN15",
+      "threads": 16,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 7.717394717037678,
+      "candidate_seconds_median": 4.346172532066703,
+      "baseline_seconds_range": [
+        7.709150282666087,
+        7.717908596619964
+      ],
+      "candidate_seconds_range": [
+        4.329126114025712,
+        4.418128041550517
+      ],
+      "speedup": 1.7756761058374007,
+      "baseline_peak_rss_mib_median": 1656.625,
+      "candidate_peak_rss_mib_median": 1151.75390625,
+      "baseline_peak_rss_mib_range": [
+        1656.29296875,
+        1659.8984375
+      ],
+      "candidate_peak_rss_mib_range": [
+        1149.81640625,
+        1152.12890625
+      ],
+      "max_absolute_errors": {
+        "nelec": 0.0,
+        "exc": 2.842170943040401e-14,
+        "vxc": 3.913536161803677e-15
+      }
+    },
+    {
+      "case": "water19oh-uks",
+      "xc": "MN15",
+      "threads": 16,
+      "baseline": "parent",
+      "candidate": "dm",
+      "baseline_commit": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "candidate_commit": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 14.668170362710953,
+      "candidate_seconds_median": 8.165849573910236,
+      "baseline_seconds_range": [
+        14.52205065637827,
+        14.719341777265072
+      ],
+      "candidate_seconds_range": [
+        8.151967592537403,
+        8.231318870559335
+      ],
+      "speedup": 1.796282215334401,
+      "baseline_peak_rss_mib_median": 1710.79296875,
+      "candidate_peak_rss_mib_median": 1225.3203125,
+      "baseline_peak_rss_mib_range": [
+        1710.03125,
+        1711.2421875
+      ],
+      "candidate_peak_rss_mib_range": [
+        1222.8203125,
+        1225.58203125
+      ],
+      "max_absolute_errors": {
+        "nelec": 1.4210854715202004e-14,
+        "exc": 0.0,
+        "vxc": 1.0439565878428425e-14
+      }
+    }
+  ],
+  "source_batch": "/home/lyl/soft/pyscf-stack-bench-20261027/dm/runs/batch.json",
+  "gates": {
+    "nelec": 1e-08,
+    "exc": 1e-08,
+    "vxc": 1e-09
+  },
+  "micro_gates": {
+    "grid": 0.0,
+    "ao": 1e-12,
+    "libxc": 1e-10
+  },
+  "statistic": "ordinary median of independent process medians; observed min/max ranges, not confidence intervals",
+  "native_provenance": "Recorded paths and hashes checked present; caller must bind native build manifest to source commit"
+}

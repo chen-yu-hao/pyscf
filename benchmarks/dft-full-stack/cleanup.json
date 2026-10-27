@@ -1,0 +1,14 @@
+{
+  "cleanup": [
+    {
+      "removed_registered_scratch": "/home/lyl/soft/pyscf-stack-bench-20261027/tmp",
+      "files": []
+    },
+    {
+      "removed_registered_scratch": "/home/lyl/soft/pyscf-stack-bench-20261027/tmp-tests",
+      "files": []
+    }
+  ],
+  "density_arrays_preserved": 90,
+  "response_fixtures_preserved": 2
+}

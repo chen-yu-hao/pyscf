@@ -1,0 +1,62 @@
+START accept_scf.py
+{
+  "accepted": true,
+  "expected_runs": 90,
+  "accepted_runs": 90,
+  "expected_pairs": 405,
+  "accepted_pairs": 405,
+  "errors": [],
+  "max_errors": {
+    "energy_delta_hartree": 2.9558577807620168e-12,
+    "density_rms": 2.188206779483712e-10,
+    "density_max": 3.3581123611015062e-09,
+    "spin_square_delta": 2.042810365310288e-14
+  }
+}
+START response/run_response_campaign.py
+START water4-rks-t8-baseline-r0
+DONE water4-rks-t8-baseline-r0
+START water4-rks-t8-cacheblocks-r0
+DONE water4-rks-t8-cacheblocks-r0
+START water4-rks-t8-compact-r0
+DONE water4-rks-t8-compact-r0
+START water4-rks-t8-cacheblocks-r1
+DONE water4-rks-t8-cacheblocks-r1
+START water4-rks-t8-compact-r1
+DONE water4-rks-t8-compact-r1
+START water4-rks-t8-baseline-r1
+DONE water4-rks-t8-baseline-r1
+START water4-rks-t8-compact-r2
+DONE water4-rks-t8-compact-r2
+START water4-rks-t8-baseline-r2
+DONE water4-rks-t8-baseline-r2
+START water4-rks-t8-cacheblocks-r2
+DONE water4-rks-t8-cacheblocks-r2
+START oh-water3-uks-t8-baseline-r0
+DONE oh-water3-uks-t8-baseline-r0
+START oh-water3-uks-t8-cacheblocks-r0
+DONE oh-water3-uks-t8-cacheblocks-r0
+START oh-water3-uks-t8-compact-r0
+DONE oh-water3-uks-t8-compact-r0
+START oh-water3-uks-t8-cacheblocks-r1
+DONE oh-water3-uks-t8-cacheblocks-r1
+START oh-water3-uks-t8-compact-r1
+DONE oh-water3-uks-t8-compact-r1
+START oh-water3-uks-t8-baseline-r1
+DONE oh-water3-uks-t8-baseline-r1
+START oh-water3-uks-t8-compact-r2
+DONE oh-water3-uks-t8-compact-r2
+START oh-water3-uks-t8-baseline-r2
+DONE oh-water3-uks-t8-baseline-r2
+START oh-water3-uks-t8-cacheblocks-r2
+DONE oh-water3-uks-t8-cacheblocks-r2
+START response/accept_response_campaign.py
+{
+  "accepted": true,
+  "completed": 18,
+  "expected": 18,
+  "errors": []
+}
+START report.py
+Rendered full report,27 incremental rows,30 measured stage cells and9 PR fact drafts.
+SCF 90/90, CPKS18/18 accepted; drafts and report rendered; scratch cleaned.

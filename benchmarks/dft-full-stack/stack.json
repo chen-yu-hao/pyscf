@@ -1,0 +1,109 @@
+{
+  "base": "44313dfb457b93358918c391fc66285fa44153ef",
+  "target": "72e5b26c91964acbf3186c5348f77a0f7faf44dd",
+  "legacy_target": "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered",
+  "repo": "/home/lyl/soft/pyscf-stack-20261027/repo",
+  "stages": [
+    {
+      "label": "00-base",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/00-base",
+      "head": "44313dfb457b93358918c391fc66285fa44153ef",
+      "branch": null
+    },
+    {
+      "label": "01-grid",
+      "branch": "DFT-stack-01-grid",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/01-grid",
+      "head": "8ee7cc3ea223d1b6e46913306b4a522c04746e98",
+      "parent": "44313dfb457b93358918c391fc66285fa44153ef",
+      "origin_commit": "3721140b263c8a974fe9ef97e7ccdfe97be7d775"
+    },
+    {
+      "label": "02-libxc",
+      "branch": "DFT-stack-02-libxc",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/02-libxc",
+      "head": "a52b05e3afa58345ba95a17a07b782d2d5a5a090",
+      "parent": "8ee7cc3ea223d1b6e46913306b4a522c04746e98",
+      "origin_commit": "3fc5c8309d97fdbf584afcf25d5e5d0e244dec47"
+    },
+    {
+      "label": "03-ao",
+      "branch": "DFT-stack-03-ao",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/03-ao",
+      "head": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "parent": "a52b05e3afa58345ba95a17a07b782d2d5a5a090",
+      "origin_commit": "65b4c7d2a134221bd7286bceeb699d90f8383eaa"
+    },
+    {
+      "label": "04-density-dm",
+      "branch": "DFT-stack-04-density-dm",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/04-density-dm",
+      "head": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "parent": "87505fe4200e3115ce7f38e3c53a4c15f46ccc2d",
+      "origin_commit": "a5d33360cd0fd9c16e48fed7e752690b98a78b61"
+    },
+    {
+      "label": "05-density-mo",
+      "branch": "DFT-stack-05-density-mo",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/05-density-mo",
+      "head": "35eb265e4017fffab2d015bf2449e5b790c38e46",
+      "parent": "343beca98c837ae2b6edb28e39f74e88b40a8971",
+      "origin_diff": [
+        "a5d33360cd0fd9c16e48fed7e752690b98a78b61",
+        "3734fc4a4fb6a5486c2a4db0b094df71cc637dc5"
+      ]
+    },
+    {
+      "label": "06-sparse-tiles",
+      "branch": "DFT-stack-06-sparse-tiles",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/06-sparse-tiles",
+      "head": "9c18323670177880b3925e53fc7dbb6e230b46af",
+      "parent": "35eb265e4017fffab2d015bf2449e5b790c38e46",
+      "origin_commit": "38d820b97fa81cba1fa4e8a23d41b547cffc1bac"
+    },
+    {
+      "label": "07-potential",
+      "branch": "DFT-stack-07-potential",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/07-potential",
+      "head": "560f88db00b6f9d37b3d66140e0c3cc43d9ec39d",
+      "parent": "9c18323670177880b3925e53fc7dbb6e230b46af",
+      "origin_commit": "d861ab396ff7337bcb3dceac01edeae1f7367f46",
+      "conflict_resolution": "C include conflict resolved against full target; C file identical to full implementation."
+    },
+    {
+      "label": "08-cache-blocks",
+      "branch": "DFT-stack-08-cache-blocks",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/08-cache-blocks",
+      "head": "f50e82b1501fcda646bf35d49d9eed1f58d09a1e",
+      "parent": "560f88db00b6f9d37b3d66140e0c3cc43d9ec39d",
+      "origin_commit": "c8767a86b887142c29434e96a884cf42626970db"
+    },
+    {
+      "label": "09-response",
+      "branch": "DFT-stack-09-response",
+      "source": "/home/lyl/soft/pyscf-stack-20261027/09-response",
+      "head": "ee16ee33a279cdcc6e0f45dcfaee3ce0bdcf17eb",
+      "parent": "f50e82b1501fcda646bf35d49d9eed1f58d09a1e",
+      "origin_commit": "01f5ce55af92be44957dc5e7a08b103e9bd3897a"
+    }
+  ],
+  "final_alias": "DFT-full-stack",
+  "final_tree": "47ea3d3ec8b07a1e0dbe4b3aaba63e1575fe4b1f",
+  "target_tree": "47ea3d3ec8b07a1e0dbe4b3aaba63e1575fe4b1f",
+  "hard_dependencies": {
+    "07-potential": [
+      "06-sparse-tiles"
+    ],
+    "09-response": [
+      "08-cache-blocks"
+    ]
+  },
+  "ordering_note": "All review branches are cumulative; other ordering is an experimental merge order, not an algorithmic prerequisite.",
+  "legacy_c_parity": {
+    "lib/dft/nr_numint.c": true,
+    "lib/dft/nr_numint_sparse.c": true,
+    "lib/dft/mgga_vmat.c": true,
+    "lib/dft/libxc_itrf.c": true,
+    "lib/gto/deriv1.c": true
+  }
+}

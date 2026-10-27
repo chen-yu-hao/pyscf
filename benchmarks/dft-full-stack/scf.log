@@ -1,0 +1,180 @@
+START water4-00-base-r0
+DONE 1 / 90 water4-00-base-r0 21.315s cycles 11
+START water4-01-grid-r0
+DONE 2 / 90 water4-01-grid-r0 19.311s cycles 11
+START water4-02-libxc-r0
+DONE 3 / 90 water4-02-libxc-r0 17.356s cycles 11
+START water4-03-ao-r0
+DONE 4 / 90 water4-03-ao-r0 17.506s cycles 11
+START water4-04-density-dm-r0
+DONE 5 / 90 water4-04-density-dm-r0 16.856s cycles 11
+START water4-05-density-mo-r0
+DONE 6 / 90 water4-05-density-mo-r0 16.654s cycles 11
+START water4-06-sparse-tiles-r0
+DONE 7 / 90 water4-06-sparse-tiles-r0 15.151s cycles 11
+START water4-07-potential-r0
+DONE 8 / 90 water4-07-potential-r0 13.497s cycles 11
+START water4-08-cache-blocks-r0
+DONE 9 / 90 water4-08-cache-blocks-r0 13.347s cycles 11
+START water4-09-response-r0
+DONE 10 / 90 water4-09-response-r0 13.448s cycles 11
+START water4-03-ao-r1
+DONE 11 / 90 water4-03-ao-r1 17.355s cycles 11
+START water4-04-density-dm-r1
+DONE 12 / 90 water4-04-density-dm-r1 16.955s cycles 11
+START water4-05-density-mo-r1
+DONE 13 / 90 water4-05-density-mo-r1 16.406s cycles 11
+START water4-06-sparse-tiles-r1
+DONE 14 / 90 water4-06-sparse-tiles-r1 15.052s cycles 11
+START water4-07-potential-r1
+DONE 15 / 90 water4-07-potential-r1 13.349s cycles 11
+START water4-08-cache-blocks-r1
+DONE 16 / 90 water4-08-cache-blocks-r1 13.497s cycles 11
+START water4-09-response-r1
+DONE 17 / 90 water4-09-response-r1 13.196s cycles 11
+START water4-00-base-r1
+DONE 18 / 90 water4-00-base-r1 18.760s cycles 11
+START water4-01-grid-r1
+DONE 19 / 90 water4-01-grid-r1 17.458s cycles 11
+START water4-02-libxc-r1
+DONE 20 / 90 water4-02-libxc-r1 17.505s cycles 11
+START water4-07-potential-r2
+DONE 21 / 90 water4-07-potential-r2 13.548s cycles 11
+START water4-08-cache-blocks-r2
+DONE 22 / 90 water4-08-cache-blocks-r2 13.297s cycles 11
+START water4-09-response-r2
+DONE 23 / 90 water4-09-response-r2 13.447s cycles 11
+START water4-00-base-r2
+DONE 24 / 90 water4-00-base-r2 18.910s cycles 11
+START water4-01-grid-r2
+DONE 25 / 90 water4-01-grid-r2 17.357s cycles 11
+START water4-02-libxc-r2
+DONE 26 / 90 water4-02-libxc-r2 17.508s cycles 11
+START water4-03-ao-r2
+DONE 27 / 90 water4-03-ao-r2 17.257s cycles 11
+START water4-04-density-dm-r2
+DONE 28 / 90 water4-04-density-dm-r2 17.007s cycles 11
+START water4-05-density-mo-r2
+DONE 29 / 90 water4-05-density-mo-r2 16.355s cycles 11
+START water4-06-sparse-tiles-r2
+DONE 30 / 90 water4-06-sparse-tiles-r2 15.000s cycles 11
+START o2-01-grid-r0
+DONE 31 / 90 o2-01-grid-r0 4.175s cycles 10
+START o2-02-libxc-r0
+DONE 32 / 90 o2-02-libxc-r0 3.975s cycles 10
+START o2-03-ao-r0
+DONE 33 / 90 o2-03-ao-r0 3.925s cycles 10
+START o2-04-density-dm-r0
+DONE 34 / 90 o2-04-density-dm-r0 4.025s cycles 10
+START o2-05-density-mo-r0
+DONE 35 / 90 o2-05-density-mo-r0 3.925s cycles 10
+START o2-06-sparse-tiles-r0
+DONE 36 / 90 o2-06-sparse-tiles-r0 4.023s cycles 10
+START o2-07-potential-r0
+DONE 37 / 90 o2-07-potential-r0 3.624s cycles 10
+START o2-08-cache-blocks-r0
+DONE 38 / 90 o2-08-cache-blocks-r0 3.625s cycles 10
+START o2-09-response-r0
+DONE 39 / 90 o2-09-response-r0 3.724s cycles 10
+START o2-00-base-r0
+DONE 40 / 90 o2-00-base-r0 4.125s cycles 10
+START o2-04-density-dm-r1
+DONE 41 / 90 o2-04-density-dm-r1 4.024s cycles 10
+START o2-05-density-mo-r1
+DONE 42 / 90 o2-05-density-mo-r1 3.975s cycles 10
+START o2-06-sparse-tiles-r1
+DONE 43 / 90 o2-06-sparse-tiles-r1 3.925s cycles 10
+START o2-07-potential-r1
+DONE 44 / 90 o2-07-potential-r1 3.674s cycles 10
+START o2-08-cache-blocks-r1
+DONE 45 / 90 o2-08-cache-blocks-r1 3.774s cycles 10
+START o2-09-response-r1
+DONE 46 / 90 o2-09-response-r1 3.775s cycles 10
+START o2-00-base-r1
+DONE 47 / 90 o2-00-base-r1 4.225s cycles 10
+START o2-01-grid-r1
+DONE 48 / 90 o2-01-grid-r1 3.975s cycles 10
+START o2-02-libxc-r1
+DONE 49 / 90 o2-02-libxc-r1 4.024s cycles 10
+START o2-03-ao-r1
+DONE 50 / 90 o2-03-ao-r1 4.025s cycles 10
+START o2-08-cache-blocks-r2
+DONE 51 / 90 o2-08-cache-blocks-r2 3.774s cycles 10
+START o2-09-response-r2
+DONE 52 / 90 o2-09-response-r2 3.774s cycles 10
+START o2-00-base-r2
+DONE 53 / 90 o2-00-base-r2 4.175s cycles 10
+START o2-01-grid-r2
+DONE 54 / 90 o2-01-grid-r2 4.025s cycles 10
+START o2-02-libxc-r2
+DONE 55 / 90 o2-02-libxc-r2 4.024s cycles 10
+START o2-03-ao-r2
+DONE 56 / 90 o2-03-ao-r2 3.975s cycles 10
+START o2-04-density-dm-r2
+DONE 57 / 90 o2-04-density-dm-r2 3.877s cycles 10
+START o2-05-density-mo-r2
+DONE 58 / 90 o2-05-density-mo-r2 3.925s cycles 10
+START o2-06-sparse-tiles-r2
+DONE 59 / 90 o2-06-sparse-tiles-r2 3.975s cycles 10
+START o2-07-potential-r2
+DONE 60 / 90 o2-07-potential-r2 3.625s cycles 10
+START water12-02-libxc-r0
+DONE 61 / 90 water12-02-libxc-r0 140.744s cycles 13
+START water12-03-ao-r0
+DONE 62 / 90 water12-03-ao-r0 140.462s cycles 13
+START water12-04-density-dm-r0
+DONE 63 / 90 water12-04-density-dm-r0 144.471s cycles 13
+START water12-05-density-mo-r0
+DONE 64 / 90 water12-05-density-mo-r0 132.228s cycles 13
+START water12-06-sparse-tiles-r0
+DONE 65 / 90 water12-06-sparse-tiles-r0 80.156s cycles 13
+START water12-07-potential-r0
+DONE 66 / 90 water12-07-potential-r0 62.814s cycles 13
+START water12-08-cache-blocks-r0
+DONE 67 / 90 water12-08-cache-blocks-r0 64.563s cycles 13
+START water12-09-response-r0
+DONE 68 / 90 water12-09-response-r0 62.357s cycles 13
+START water12-00-base-r0
+DONE 69 / 90 water12-00-base-r0 157.069s cycles 13
+START water12-01-grid-r0
+DONE 70 / 90 water12-01-grid-r0 152.170s cycles 13
+START water12-05-density-mo-r1
+DONE 71 / 90 water12-05-density-mo-r1 128.415s cycles 13
+START water12-06-sparse-tiles-r1
+DONE 72 / 90 water12-06-sparse-tiles-r1 75.803s cycles 13
+START water12-07-potential-r1
+DONE 73 / 90 water12-07-potential-r1 59.007s cycles 13
+START water12-08-cache-blocks-r1
+DONE 74 / 90 water12-08-cache-blocks-r1 59.357s cycles 13
+START water12-09-response-r1
+DONE 75 / 90 water12-09-response-r1 59.364s cycles 13
+START water12-00-base-r1
+DONE 76 / 90 water12-00-base-r1 150.991s cycles 13
+START water12-01-grid-r1
+DONE 77 / 90 water12-01-grid-r1 147.875s cycles 13
+START water12-02-libxc-r1
+DONE 78 / 90 water12-02-libxc-r1 146.526s cycles 13
+START water12-03-ao-r1
+DONE 79 / 90 water12-03-ao-r1 147.483s cycles 13
+START water12-04-density-dm-r1
+DONE 80 / 90 water12-04-density-dm-r1 142.516s cycles 13
+START water12-09-response-r2
+DONE 81 / 90 water12-09-response-r2 59.663s cycles 13
+START water12-00-base-r2
+DONE 82 / 90 water12-00-base-r2 153.020s cycles 13
+START water12-01-grid-r2
+DONE 83 / 90 water12-01-grid-r2 149.757s cycles 13
+START water12-02-libxc-r2
+DONE 84 / 90 water12-02-libxc-r2 149.865s cycles 13
+START water12-03-ao-r2
+DONE 85 / 90 water12-03-ao-r2 149.693s cycles 13
+START water12-04-density-dm-r2
+DONE 86 / 90 water12-04-density-dm-r2 147.032s cycles 13
+START water12-05-density-mo-r2
+DONE 87 / 90 water12-05-density-mo-r2 129.869s cycles 13
+START water12-06-sparse-tiles-r2
+DONE 88 / 90 water12-06-sparse-tiles-r2 80.382s cycles 13
+START water12-07-potential-r2
+DONE 89 / 90 water12-07-potential-r2 63.010s cycles 13
+START water12-08-cache-blocks-r2
+DONE 90 / 90 water12-08-cache-blocks-r2 65.357s cycles 13

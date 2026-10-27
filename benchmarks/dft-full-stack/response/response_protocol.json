@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "benchmark": "complete analytic static electric-field CPKS",
+  "functional": "TPSS",
+  "systems": [
+    {
+      "name": "water4-rks",
+      "fixture": "response-rks.npz",
+      "waters": 4,
+      "spin": 0,
+      "basis": "cc-pVDZ",
+      "expected_nao": 96
+    },
+    {
+      "name": "oh-water3-uks",
+      "fixture": "response-uks.npz",
+      "waters": 4,
+      "spin": 1,
+      "basis": "cc-pVDZ",
+      "expected_nao": 91
+    }
+  ],
+  "grid_level": 3,
+  "grid_equivalence": "exact frozen coordinates and weights from the same reference fixture",
+  "threads": [
+    8
+  ],
+  "blas_threads": 1,
+  "repeats": 3,
+  "execution": "sequential fresh processes, pinned physical cores; cyclic reference/candidate order; no SCF in timed process",
+  "reference": "Cumulative stage 07-potential; one frozen SCF fixture generated from 00-base",
+  "candidate": "Cumulative potential, cache-block and compact-response stages",
+  "fixture": "one converged SCF from upstream reference per system, then reused unchanged for all branches and repetitions",
+  "scf_tolerance": {
+    "energy": 1e-11,
+    "gradient": 1e-07,
+    "accepted_gradient_max": 2e-07
+  },
+  "solver": {
+    "type": "cphf.solve or ucphf.solve with zero overlap response",
+    "tolerance": 1e-10,
+    "max_cycle": 80,
+    "right_hand_sides": 3
+  },
+  "time": "cache construction plus full CPKS solve including conventional Coulomb response; cache and solver also reported separately",
+  "exclusions": "imports, input load, SCF, dipole-integral construction, postsolve residual check; excluded from response wall time only",
+  "memory": "sample VmRSS every 5 ms throughout cache plus solve, report absolute peak and baseline increment; process ru_maxrss is diagnostic and includes startup",
+  "per_run_acceptance": {
+    "residual_max": 2e-08,
+    "polarizability_symmetry_max": 2e-07,
+    "finite": true
+  },
+  "paired_acceptance": {
+    "identical_fixture_sha256": true,
+    "polarizability_absolute_max_au": 2e-07,
+    "same_affinity_threads": true
+  },
+  "summary": "statistics.median over three process runs; report minimum and maximum; disclose regressions and full-source provenance",
+  "api_policy": "No monkeypatching or changes to NumInt/response callbacks. Wrapping the returned linear action only counts solver calls. Cache type is read from closure metadata after timing.",
+  "versions": [
+    "baseline",
+    "cacheblocks",
+    "compact"
+  ],
+  "expected_processes": 18
+}

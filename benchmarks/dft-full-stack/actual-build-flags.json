@@ -1,0 +1,78 @@
+{
+  "checked": 18,
+  "accepted": true,
+  "records": [
+    {
+      "path": "builds/02-libxc/cmake/gto/CMakeFiles/cgto.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/02-libxc/cmake/dft/CMakeFiles/dft.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/02-libxc/cmake/dft/CMakeFiles/xc_itrf.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/03-ao/cmake/gto/CMakeFiles/cgto.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/03-ao/cmake/dft/CMakeFiles/dft.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/03-ao/cmake/dft/CMakeFiles/xc_itrf.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/04-density-dm/cmake/gto/CMakeFiles/cgto.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/04-density-dm/cmake/dft/CMakeFiles/dft.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/04-density-dm/cmake/dft/CMakeFiles/xc_itrf.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/05-density-mo/cmake/gto/CMakeFiles/cgto.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/05-density-mo/cmake/dft/CMakeFiles/dft.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/05-density-mo/cmake/dft/CMakeFiles/xc_itrf.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/06-sparse-tiles/cmake/gto/CMakeFiles/cgto.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/06-sparse-tiles/cmake/dft/CMakeFiles/dft.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/06-sparse-tiles/cmake/dft/CMakeFiles/xc_itrf.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/07-potential/cmake/gto/CMakeFiles/cgto.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/07-potential/cmake/dft/CMakeFiles/dft.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    },
+    {
+      "path": "builds/07-potential/cmake/dft/CMakeFiles/xc_itrf.dir/flags.make",
+      "c_flags": "-Wall  -msse3 -O3 -DNDEBUG -std=gnu99 -fPIC -fopenmp"
+    }
+  ]
+}

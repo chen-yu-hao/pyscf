@@ -1,0 +1,11 @@
+..WARN: eval_rho1 does not support complex density, eval_rho is called instead
+...../home/lyl/soft/pyscf-stack-20261027/04-density-dm/pyscf/dft/numint.py:673: UserWarning: Note the output of libxc.eval_xc cannot be directly used in eval_mat.
+vsigma from eval_xc should be restructured as (vsigma[:,0],vsigma[:,1])
+
+  warnings.warn('Note the output of libxc.eval_xc cannot be '
+.........................
+----------------------------------------------------------------------
+Ran 32 tests in 13.920s
+
+OK
+output file: /dev/null

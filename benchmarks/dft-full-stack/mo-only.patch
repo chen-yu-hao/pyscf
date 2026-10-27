@@ -1,0 +1,510 @@
+diff --git a/pyscf/dft/numint.py b/pyscf/dft/numint.py
+index 3e2a27ffd..05e145efd 100644
+--- a/pyscf/dft/numint.py
++++ b/pyscf/dft/numint.py
+@@ -401,6 +401,28 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
+     xctype = xctype.upper()
+     ngrids, nao = ao.shape[-2:]
+ 
++    if (xctype == 'MGGA' and not with_lapl
++        and ao.dtype == mo_coeff.dtype == mo_occ.dtype == numpy.double
++        and (nao < SWITCH_SIZE or non0tab is None)
++        and all(ao[i].flags.f_contiguous for i in range(4))):
++        occupied = abs(mo_occ) > OCCDROP
++        if not numpy.any(occupied):
++            return numpy.zeros((5, ngrids))
++        coeff = numpy.asarray(mo_coeff[:,occupied] * numpy.sqrt(abs(mo_occ[occupied])),
++                              order='C')
++        sign = numpy.where(mo_occ[occupied] > 0, 1., -1.)
++        rho = numpy.empty((5, ngrids))
++        done = libdft.VXCeval_rho_mgga_mo(
++            rho.ctypes.data_as(ctypes.c_void_p),
++            ao.ctypes.data_as(ctypes.c_void_p),
++            coeff.ctypes.data_as(ctypes.c_void_p),
++            sign.ctypes.data_as(ctypes.c_void_p),
++            ctypes.c_int(nao), ctypes.c_int(coeff.shape[1]), ctypes.c_int(ngrids),
++            ctypes.c_ssize_t(ao.strides[0] // ao.itemsize))
++        if done:
++            return rho
++        del coeff
++
+     shls_slice = (0, mol.nbas)
+     ao_loc = mol.ao_loc_nr()
+     pos = mo_occ > OCCDROP
+@@ -436,8 +458,9 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
+                 c1 = _dot_ao_dm(mol, ao[i], cpos, non0tab, shls_slice, ao_loc)
+                 #:rho[i] = numpy.einsum('pi,pi->p', c0, c1) * 2 # *2 for +c.c.
+                 #:rho[5] += numpy.einsum('pi,pi->p', c1, c1)
+-                rho[i] = _contract_rho(c0, c1) * 2
+-                rho[tau_idx] += _contract_rho(c1, c1)
++                rho_grad, rho_tau = _contract_rho_grad_tau(c0, c1)
++                rho[i] = rho_grad * 2
++                rho[tau_idx] += rho_tau
+ 
+             if with_lapl:
+                 if ao.shape[0] > 4:
+@@ -487,8 +510,9 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
+                 c1 = _dot_ao_dm(mol, ao[i], cneg, non0tab, shls_slice, ao_loc)
+                 #:rho[i] -= numpy.einsum('pi,pi->p', c0, c1) * 2 # *2 for +c.c.
+                 #:rho5 += numpy.einsum('pi,pi->p', c1, c1)
+-                rho[i] -= _contract_rho(c0, c1) * 2 # *2 for +c.c.
+-                rho5 += _contract_rho(c1, c1)
++                rho_grad, rho_tau = _contract_rho_grad_tau(c0, c1)
++                rho[i] -= rho_grad * 2 # *2 for +c.c.
++                rho5 += rho_tau
+ 
+             if with_lapl:
+                 if ao.shape[0] > 4:
+@@ -836,6 +860,20 @@ def _contract_rho(bra, ket):
+         rho += numpy.einsum('ip,ip->p', bra.imag, ket.imag)
+     return rho
+ 
++def _contract_rho_grad_tau(bra, ket):
++    '''Real parts of bra.conj()*ket and ket.conj()*ket, summed over orbitals.'''
++    if (bra.dtype == ket.dtype == numpy.double and
++        bra.flags.f_contiguous and ket.flags.f_contiguous):
++        ngrids, nao = bra.shape
++        rho = numpy.empty((2, ngrids))
++        libdft.VXC_dcontract_rho_grad_tau(
++            rho.ctypes.data_as(ctypes.c_void_p),
++            bra.ctypes.data_as(ctypes.c_void_p),
++            ket.ctypes.data_as(ctypes.c_void_p),
++            ctypes.c_int(nao), ctypes.c_int(ngrids))
++        return rho
++    return _contract_rho(bra, ket), _contract_rho(ket, ket)
++
+ def _tau_dot(mol, bra, ket, wv, mask, shls_slice, ao_loc):
+     '''nabla_ao dot nabla_ao
+     numpy.einsum('p,xpi,xpj->ij', wv, bra[1:4].conj(), ket[1:4])
+diff --git a/pyscf/dft/test/test_numint_rho.py b/pyscf/dft/test/test_numint_rho.py
+new file mode 100644
+index 000000000..4e2c3ffdd
+--- /dev/null
++++ b/pyscf/dft/test/test_numint_rho.py
+@@ -0,0 +1,75 @@
++#!/usr/bin/env python
++# Copyright 2026 The PySCF Developers. All Rights Reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++import unittest
++import numpy
++from pyscf import gto
++from pyscf.dft import numint
++
++
++class KnownValues(unittest.TestCase):
++    def check_mgga(self, complex_coeff):
++        mol = gto.M(atom='O 0 0 0; H 0 0 1; H 0 1 0',
++                    basis='sto-3g', verbose=0)
++        rng = numpy.random.default_rng(18)
++        coeff = rng.standard_normal((mol.nao, mol.nao))
++        if complex_coeff:
++            coeff = coeff + 1j*rng.standard_normal(coeff.shape)
++        coeff = numpy.linalg.qr(coeff)[0]
++        occ = numpy.linspace(-.8, 1.7, mol.nao)
++        occ[mol.nao//2] = 0
++        dm = (coeff * occ).dot(coeff.conj().T)
++        ao2 = numint.eval_ao(mol, rng.standard_normal((113, 3)), deriv=2)
++        for deriv, with_lapl in ((1, False), (1, True), (2, True)):
++            with self.subTest(deriv=deriv, with_lapl=with_lapl):
++                ao = ao2 if deriv == 2 else ao2[:4]
++                orbitals = numpy.einsum('xpi,ij->xpj', ao, coeff)
++                ref = numpy.zeros((6 if with_lapl else 5, ao.shape[1]))
++                ref[0] = numpy.einsum('pi,i,pi->p', orbitals[0].conj(),
++                                     occ, orbitals[0]).real
++                ref[1:4] = 2*numpy.einsum('pi,i,xpi->xp', orbitals[0].conj(),
++                                          occ, orbitals[1:4]).real
++                ref[-1] = .5*numpy.einsum('xpi,i,xpi->p', orbitals[1:4].conj(),
++                                          occ, orbitals[1:4]).real
++                if deriv == 2:
++                    lapl = orbitals[4] + orbitals[7] + orbitals[9]
++                    ref[4] = 2*numpy.einsum('pi,i,pi->p', orbitals[0].conj(),
++                                            occ, lapl).real + 4*ref[-1]
++                rho = numint.eval_rho2(mol, ao, coeff, occ, xctype='MGGA',
++                                      with_lapl=with_lapl)
++                numpy.testing.assert_allclose(rho, ref, atol=2e-12, rtol=2e-12)
++                if deriv == 2 or not with_lapl:
++                    rho_dm = numint.eval_rho(mol, ao, dm, xctype='MGGA',
++                                            hermi=1, with_lapl=with_lapl)
++                    numpy.testing.assert_allclose(rho, rho_dm, atol=2e-12,
++                                                  rtol=2e-12)
++
++    def test_real_mgga_mixed_occupations(self):
++        self.check_mgga(False)
++
++    def test_complex_mgga_mixed_occupations(self):
++        self.check_mgga(True)
++
++    def test_noncontiguous_contraction(self):
++        rng = numpy.random.default_rng(19)
++        bra = rng.standard_normal((115, 10))[:, ::2]
++        ket = rng.standard_normal((115, 10))[:, ::2]
++        grad, tau = numint._contract_rho_grad_tau(bra, ket)
++        numpy.testing.assert_allclose(grad, numpy.einsum('pi,pi->p', bra, ket))
++        numpy.testing.assert_allclose(tau, numpy.einsum('pi,pi->p', ket, ket))
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/pyscf/dft/test/test_numint_rho_stream.py b/pyscf/dft/test/test_numint_rho_stream.py
+new file mode 100644
+index 000000000..30d100179
+--- /dev/null
++++ b/pyscf/dft/test/test_numint_rho_stream.py
+@@ -0,0 +1,151 @@
++#!/usr/bin/env python
++# Copyright 2026 The PySCF Developers. All Rights Reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++import ctypes
++import unittest
++import numpy
++from pyscf import gto, lib
++from pyscf.dft import numint
++
++
++def legacy_mgga(mol, ao, coeff, occ, screen=None):
++    rho = numpy.zeros((5, ao.shape[1]))
++    for sign in (1, -1):
++        selected = sign * occ > numint.OCCDROP
++        if not numpy.any(selected):
++            continue
++        weighted = numpy.einsum('ij,j->ij', coeff[:, selected], numpy.sqrt(sign*occ[selected]))
++        orbitals = [numint._dot_ao_dm(mol, ao[c], weighted, screen,
++                                     (0, mol.nbas), mol.ao_loc_nr()) for c in range(4)]
++        rho[0] += sign * numint._contract_rho(orbitals[0], orbitals[0])
++        for c in range(1, 4):
++            grad, tau = numint._contract_rho_grad_tau(orbitals[0], orbitals[c])
++            rho[c] += sign * 2 * grad
++            rho[4] += sign * .5 * tau
++    return rho
++
++
++class KnownValues(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.mol = gto.M(atom='O 0 0 0; H 0 0 1; H 0 1 0',
++                        basis='cc-pvdz', verbose=0)
++
++    def _inputs(self, ngrids):
++        rng = numpy.random.default_rng(27)
++        nao = self.mol.nao
++        ao = rng.normal(size=(8, nao, ngrids))[::2].transpose(0, 2, 1)
++        coeff = numpy.linalg.qr(rng.normal(size=(nao, nao)))[0]
++        occ = numpy.linspace(-.8, 1.7, nao)
++        occ[:3] = (0, numint.OCCDROP*.5, -numint.OCCDROP*.5)
++        return ao, coeff, occ
++
++    def test_signed_occupations(self):
++        for ngrids in (1, 127, 128, 129, 1025):
++            ao, coeff, occ = self._inputs(ngrids)
++            ao = ao[::-1]
++            reference = legacy_mgga(self.mol, ao, coeff, occ)
++            orbitals = numpy.einsum('xpi,ij->xpj', ao, coeff)
++            dropped = numpy.where(abs(occ) > numint.OCCDROP, occ, 0)
++            direct = numpy.empty_like(reference)
++            direct[0] = numpy.einsum('pi,i,pi->p', orbitals[0], dropped, orbitals[0])
++            direct[1:4] = 2*numpy.einsum('pi,i,xpi->xp', orbitals[0], dropped, orbitals[1:4])
++            direct[4] = .5*numpy.einsum('xpi,i,xpi->p', orbitals[1:4], dropped, orbitals[1:4])
++            for threads in (1, 4):
++                with self.subTest(ngrids=ngrids, threads=threads), lib.with_omp_threads(threads):
++                    actual = numint.eval_rho2(self.mol, ao, coeff, occ,
++                                              xctype='MGGA', with_lapl=False)
++                    numpy.testing.assert_allclose(actual, reference, atol=2e-12, rtol=2e-12)
++                    numpy.testing.assert_allclose(actual, direct, atol=2e-12, rtol=2e-12)
++
++    def test_zero_occupations(self):
++        ao, coeff, occ = self._inputs(129)
++        actual = numint.eval_rho2(self.mol, ao, coeff, numpy.zeros_like(occ),
++                                  xctype='MGGA', with_lapl=False)
++        numpy.testing.assert_array_equal(actual, numpy.zeros((5, 129)))
++
++    def test_exact_zero_compaction(self):
++        mol = gto.M(atom='O 0 0 0; H 0 0 1; H 0 1 0; '
++                         'O 4 0 0; H 4 0 1; H 4 1 0',
++                    basis='cc-pvdz', verbose=0)
++        rng = numpy.random.default_rng(29)
++        coeff = rng.normal(size=(mol.nao, mol.nao))
++        coeff[2] *= 1e30
++        occ = numpy.linspace(-.8, 1.7, mol.nao)
++        for ngrids in (1, 55, 56, 111, 112, 113, 225):
++            ao = rng.normal(size=(8, mol.nao, ngrids))[::2].transpose(0, 2, 1)
++            ao = ao[::-1]
++            ao[:, :, numpy.arange(mol.nao) % 4 != 0] = 0
++            ao[1, -1, 1] = .25  # A derivative alone keeps this AO column.
++            ao[:, :, 2] = 1e-30  # Small nonzero values must never be screened.
++            ao[:, :, 3] = -0.
++            orbitals = numpy.einsum('xpi,ij->xpj', ao, coeff)
++            reference = numpy.empty((5, ngrids))
++            reference[0] = numpy.einsum('pi,i,pi->p', orbitals[0], occ, orbitals[0])
++            reference[1:4] = 2*numpy.einsum('pi,i,xpi->xp', orbitals[0], occ,
++                                            orbitals[1:4])
++            reference[4] = .5*numpy.einsum('xpi,i,xpi->p', orbitals[1:4], occ,
++                                          orbitals[1:4])
++            for threads in (1, 2):
++                with self.subTest(ngrids=ngrids, threads=threads), lib.with_omp_threads(threads):
++                    actual = numint.eval_rho2(mol, ao, coeff, occ,
++                                              xctype='MGGA', with_lapl=False)
++                    numpy.testing.assert_allclose(actual, reference, atol=2e-11,
++                                                  rtol=2e-12)
++
++    def test_nonfinite_coefficients_on_zero_ao(self):
++        ao = numpy.zeros((4, 48, 113)).transpose(0, 2, 1)
++        sign = numpy.ones(32)
++        rho = numpy.empty((5, 113))
++        for value in (numpy.nan, numpy.inf, -numpy.inf):
++            coeff = numpy.ones((48, 32))
++            coeff[3, 2] = value
++            done = numint.libdft.VXCeval_rho_mgga_mo(
++                rho.ctypes.data_as(ctypes.c_void_p),
++                ao.ctypes.data_as(ctypes.c_void_p),
++                coeff.ctypes.data_as(ctypes.c_void_p),
++                sign.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(48),
++                ctypes.c_int(32), ctypes.c_int(113),
++                ctypes.c_ssize_t(ao.strides[0] // ao.itemsize))
++            self.assertEqual(done, 1)
++            self.assertTrue(numpy.isnan(rho).all())
++
++    def test_screened_and_layout_fallback(self):
++        ao, coeff, occ = self._inputs(129)
++        screen = numpy.ones((3, self.mol.nbas), dtype=numpy.uint8)
++        with lib.temporary_env(numint, SWITCH_SIZE=0):
++            actual = numint.eval_rho2(self.mol, ao, coeff, occ, screen,
++                                      'MGGA', with_lapl=False)
++            reference = legacy_mgga(self.mol, ao, coeff, occ, screen)
++        numpy.testing.assert_allclose(actual, reference, atol=2e-12, rtol=2e-12)
++        ao = numpy.asarray(ao, order='C')
++        actual = numint.eval_rho2(self.mol, ao, coeff, occ, xctype='MGGA', with_lapl=False)
++        reference = legacy_mgga(self.mol, ao, coeff, occ)
++        numpy.testing.assert_allclose(actual, reference, atol=2e-12, rtol=2e-12)
++
++    def test_scratch_limit(self):
++        # The byte limit is checked before reading inputs or allocating scratch.
++        sentinel = numpy.array([42.])
++        ptr = sentinel.ctypes.data_as(ctypes.c_void_p)
++        with lib.with_omp_threads(8):
++            done = numint.libdft.VXCeval_rho_mgga_mo(
++                ptr, ptr, ptr, ptr, ctypes.c_int(4096), ctypes.c_int(8192),
++                ctypes.c_int(1), ctypes.c_ssize_t(4096))
++        self.assertEqual(done, 0)
++        numpy.testing.assert_array_equal(sentinel, [42.])
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/pyscf/lib/dft/nr_numint.c b/pyscf/lib/dft/nr_numint.c
+index 041ab40e3..b50f7c673 100644
+--- a/pyscf/lib/dft/nr_numint.c
++++ b/pyscf/lib/dft/nr_numint.c
+@@ -18,8 +18,10 @@
+ 
+ #include <stdlib.h>
+ #include <stdint.h>
++#include <stddef.h>
+ #include <stdbool.h>
+ #include <assert.h>
++#include <string.h>
+ #include "config.h"
+ #include "gto/grid_ao_drv.h"
+ #include "np_helper/np_helper.h"
+@@ -383,6 +385,178 @@ void VXC_dcontract_rho(double *rho, double *bra, double *ket,
+ }
+ }
+ 
++static int nonzero_ao_grid(const double *ao, int ng, ptrdiff_t stride)
++{
++        int active = 0;
++        int c, g;
++        for (c = 0; c < 4 && !active; c++) {
++                const double *src = ao + c*stride;
++                if (src[0] != 0.) {
++                        return 1;
++                }
++#pragma omp simd reduction(|:active)
++                for (g = 1; g < ng; g++) {
++                        active |= src[g] != 0.;
++                }
++        }
++        return active;
++}
++
++static int compact_mo_ao(const double *ao, int nao, int nocc, int ngrids,
++                         ptrdiff_t stride)
++{
++        if (nocc < 24 || ngrids == 0) {
++                return 0;
++        }
++        const int ntiles = (ngrids+111) / 112;
++        const int nr = MIN(nao, 32);
++        const int nt = MIN(ntiles, 5);
++        int t, r, tile, ig0, ng, i, active = 0;
++        for (t = 0; t < nt; t++) {
++                tile = nt == 1 ? 0 : (size_t)t*(ntiles-1)/(nt-1);
++                ig0 = tile * 112;
++                ng = MIN(112, ngrids-ig0);
++                for (r = 0; r < nr; r++) {
++                        i = nr == 1 ? 0 : (size_t)r*(nao-1)/(nr-1);
++                        active += nonzero_ao_grid(ao+(size_t)i*ngrids+ig0,
++                                                  ng, stride);
++                }
++        }
++        /* Sampling chooses an execution path only. Every omitted column is
++         * checked for exact zeros again when its grid block is processed. */
++        return (double)nocc*(nr*nt-active) >= 18.*nr*nt;
++}
++
++int VXCeval_rho_mgga_mo(double *rho, double *ao, double *coeff, double *sign,
++                        int nao, int nocc, int ngrids, ptrdiff_t ao_stride)
++{
++        int grid_tile = 512;
++        size_t thread_size = (size_t)4 * grid_tile * nocc;
++        int nthreads = 1;
++#ifdef _OPENMP
++        nthreads = omp_get_max_threads();
++#endif
++        if (thread_size * nthreads > (128*1024*1024) / sizeof(double)) {
++                return 0;
++        }
++        int compact = compact_mo_ao(ao, nao, nocc, ngrids, ao_stride);
++        const size_t compact_size = (size_t)4*112*(nao+nocc) + (size_t)nao*nocc;
++        if (compact && compact_size*nthreads*sizeof(double)+nao <= 128*1024*1024) {
++                grid_tile = 112;
++                thread_size = compact_size;
++        } else {
++                compact = 0;
++        }
++        double *scratch = malloc(thread_size * nthreads * sizeof(double));
++        uint8_t *nonfinite = compact ? malloc(nao) : NULL;
++        if (scratch == NULL || (compact && nonfinite == NULL)) {
++                free(scratch);
++                free(nonfinite);
++                return 0;
++        }
++        if (compact) {
++                int i, j;
++                for (i = 0; i < nao; i++) {
++                        nonfinite[i] = 0;
++                        for (j = 0; j < nocc; j++) {
++                                if (!isfinite(coeff[(size_t)i*nocc+j])) {
++                                        nonfinite[i] = 1;
++                                        break;
++                                }
++                        }
++                }
++        }
++#pragma omp parallel
++{
++        const char TRANS_N = 'N';
++        const char TRANS_T = 'T';
++        const double D0 = 0;
++        const double D1 = 1;
++        double *orb = scratch + thread_size * omp_get_thread_num();
++        double *packed = orb + (size_t)4*grid_tile*nocc;
++        double *gathered = compact ? packed+(size_t)4*grid_tile*nao : packed;
++        double *pc;
++        int ig0, ng, m, i, j, c, g, nactive;
++#pragma omp for schedule(static)
++        for (ig0 = 0; ig0 < ngrids; ig0 += grid_tile) {
++                ng = MIN(grid_tile, ngrids - ig0);
++                m = 4 * ng;
++                if (compact) {
++                        nactive = 0;
++                        for (i = 0; i < nao; i++) {
++                                const double *src = ao+(size_t)i*ngrids+ig0;
++                                if (nonfinite[i] || nonzero_ao_grid(src, ng, ao_stride)) {
++                                        for (c = 0; c < 4; c++) {
++                                                memcpy(packed+(size_t)nactive*m+c*ng,
++                                                       src+c*ao_stride, ng*sizeof(double));
++                                        }
++                                        memcpy(gathered+(size_t)nactive*nocc,
++                                               coeff+(size_t)i*nocc, nocc*sizeof(double));
++                                        nactive++;
++                                }
++                        }
++                        if (nactive) {
++                                dgemm_(&TRANS_N, &TRANS_T, &m, &nocc, &nactive,
++                                       &D1, packed, &m, gathered, &nocc, &D0, orb, &m);
++                        } else {
++                                memset(orb, 0, (size_t)m*nocc*sizeof(double));
++                        }
++                } else {
++                        for (c = 0; c < 4; c++) {
++                                dgemm_(&TRANS_N, &TRANS_T, &ng, &nocc, &nao,
++                                       &D1, ao+c*ao_stride+ig0, &ngrids, coeff, &nocc,
++                                       &D0, orb+c*ng, &m);
++                        }
++                }
++                for (c = 0; c < 5; c++) {
++                for (g = 0; g < ng; g++) {
++                        rho[(size_t)c*ngrids+ig0+g] = 0;
++                } }
++                for (j = 0; j < nocc; j++) {
++                        pc = orb + j*m;
++                        for (g = 0; g < ng; g++) {
++                                rho[ig0+g] += sign[j]*pc[g]*pc[g];
++                        }
++                        for (c = 1; c < 4; c++) {
++                        for (g = 0; g < ng; g++) {
++                                rho[(size_t)c*ngrids+ig0+g] += 2*sign[j]*pc[g]*pc[c*ng+g];
++                                rho[(size_t)4*ngrids+ig0+g] += .5*sign[j]*pc[c*ng+g]*pc[c*ng+g];
++                        } }
++                }
++        }
++}
++        free(scratch);
++        free(nonfinite);
++        return 1;
++}
++
++void VXC_dcontract_rho_grad_tau(double *rho, double *bra, double *ket,
++                               int nao, int ngrids)
++{
++        double *tau = rho + ngrids;
++#pragma omp parallel
++{
++        size_t Ngrids = ngrids;
++        int nthread = omp_get_num_threads();
++        int blksize = MAX((Ngrids+nthread-1) / nthread, 1);
++        int ib, b0, b1, i, j;
++#pragma omp for
++        for (ib = 0; ib < nthread; ib++) {
++                b0 = ib * blksize;
++                b1 = MIN(b0 + blksize, ngrids);
++                for (j = b0; j < b1; j++) {
++                        rho[j] = bra[j] * ket[j];
++                        tau[j] = ket[j] * ket[j];
++                }
++                for (i = 1; i < nao; i++) {
++                for (j = b0; j < b1; j++) {
++                        rho[j] += bra[i*Ngrids+j] * ket[i*Ngrids+j];
++                        tau[j] += ket[i*Ngrids+j] * ket[i*Ngrids+j];
++                } }
++        }
++}
++}
++
+ void VXC_vv10nlc(double *Fvec, double *Uvec, double *Wvec,
+                  double *vvcoords, double *coords,
+                  double *W0p, double *W0, double *K, double *Kp, double *RpW,

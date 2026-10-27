@@ -1,0 +1,8 @@
+...WARN: n_ang 11 for atom 0 O is not the supported Lebedev angular grids. Set n_ang to 50
+WARN: n_ang 11 for atom 1 H is not the supported Lebedev angular grids. Set n_ang to 50
+.......
+----------------------------------------------------------------------
+Ran 10 tests in 0.465s
+
+OK
+output file: /dev/null

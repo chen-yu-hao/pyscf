@@ -1,0 +1,256 @@
+{
+  "schema": 1,
+  "operation": "analytic electric-field CPKS, three Cartesian fields",
+  "source": {
+    "source": "/home/lyl/soft/pyscf-stack-20261027/07-potential",
+    "commit": "560f88db00b6f9d37b3d66140e0c3cc43d9ec39d",
+    "tracked_source_dirty": false
+  },
+  "pyscf_import": "/home/lyl/soft/pyscf-stack-20261027/07-potential/pyscf/__init__.py",
+  "native_libraries": {
+    "libdft.so": {
+      "path": "/home/lyl/soft/pyscf-stack-20261027/07-potential/pyscf/lib/libdft.so",
+      "sha256": "0081196172ab377fc6b2bd0c6c539b329cba5de0d0c9f442bf18b4dc0aa3f995"
+    },
+    "libcgto.so": {
+      "path": "/home/lyl/soft/pyscf-stack-20261027/07-potential/pyscf/lib/libcgto.so",
+      "sha256": "129d1de594b2530c685476e41b16c35bc06a8fdeb4f696ed3da5e996ce0807d9"
+    },
+    "libxc_itrf.so": {
+      "path": "/home/lyl/soft/pyscf-stack-20261027/07-potential/pyscf/lib/libxc_itrf.so",
+      "sha256": "25b7ded8ae74d26640291d065f234a39b53c1bb501b38cdb8e22c5db7cef363a"
+    }
+  },
+  "fixture": "/home/lyl/soft/pyscf-stack-bench-20261027/response/fixtures/response-uks.npz",
+  "fixture_sha256": "74f1f354bd99c4da78ebaa07ca02108cc6554d0bd0047032c6f922c008621741",
+  "fixture_metadata": {
+    "atom": [
+      [
+        "O",
+        [
+          0.0,
+          0.0,
+          0
+        ]
+      ],
+      [
+        "H",
+        [
+          0.758602,
+          0.0,
+          0.504284
+        ]
+      ],
+      [
+        "H",
+        [
+          -0.758602,
+          0.0,
+          0.504284
+        ]
+      ],
+      [
+        "O",
+        [
+          3.3,
+          0.0,
+          0
+        ]
+      ],
+      [
+        "H",
+        [
+          4.058602,
+          0.0,
+          0.504284
+        ]
+      ],
+      [
+        "H",
+        [
+          2.541398,
+          0.0,
+          0.504284
+        ]
+      ],
+      [
+        "O",
+        [
+          6.6,
+          0.0,
+          0
+        ]
+      ],
+      [
+        "H",
+        [
+          7.358601999999999,
+          0.0,
+          0.504284
+        ]
+      ],
+      [
+        "H",
+        [
+          5.841398,
+          0.0,
+          0.504284
+        ]
+      ],
+      [
+        "O",
+        [
+          9.899999999999999,
+          0.0,
+          0
+        ]
+      ],
+      [
+        "H",
+        [
+          10.658601999999998,
+          0.0,
+          0.504284
+        ]
+      ]
+    ],
+    "basis": "cc-pVDZ",
+    "spin": 1,
+    "xc": "TPSS",
+    "grid_level": 3,
+    "max_memory_mb": 1000,
+    "scf_source": {
+      "source": "/home/lyl/soft/pyscf-stack-20261027/00-base",
+      "commit": "44313dfb457b93358918c391fc66285fa44153ef",
+      "tracked_source_dirty": false
+    },
+    "fixture_role": "frozen converged reference orbitals and grid",
+    "scf_energy_hartree": -304.966415528785,
+    "scf_gradient_norm": 7.310729581570668e-08,
+    "nao": 91,
+    "ngrids": 124984
+  },
+  "affinity": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "omp_threads": 8,
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "version": "0.3.23.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "version": "0.3.29.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/pyscf-stack-20261027/07-potential/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "version": null,
+      "threading_layer": "disabled",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgomp.so.1.0.0",
+      "version": null
+    }
+  ],
+  "cache_wall_s": 0.49225718528032303,
+  "solver_wall_s": 26.525708213448524,
+  "response_wall_s": 27.017965398728848,
+  "response_cpu_s": 127.184995155,
+  "solver_action_calls": 15,
+  "response_peak_rss": {
+    "rss_baseline_mib": 103.94140625,
+    "rss_sampled_peak_mib": 657.5234375,
+    "rss_peak_increment_mib": 553.58203125,
+    "rss_sample_interval_s": 0.005,
+    "rss_sample_count": 4935
+  },
+  "process_hwm_before_mib": 104.1640625,
+  "process_hwm_after_response_mib": 655.1796875,
+  "cache": {
+    "type": "ndarray",
+    "unique_array_bytes": 119984640,
+    "array_shapes": [
+      [
+        5,
+        124984
+      ],
+      [
+        5,
+        124984
+      ],
+      [
+        2,
+        5,
+        124984
+      ],
+      [
+        2,
+        5,
+        2,
+        5,
+        124984
+      ]
+    ]
+  },
+  "coulomb_eri_cached": true,
+  "coulomb_eri_bytes": 70107128,
+  "polarizability_au": [
+    [
+      37.80719077726653,
+      6.69241244017182e-16,
+      0.6914854422799825
+    ],
+    [
+      6.639683891224363e-16,
+      12.510637546644674,
+      2.28903682970857e-15
+    ],
+    [
+      0.6914854423401687,
+      2.239342966137292e-15,
+      17.524043761297538
+    ]
+  ],
+  "residual_max": 1.0051733612126412e-09,
+  "polarizability_symmetry_error": 6.01861893656519e-11,
+  "scientific_accepted": true,
+  "timing_scope": "cache construction plus complete iterative CPKS; imports, frozen input loading, SCF, dipole integrals and postsolve residual check excluded",
+  "memory_scope": "sampled response interval RSS, 5 ms; process high-water mark diagnostic includes startup"
+}

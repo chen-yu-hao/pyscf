@@ -1,0 +1,78 @@
+git clone --shared --no-hardlinks /home/lyl/soft/pyscf-dft-pr-20261026 /home/lyl/soft/pyscf-stack-20261027/repo
+Cloning into '/home/lyl/soft/pyscf-stack-20261027/repo'...
+done.
+git remote set-url origin git@github.com:chen-yu-hao/pyscf.git
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/grid HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/libxc HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/ao HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/density-dm HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/density HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/tiles HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/potential HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/cache-blocks HEAD
+git fetch --no-tags --no-write-fetch-head /home/lyl/soft/pyscf-split-20261026/response HEAD
+git worktree add --detach /home/lyl/soft/pyscf-stack-20261027/00-base 44313dfb457b93358918c391fc66285fa44153ef
+HEAD is now at 44313dfb4 Replicate the ECP of every image. (#3542)
+Preparing worktree (detached HEAD 44313dfb4)
+git worktree add -b DFT-stack-01-grid /home/lyl/soft/pyscf-stack-20261027/01-grid 44313dfb457b93358918c391fc66285fa44153ef
+HEAD is now at 44313dfb4 Replicate the ECP of every image. (#3542)
+Preparing worktree (new branch 'DFT-stack-01-grid')
+git cherry-pick -x 3721140b263c8a974fe9ef97e7ccdfe97be7d775
+[DFT-stack-01-grid 8ee7cc3ea] Preserve grid grouping order with stable integer keys
+ Date: Tue Oct 27 00:01:12 2026 +0800
+ 2 files changed, 29 insertions(+)
+git rev-parse HEAD
+8ee7cc3ea223d1b6e46913306b4a522c04746e98
+git worktree add -b DFT-stack-02-libxc /home/lyl/soft/pyscf-stack-20261027/02-libxc 8ee7cc3ea223d1b6e46913306b4a522c04746e98
+HEAD is now at 8ee7cc3ea Preserve grid grouping order with stable integer keys
+Preparing worktree (new branch 'DFT-stack-02-libxc')
+git cherry-pick -x 3fc5c8309d97fdbf584afcf25d5e5d0e244dec47
+[DFT-stack-02-libxc a52b05e3a] Evaluate and accumulate LibXC components in one parallel region
+ Date: Tue Oct 27 00:01:13 2026 +0800
+ 2 files changed, 49 insertions(+), 52 deletions(-)
+git rev-parse HEAD
+a52b05e3afa58345ba95a17a07b782d2d5a5a090
+git worktree add -b DFT-stack-03-ao /home/lyl/soft/pyscf-stack-20261027/03-ao a52b05e3afa58345ba95a17a07b782d2d5a5a090
+HEAD is now at a52b05e3a Evaluate and accumulate LibXC components in one parallel region
+Preparing worktree (new branch 'DFT-stack-03-ao')
+git cherry-pick -x 65b4c7d2a134221bd7286bceeb699d90f8383eaa
+[DFT-stack-03-ao 87505fe42] Reuse primitive exponentials in AO first derivative contraction
+ Date: Tue Oct 27 00:01:13 2026 +0800
+ 2 files changed, 84 insertions(+), 7 deletions(-)
+ create mode 100644 pyscf/gto/test/test_grid_exp1.py
+git rev-parse HEAD
+87505fe4200e3115ce7f38e3c53a4c15f46ccc2d
+git worktree add -b DFT-stack-04-density-dm /home/lyl/soft/pyscf-stack-20261027/04-density-dm 87505fe4200e3115ce7f38e3c53a4c15f46ccc2d
+HEAD is now at 87505fe42 Reuse primitive exponentials in AO first derivative contraction
+Preparing worktree (new branch 'DFT-stack-04-density-dm')
+git cherry-pick -x a5d33360cd0fd9c16e48fed7e752690b98a78b61
+[DFT-stack-04-density-dm 343beca98] Fuse sparse density-matrix contractions in numerical integration
+ Date: Tue Oct 27 13:32:54 2026 +0800
+ 4 files changed, 332 insertions(+), 1 deletion(-)
+ create mode 100644 pyscf/dft/test/test_numint_rho_fused.py
+git rev-parse HEAD
+343beca98c837ae2b6edb28e39f74e88b40a8971
+git worktree add -b DFT-stack-05-density-mo /home/lyl/soft/pyscf-stack-20261027/05-density-mo 343beca98c837ae2b6edb28e39f74e88b40a8971
+HEAD is now at 343beca98 Fuse sparse density-matrix contractions in numerical integration
+Preparing worktree (new branch 'DFT-stack-05-density-mo')
+git commit -m Stream MO density, gradient and tau contractions -m MO-only difference between DFT-density-dm a5d33360cd0fd9c16e48fed7e752690b98a78b61 and DFT-density 3734fc4a4fb6a5486c2a4db0b094df71cc637dc5.
+[DFT-stack-05-density-mo 35eb265e4] Stream MO density, gradient and tau contractions
+ 4 files changed, 442 insertions(+), 4 deletions(-)
+ create mode 100644 pyscf/dft/test/test_numint_rho.py
+ create mode 100644 pyscf/dft/test/test_numint_rho_stream.py
+git rev-parse HEAD
+35eb265e4017fffab2d015bf2449e5b790c38e46
+git worktree add -b DFT-stack-06-sparse-tiles /home/lyl/soft/pyscf-stack-20261027/06-sparse-tiles 35eb265e4017fffab2d015bf2449e5b790c38e46
+HEAD is now at 35eb265e4 Stream MO density, gradient and tau contractions
+Preparing worktree (new branch 'DFT-stack-06-sparse-tiles')
+git cherry-pick -x 38d820b97fa81cba1fa4e8a23d41b547cffc1bac
+Auto-merging pyscf/lib/dft/nr_numint_sparse.c
+[DFT-stack-06-sparse-tiles 9c1832367] Reduce sparse AO output tiles and schedule finer pair tasks
+ Date: Tue Oct 27 00:00:16 2026 +0800
+ 2 files changed, 100 insertions(+), 6 deletions(-)
+ create mode 100644 pyscf/dft/test/test_numint_pair_tiles.py
+git rev-parse HEAD
+9c18323670177880b3925e53fc7dbb6e230b46af
+git worktree add -b DFT-stack-07-potential /home/lyl/soft/pyscf-stack-20261027/07-potential 9c18323670177880b3925e53fc7dbb6e230b46af
+HEAD is now at 9c1832367 Reduce sparse AO output tiles and schedule finer pair tasks
+Preparing worktree (new branch 'DFT-stack-07-potential')
