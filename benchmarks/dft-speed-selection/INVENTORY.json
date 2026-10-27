@@ -1,0 +1,36 @@
+{
+  "included_files": [
+    "README.md",
+    "REVIEW_GUIDE.md",
+    "accept_xc_campaign.py",
+    "builds.json",
+    "drafts/density-dm.md",
+    "drafts/grid.md",
+    "drafts/tiles.md",
+    "micro_benchmark.py",
+    "protocols/micro-grid.json",
+    "protocols/xc-component.json",
+    "results/density-dm.csv",
+    "results/density-dm.json",
+    "results/grid.csv",
+    "results/grid.json",
+    "results/tiles.csv",
+    "results/tiles.json",
+    "run_micro_campaign.py",
+    "run_xc_campaign.py",
+    "selection.json",
+    "xc_benchmark.py"
+  ],
+  "new_evidence_branch": true,
+  "comparison_cells": 17,
+  "selected_fresh_process_runs": 102,
+  "all_cells_of_retained_components_included": true,
+  "excluded": [
+    "large raw .npz arrays and full machine-local logs (retained locally; reproducible)",
+    "historical aggregate timings (not evidence for the selected individual heads)",
+    "deferred MO/LibXC/AO/potential/response proposals (reasons in selection.json)"
+  ],
+  "previous_public_evidence_files": 0,
+  "deleted_previous_results": 0,
+  "production_library_source_files_added": 0
+}

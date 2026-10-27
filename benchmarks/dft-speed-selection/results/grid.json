@@ -1,0 +1,54 @@
+{
+  "accepted": true,
+  "selected_comparison_rows": 1,
+  "selected_pair_runs": 6,
+  "original_batch_runs": 6,
+  "comparisons": [
+    {
+      "case": "water20-rks",
+      "threads": 1,
+      "mode": "grid",
+      "baseline": "baseline",
+      "candidate": "grid",
+      "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+      "candidate_commit": "3721140b263c8a974fe9ef97e7ccdfe97be7d775",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 0.6725877486169338,
+      "candidate_seconds_median": 0.06131430342793465,
+      "baseline_seconds_range": [
+        0.6538880318403244,
+        0.6767999064177275
+      ],
+      "candidate_seconds_range": [
+        0.059621063992381096,
+        0.06878606975078583
+      ],
+      "speedup": 10.969508108453931,
+      "baseline_peak_rss_mib_median": 162.98046875,
+      "candidate_peak_rss_mib_median": 148.58203125,
+      "baseline_peak_rss_mib_range": [
+        162.69921875,
+        163.12109375
+      ],
+      "candidate_peak_rss_mib_range": [
+        148.5546875,
+        148.8828125
+      ],
+      "max_absolute_errors": {
+        "values": 0.0
+      }
+    }
+  ],
+  "gates": {
+    "nelec": 1e-08,
+    "exc": 1e-08,
+    "vxc": 1e-09
+  },
+  "micro_gates": {
+    "grid": 0.0,
+    "ao": 1e-12,
+    "libxc": 1e-10
+  },
+  "original_acceptance_sha256": "6e417083d5637408d9367cd72061f0b0b6324e93a28e72c95dcd9cf7c85ab79d"
+}

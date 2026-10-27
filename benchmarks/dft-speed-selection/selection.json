@@ -1,0 +1,51 @@
+{
+  "deferred": {
+    "DFT-density": "Superseded for this submission by DM-only head; original MO path had a measured UKS/8-thread regression.",
+    "DFT-libxc": "Mixed gains and regressions; median speed ratio 0.928 in evaluator microbenchmarks.",
+    "DFT-ao": "Only 0.985\u20131.029 speed ratios, too small for this submission focus.",
+    "DFT-potential": "Relative to direct tiles parent, large 24-thread cells regress to 0.9275/0.9516 ratios.",
+    "DFT-cache-blocks": "Complete CPKS speed ratio about one.",
+    "DFT-response": "Memory reduction, approximately unchanged total solve time."
+  },
+  "criterion": "Clear measured gains across all chosen relevant cells versus the direct parent, numerical equivalence, no observed regressions in retained scope. Sample ranges are descriptive, not confidence intervals.",
+  "new_dm_tests": 32,
+  "new_dm_runs": 48,
+  "head_retested_after_scope_reduction": true,
+  "independent_speedups_must_not_be_multiplied": true,
+  "no_upstream_pr_created": true,
+  "selected": [
+    {
+      "component": "grid",
+      "branch": "DFT-grid",
+      "head": "3721140b263c8a974fe9ef97e7ccdfe97be7d775",
+      "base": "44313dfb457b93358918c391fc66285fa44153ef",
+      "cells": 1,
+      "fresh_process_runs": 6,
+      "speedup_min": 10.969508108453931,
+      "speedup_max": 10.969508108453931,
+      "observed_ranges_separate_in_all_cells": true
+    },
+    {
+      "component": "tiles",
+      "branch": "DFT-sparse-tiles",
+      "head": "38d820b97fa81cba1fa4e8a23d41b547cffc1bac",
+      "base": "44313dfb457b93358918c391fc66285fa44153ef",
+      "cells": 8,
+      "fresh_process_runs": 48,
+      "speedup_min": 1.2016692882887379,
+      "speedup_max": 1.5832989172766392,
+      "observed_ranges_separate_in_all_cells": true
+    },
+    {
+      "component": "density-dm",
+      "branch": "DFT-density-dm",
+      "head": "a5d33360cd0fd9c16e48fed7e752690b98a78b61",
+      "base": "44313dfb457b93358918c391fc66285fa44153ef",
+      "cells": 8,
+      "fresh_process_runs": 48,
+      "speedup_min": 1.253492677003317,
+      "speedup_max": 1.9065466204275159,
+      "observed_ranges_separate_in_all_cells": true
+    }
+  ]
+}
