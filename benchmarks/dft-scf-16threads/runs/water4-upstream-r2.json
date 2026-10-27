@@ -1,0 +1,197 @@
+{
+  "case": "water4",
+  "basis": "cc-pvdz",
+  "xc": "MN15",
+  "spin": 0,
+  "cores": 16,
+  "python": "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+  "pyscf_path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/__init__.py",
+  "version": "2.14.0",
+  "affinity": [
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47
+  ],
+  "energy": -305.35020983391234,
+  "kernel_wall_s": 19.269784094765782,
+  "cycles": 11,
+  "polish_cycles": 0,
+  "strict": true,
+  "history": [
+    {
+      "cycle": 1,
+      "density_rms": 0.02033303515860719,
+      "density_max": 0.2876817132493711,
+      "energy_delta": 0.577168877061581,
+      "gradient": 0.40471787441726037
+    },
+    {
+      "cycle": 2,
+      "density_rms": 0.002997939034705543,
+      "density_max": 0.038291763487613706,
+      "energy_delta": 0.026213546624830997,
+      "gradient": 0.1509188273026963
+    },
+    {
+      "cycle": 3,
+      "density_rms": 0.0008426251209553365,
+      "density_max": 0.0126276150076573,
+      "energy_delta": 0.003331639676332543,
+      "gradient": 0.04159128979049725
+    },
+    {
+      "cycle": 4,
+      "density_rms": 0.00029246491105663116,
+      "density_max": 0.006024002378135052,
+      "energy_delta": 0.0002889505993266539,
+      "gradient": 0.01034226634658363
+    },
+    {
+      "cycle": 5,
+      "density_rms": 8.887298004379884e-05,
+      "density_max": 0.0020205513916072837,
+      "energy_delta": 2.4082053300844564e-05,
+      "gradient": 0.000419426671404512
+    },
+    {
+      "cycle": 6,
+      "density_rms": 9.421121086286163e-06,
+      "density_max": 0.00011684649925391977,
+      "energy_delta": 1.1213580819458002e-07,
+      "gradient": 0.0001316344827625422
+    },
+    {
+      "cycle": 7,
+      "density_rms": 1.8071019277564569e-06,
+      "density_max": 2.201775251009508e-05,
+      "energy_delta": 5.686501935997512e-09,
+      "gradient": 2.4258907080177928e-05
+    },
+    {
+      "cycle": 8,
+      "density_rms": 4.596621046406841e-07,
+      "density_max": 6.216988932439271e-06,
+      "energy_delta": 2.425508682790678e-10,
+      "gradient": 3.098378116879956e-06
+    },
+    {
+      "cycle": 9,
+      "density_rms": 5.6113029016615346e-08,
+      "density_max": 8.514558905714509e-07,
+      "energy_delta": 2.6147972675971687e-12,
+      "gradient": 1.512193967449357e-07
+    },
+    {
+      "cycle": 10,
+      "density_rms": 3.2824622357908103e-09,
+      "density_max": 4.0556745850572895e-08,
+      "energy_delta": 2.8421709430404007e-13,
+      "gradient": 1.678268645271588e-08
+    },
+    {
+      "cycle": 11,
+      "density_rms": 1.8898522468688638e-10,
+      "density_max": 1.7277180042532536e-09,
+      "energy_delta": 1.1368683772161603e-13,
+      "gradient": 9.34073851969001e-09
+    },
+    {
+      "cycle": 11,
+      "density_rms": 2.1020601545408286e-10,
+      "density_max": 2.1033426007843747e-09,
+      "energy_delta": 3.979039320256561e-13,
+      "gradient": 2.9878118846779706e-09
+    }
+  ],
+  "grid_nominal": [
+    99,
+    590
+  ],
+  "grid_points": 700920,
+  "nonzero_weight_points": 699540,
+  "cutoff": 1e-10,
+  "numint_cutoff": 1e-08,
+  "nelec_overlap": 40.00000000000011,
+  "nao": 96,
+  "cpu_seconds": 133.209315,
+  "peak_rss_kib": 501416,
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "version": "0.3.23.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "version": "0.3.29.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 16,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "version": null,
+      "threading_layer": "disabled",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 16,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgomp.so.1.0.0",
+      "version": null
+    }
+  ],
+  "native_maps": [
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib/libcint.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib/libxc.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib64/libxcfun.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libao2mo.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libcgto.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libcvhf.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libdft.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libnp_helper.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libpbc.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libri.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libxc_itrf.so",
+    "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libxcfun_itrf.so"
+  ],
+  "grid_coords_digest": "73d57f2d277b9f63c8222223441f731c78b2f09874067873e1274cfa1c055d3d",
+  "grid_weights_digest": "2eae1cf5f466fbe715a5de6e6ee2b1c1b4768ccd0a6feab33cb62aead0c27a01"
+}

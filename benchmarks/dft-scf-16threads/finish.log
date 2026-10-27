@@ -1,0 +1,16 @@
+{
+  "accepted": true,
+  "expected_runs": 27,
+  "accepted_runs": 27,
+  "expected_pairs": 27,
+  "accepted_pairs": 27,
+  "errors": [],
+  "max_errors": {
+    "energy_delta_hartree": 1.8189894035458565e-12,
+    "density_rms": 2.1882055566687957e-10,
+    "density_max": 3.3578429464026227e-09,
+    "spin_square_delta": 1.865174681370263e-14
+  }
+}
+Wrote REPORT.md, measurements.csv and comparison.csv
+Accepted 27 runs, rendered report, removed registered scratch.
