@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
 #include "config.h"
 #include "np_helper/np_helper.h"
 #include "cint.h"
@@ -301,6 +302,145 @@ _dot_ao_dm_l1(out, ao, dm, nao, ngrids, nbas, ig0, ig1,
         }
         free(box_l1_loc);
         free(mask_l1);
+}
+
+static void eval_rho_sparse(double *rho, double *ao, double *dm,
+                             int nao, int ngrids, int nbas, int nbins, int hermi,
+                             uint8_t *screen_index, uint8_t *pair_mask,
+                             int *ao_loc, ptrdiff_t ao_stride, int nvar)
+{
+        int shls_slice[2] = {0, nbas};
+        int *box_loc = malloc(sizeof(int) * (nbas+1));
+        int nbox = CVHFshls_block_partition(box_loc, shls_slice, ao_loc, BOXSIZE1_N);
+        int box_size = 0;
+        for (int ib = 0; ib < nbox; ib++) {
+                box_size = MAX(box_size, ao_loc[box_loc[ib+1]] - ao_loc[box_loc[ib]]);
+        }
+        const int ncomp = nvar == 5 ? 4 : 1;
+        const size_t tile_size = ncomp * BLKSIZE * box_size;
+#pragma omp parallel
+{
+        const char TRANS_N = 'N';
+        const double D1 = 1;
+        int ig0, ng, m, ib, jb, ish, jsh, i, j, g, c, ni, nj, bin, active;
+        int ia[box_size], ja[box_size];
+        int ibin[box_size], jbin[box_size];
+        int ishell[box_size], jshell[box_size];
+        size_t addr;
+        uint8_t *screen;
+        double *buf = malloc(sizeof(double) * (2*tile_size + (size_t)box_size*box_size));
+        double *aobuf = buf;
+        double *cbuf = aobuf + tile_size;
+        double *dmbuf = cbuf + tile_size;
+        double *pao, *pc;
+#pragma omp for schedule(dynamic)
+        for (ig0 = 0; ig0 < ngrids; ig0 += BLKSIZE) {
+                ng = MIN(BLKSIZE, ngrids - ig0);
+                m = ncomp * ng;
+                screen = screen_index + (ig0 / BLKSIZE) * nbas;
+                for (c = 0; c < nvar; c++) {
+                for (g = 0; g < ng; g++) {
+                        rho[(size_t)c*ngrids+ig0+g] = 0;
+                } }
+                for (jb = 0; jb < nbox; jb++) {
+                        nj = 0;
+                        for (jsh = box_loc[jb]; jsh < box_loc[jb+1]; jsh++) {
+                                if (screen[jsh] == 0) {
+                                        continue;
+                                }
+                                for (j = ao_loc[jsh]; j < ao_loc[jsh+1]; j++) {
+                                        ja[nj] = j;
+                                        jbin[nj] = screen[jsh];
+                                        jshell[nj++] = jsh;
+                                }
+                        }
+                        if (nj == 0) {
+                                continue;
+                        }
+                        for (i = 0; i < m*nj; i++) {
+                                cbuf[i] = 0;
+                        }
+                        for (ib = 0; ib < nbox; ib++) {
+                                ni = 0;
+                                for (ish = box_loc[ib]; ish < box_loc[ib+1]; ish++) {
+                                        if (screen[ish] == 0) {
+                                                continue;
+                                        }
+                                        for (i = ao_loc[ish]; i < ao_loc[ish+1]; i++) {
+                                                ia[ni] = i;
+                                                ibin[ni] = screen[ish];
+                                                ishell[ni++] = ish;
+                                        }
+                                }
+                                active = 0;
+                                for (j = 0; j < nj; j++) {
+                                        bin = MAX(1, nbins - jbin[j]);
+                                        for (i = 0; i < ni; i++) {
+                                                if (ibin[i] >= bin && pair_mask[ishell[i]*nbas+jshell[j]]) {
+                                                        dmbuf[j*ni+i] = dm[(size_t)ia[i]*nao+ja[j]];
+                                                        active = 1;
+                                                } else {
+                                                        dmbuf[j*ni+i] = 0;
+                                                }
+                                        }
+                                }
+                                if (!active) {
+                                        continue;
+                                }
+                                for (i = 0; i < ni; i++) {
+                                for (c = 0; c < ncomp; c++) {
+                                        pao = ao + c*ao_stride + (size_t)ia[i]*ngrids + ig0;
+                                        for (g = 0; g < ng; g++) {
+                                                aobuf[i*m+c*ng+g] = pao[g];
+                                        }
+                                } }
+                                dgemm_(&TRANS_N, &TRANS_N, &m, &nj, &ni,
+                                       &D1, aobuf, &m, dmbuf, &ni, &D1, cbuf, &m);
+                        }
+                        for (j = 0; j < nj; j++) {
+                                addr = (size_t)ja[j]*ngrids + ig0;
+                                pc = cbuf + j*m;
+                                for (g = 0; g < ng; g++) {
+                                        rho[ig0+g] += ao[addr+g] * pc[g];
+                                }
+                                for (c = 1; c < MIN(nvar, 4); c++) {
+                                        pao = ao + c*ao_stride + addr;
+                                        for (g = 0; g < ng; g++) {
+                                                rho[(size_t)c*ngrids+ig0+g] +=
+                                                        hermi ? 2*pao[g]*pc[g] :
+                                                        pao[g]*pc[g] + ao[addr+g]*pc[c*ng+g];
+                                                if (nvar == 5) {
+                                                        rho[(size_t)4*ngrids+ig0+g] +=
+                                                                .5*pao[g]*pc[c*ng+g];
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+        free(buf);
+}
+        free(box_loc);
+}
+
+void VXCeval_rho_mgga_sparse(double *rho, double *ao, double *dm,
+                             int nao, int ngrids, int nbas, int nbins, int hermi,
+                             uint8_t *screen_index, uint8_t *pair_mask,
+                             int *ao_loc, ptrdiff_t ao_stride)
+{
+        eval_rho_sparse(rho, ao, dm, nao, ngrids, nbas, nbins, hermi,
+                        screen_index, pair_mask, ao_loc, ao_stride, 5);
+}
+
+/* GGA requires hermi=1: the nonsymmetric legacy path contracts D and D^T
+ * with the same (potentially asymmetric) shell-pair mask. */
+void VXCeval_rho_lda_gga_sparse(double *rho, double *ao, double *dm,
+                                int nao, int ngrids, int nbas, int nbins,
+                                uint8_t *screen_index, uint8_t *pair_mask,
+                                int *ao_loc, ptrdiff_t ao_stride, int nvar)
+{
+        eval_rho_sparse(rho, ao, dm, nao, ngrids, nbas, nbins, 1,
+                        screen_index, pair_mask, ao_loc, ao_stride, nvar);
 }
 
 static void _dot_aow_ao_l1(double *out, double *bra, double *ket, double *wv,
