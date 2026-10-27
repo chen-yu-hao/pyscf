@@ -401,6 +401,28 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
     xctype = xctype.upper()
     ngrids, nao = ao.shape[-2:]
 
+    if (xctype == 'MGGA' and not with_lapl
+        and ao.dtype == mo_coeff.dtype == mo_occ.dtype == numpy.double
+        and (nao < SWITCH_SIZE or non0tab is None)
+        and all(ao[i].flags.f_contiguous for i in range(4))):
+        occupied = abs(mo_occ) > OCCDROP
+        if not numpy.any(occupied):
+            return numpy.zeros((5, ngrids))
+        coeff = numpy.asarray(mo_coeff[:,occupied] * numpy.sqrt(abs(mo_occ[occupied])),
+                              order='C')
+        sign = numpy.where(mo_occ[occupied] > 0, 1., -1.)
+        rho = numpy.empty((5, ngrids))
+        done = libdft.VXCeval_rho_mgga_mo(
+            rho.ctypes.data_as(ctypes.c_void_p),
+            ao.ctypes.data_as(ctypes.c_void_p),
+            coeff.ctypes.data_as(ctypes.c_void_p),
+            sign.ctypes.data_as(ctypes.c_void_p),
+            ctypes.c_int(nao), ctypes.c_int(coeff.shape[1]), ctypes.c_int(ngrids),
+            ctypes.c_ssize_t(ao.strides[0] // ao.itemsize))
+        if done:
+            return rho
+        del coeff
+
     shls_slice = (0, mol.nbas)
     ao_loc = mol.ao_loc_nr()
     pos = mo_occ > OCCDROP
@@ -436,8 +458,9 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
                 c1 = _dot_ao_dm(mol, ao[i], cpos, non0tab, shls_slice, ao_loc)
                 #:rho[i] = numpy.einsum('pi,pi->p', c0, c1) * 2 # *2 for +c.c.
                 #:rho[5] += numpy.einsum('pi,pi->p', c1, c1)
-                rho[i] = _contract_rho(c0, c1) * 2
-                rho[tau_idx] += _contract_rho(c1, c1)
+                rho_grad, rho_tau = _contract_rho_grad_tau(c0, c1)
+                rho[i] = rho_grad * 2
+                rho[tau_idx] += rho_tau
 
             if with_lapl:
                 if ao.shape[0] > 4:
@@ -487,8 +510,9 @@ def eval_rho2(mol, ao, mo_coeff, mo_occ, non0tab=None, xctype='LDA',
                 c1 = _dot_ao_dm(mol, ao[i], cneg, non0tab, shls_slice, ao_loc)
                 #:rho[i] -= numpy.einsum('pi,pi->p', c0, c1) * 2 # *2 for +c.c.
                 #:rho5 += numpy.einsum('pi,pi->p', c1, c1)
-                rho[i] -= _contract_rho(c0, c1) * 2 # *2 for +c.c.
-                rho5 += _contract_rho(c1, c1)
+                rho_grad, rho_tau = _contract_rho_grad_tau(c0, c1)
+                rho[i] -= rho_grad * 2 # *2 for +c.c.
+                rho5 += rho_tau
 
             if with_lapl:
                 if ao.shape[0] > 4:
@@ -835,6 +859,20 @@ def _contract_rho(bra, ket):
         rho  = numpy.einsum('ip,ip->p', bra.real, ket.real)
         rho += numpy.einsum('ip,ip->p', bra.imag, ket.imag)
     return rho
+
+def _contract_rho_grad_tau(bra, ket):
+    '''Real parts of bra.conj()*ket and ket.conj()*ket, summed over orbitals.'''
+    if (bra.dtype == ket.dtype == numpy.double and
+        bra.flags.f_contiguous and ket.flags.f_contiguous):
+        ngrids, nao = bra.shape
+        rho = numpy.empty((2, ngrids))
+        libdft.VXC_dcontract_rho_grad_tau(
+            rho.ctypes.data_as(ctypes.c_void_p),
+            bra.ctypes.data_as(ctypes.c_void_p),
+            ket.ctypes.data_as(ctypes.c_void_p),
+            ctypes.c_int(nao), ctypes.c_int(ngrids))
+        return rho
+    return _contract_rho(bra, ket), _contract_rho(ket, ket)
 
 def _tau_dot(mol, bra, ket, wv, mask, shls_slice, ao_loc):
     '''nabla_ao dot nabla_ao
