@@ -1,0 +1,811 @@
+{
+  "xc": {
+    "accepted": true,
+    "expected": 48,
+    "completed": 48,
+    "numerically_validated": 48,
+    "failures": [],
+    "comparisons": [
+      {
+        "case": "water12-rks",
+        "xc": "LDA,VWN",
+        "threads": 8,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 0.5518511477857828,
+        "candidate_seconds_median": 0.2370840199291706,
+        "baseline_seconds_range": [
+          0.5342099312692881,
+          0.555210730060935
+        ],
+        "candidate_seconds_range": [
+          0.22740131244063377,
+          0.24552534148097038
+        ],
+        "speedup": 2.3276606662509334,
+        "baseline_peak_rss_mib_median": 403.73046875,
+        "candidate_peak_rss_mib_median": 253.9375,
+        "baseline_peak_rss_mib_range": [
+          403.296875,
+          403.8203125
+        ],
+        "candidate_peak_rss_mib_range": [
+          253.9140625,
+          254.63671875
+        ],
+        "max_absolute_errors": {
+          "nelec": 0.0,
+          "exc": 0.0,
+          "vxc": 4.440892098500626e-16
+        }
+      },
+      {
+        "case": "water12-rks",
+        "xc": "PBE",
+        "threads": 8,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 0.9434786196798086,
+        "candidate_seconds_median": 0.5122903063893318,
+        "baseline_seconds_range": [
+          0.9208613876253366,
+          0.9583381675183773
+        ],
+        "candidate_seconds_range": [
+          0.5083124451339245,
+          0.5169403683394194
+        ],
+        "speedup": 1.8416874336926865,
+        "baseline_peak_rss_mib_median": 948.54296875,
+        "candidate_peak_rss_mib_median": 823.13671875,
+        "baseline_peak_rss_mib_range": [
+          948.28515625,
+          950.9140625
+        ],
+        "candidate_peak_rss_mib_range": [
+          822.7265625,
+          837.6328125
+        ],
+        "max_absolute_errors": {
+          "nelec": 0.0,
+          "exc": 0.0,
+          "vxc": 4.440892098500626e-16
+        }
+      },
+      {
+        "case": "water12-rks",
+        "xc": "MN15",
+        "threads": 8,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 2.2827849704772234,
+        "candidate_seconds_median": 0.8598898760974407,
+        "baseline_seconds_range": [
+          2.2707470152527094,
+          2.2925971187651157
+        ],
+        "candidate_seconds_range": [
+          0.8338290359824896,
+          0.8617865834385157
+        ],
+        "speedup": 2.654741070842127,
+        "baseline_peak_rss_mib_median": 1230.4453125,
+        "candidate_peak_rss_mib_median": 831.9453125,
+        "baseline_peak_rss_mib_range": [
+          1229.87890625,
+          1230.5859375
+        ],
+        "candidate_peak_rss_mib_range": [
+          831.77734375,
+          834.91796875
+        ],
+        "max_absolute_errors": {
+          "nelec": 0.0,
+          "exc": 0.0,
+          "vxc": 4.440892098500626e-16
+        }
+      },
+      {
+        "case": "water11oh-uks",
+        "xc": "LDA,VWN",
+        "threads": 8,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 0.951798802241683,
+        "candidate_seconds_median": 0.39090503565967083,
+        "baseline_seconds_range": [
+          0.9487792085856199,
+          0.9630727153271437
+        ],
+        "candidate_seconds_range": [
+          0.37970512732863426,
+          0.40232538990676403
+        ],
+        "speedup": 2.434859404242458,
+        "baseline_peak_rss_mib_median": 406.96875,
+        "candidate_peak_rss_mib_median": 260.0546875,
+        "baseline_peak_rss_mib_range": [
+          406.6015625,
+          407.33984375
+        ],
+        "candidate_peak_rss_mib_range": [
+          259.42578125,
+          260.4375
+        ],
+        "max_absolute_errors": {
+          "nelec": 0.0,
+          "exc": 0.0,
+          "vxc": 8.881784197001252e-16
+        }
+      },
+      {
+        "case": "water11oh-uks",
+        "xc": "PBE",
+        "threads": 8,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 1.5585588198155165,
+        "candidate_seconds_median": 0.760271867737174,
+        "baseline_seconds_range": [
+          1.535053551197052,
+          1.5893830191344023
+        ],
+        "candidate_seconds_range": [
+          0.7459638733416796,
+          0.7685297522693872
+        ],
+        "speedup": 2.050001961080467,
+        "baseline_peak_rss_mib_median": 949.703125,
+        "candidate_peak_rss_mib_median": 828.92578125,
+        "baseline_peak_rss_mib_range": [
+          948.3671875,
+          950.91796875
+        ],
+        "candidate_peak_rss_mib_range": [
+          827.5,
+          829.52734375
+        ],
+        "max_absolute_errors": {
+          "nelec": 0.0,
+          "exc": 0.0,
+          "vxc": 8.881784197001252e-16
+        }
+      },
+      {
+        "case": "water11oh-uks",
+        "xc": "MN15",
+        "threads": 8,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 4.171733228489757,
+        "candidate_seconds_median": 1.3703551087528467,
+        "baseline_seconds_range": [
+          4.166695278137922,
+          4.2076245583593845
+        ],
+        "candidate_seconds_range": [
+          1.3683627638965845,
+          1.4059276301413774
+        ],
+        "speedup": 3.044271664945614,
+        "baseline_peak_rss_mib_median": 1238.80859375,
+        "candidate_peak_rss_mib_median": 845.05078125,
+        "baseline_peak_rss_mib_range": [
+          1238.67578125,
+          1267.828125
+        ],
+        "candidate_peak_rss_mib_range": [
+          844.796875,
+          845.2734375
+        ],
+        "max_absolute_errors": {
+          "nelec": 0.0,
+          "exc": 0.0,
+          "vxc": 4.440892098500626e-16
+        }
+      },
+      {
+        "case": "water20-rks",
+        "xc": "MN15",
+        "threads": 24,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 6.95155499689281,
+        "candidate_seconds_median": 2.493233123794198,
+        "baseline_seconds_range": [
+          6.7820601388812065,
+          7.364301959052682
+        ],
+        "candidate_seconds_range": [
+          2.4904365073889494,
+          2.9934400264173746
+        ],
+        "speedup": 2.7881688762075907,
+        "baseline_peak_rss_mib_median": 1670.51953125,
+        "candidate_peak_rss_mib_median": 1149.81640625,
+        "baseline_peak_rss_mib_range": [
+          1663.0546875,
+          1697.08203125
+        ],
+        "candidate_peak_rss_mib_range": [
+          1149.578125,
+          1152.19140625
+        ],
+        "max_absolute_errors": {
+          "nelec": 0.0,
+          "exc": 2.842170943040401e-14,
+          "vxc": 3.913536161803677e-15
+        }
+      },
+      {
+        "case": "water19oh-uks",
+        "xc": "MN15",
+        "threads": 24,
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 14.21661408804357,
+        "candidate_seconds_median": 5.225222948938608,
+        "baseline_seconds_range": [
+          14.103286234661937,
+          14.481859341263771
+        ],
+        "candidate_seconds_range": [
+          4.968163426965475,
+          5.341362712904811
+        ],
+        "speedup": 2.7207669848673866,
+        "baseline_peak_rss_mib_median": 1712.80859375,
+        "candidate_peak_rss_mib_median": 1223.76171875,
+        "baseline_peak_rss_mib_range": [
+          1712.3203125,
+          1718.11328125
+        ],
+        "candidate_peak_rss_mib_range": [
+          1222.08203125,
+          1225.7265625
+        ],
+        "max_absolute_errors": {
+          "nelec": 1.4210854715202004e-14,
+          "exc": 0.0,
+          "vxc": 1.0439565878428425e-14
+        }
+      }
+    ],
+    "source_batch": "/home/lyl/soft/pyscf-combined-bench-20261027/xc-v1/batch.json",
+    "gates": {
+      "nelec": 1e-08,
+      "exc": 1e-08,
+      "vxc": 1e-09
+    },
+    "micro_gates": {
+      "grid": 0.0,
+      "ao": 1e-12,
+      "libxc": 1e-10
+    },
+    "statistic": "ordinary median of independent process medians; observed min/max ranges, not confidence intervals",
+    "native_provenance": "Recorded paths and hashes checked present; caller must bind native build manifest to source commit"
+  },
+  "sort": {
+    "accepted": true,
+    "expected": 6,
+    "completed": 6,
+    "numerically_validated": 6,
+    "failures": [],
+    "comparisons": [
+      {
+        "case": "water20-rks",
+        "threads": 1,
+        "mode": "grid",
+        "baseline": "baseline",
+        "candidate": "combined",
+        "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+        "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+        "numerically_accepted": true,
+        "repeats": 3,
+        "baseline_seconds_median": 0.8222289122641087,
+        "candidate_seconds_median": 0.09220497868955135,
+        "baseline_seconds_range": [
+          0.8151494655758142,
+          0.8414512928575277
+        ],
+        "candidate_seconds_range": [
+          0.0861376766115427,
+          0.09333544783294201
+        ],
+        "speedup": 8.917402551900198,
+        "baseline_peak_rss_mib_median": 163.10546875,
+        "candidate_peak_rss_mib_median": 148.97265625,
+        "baseline_peak_rss_mib_range": [
+          162.0703125,
+          163.16796875
+        ],
+        "candidate_peak_rss_mib_range": [
+          148.96875,
+          149.15234375
+        ],
+        "max_absolute_errors": {
+          "values": 0.0
+        }
+      }
+    ],
+    "source_batch": "/home/lyl/soft/pyscf-combined-bench-20261027/grid-sort-v1/batch.json",
+    "gates": {
+      "nelec": 1e-08,
+      "exc": 1e-08,
+      "vxc": 1e-09
+    },
+    "micro_gates": {
+      "grid": 0.0,
+      "ao": 1e-12,
+      "libxc": 1e-10
+    },
+    "statistic": "ordinary median of independent process medians; observed min/max ranges, not confidence intervals",
+    "native_provenance": "Recorded paths and hashes checked present; caller must bind native build manifest to source commit"
+  },
+  "end_to_end": {
+    "accepted": true,
+    "expected": 48,
+    "checked": 48,
+    "failures": [],
+    "gates": {
+      "energy_hartree": 1e-08,
+      "dm_absolute": 1e-06,
+      "overlap_electrons": 1e-09,
+      "grid_identity": "exact coordinates, weights and screening index"
+    },
+    "comparisons": [
+      {
+        "mode": "grid-build",
+        "case": "water20-rks",
+        "xc": null,
+        "threads": 8,
+        "nao": 1160,
+        "grid_points": 439040,
+        "errors": {
+          "energy_hartree": 0.0,
+          "dm_absolute": 0.0
+        },
+        "baseline_peak_rss_mib": 162.765625,
+        "baseline_peak_rss_mib_range": [
+          162.2421875,
+          162.84765625
+        ],
+        "combined_peak_rss_mib": 155.0234375,
+        "combined_peak_rss_mib_range": [
+          154.171875,
+          155.51953125
+        ],
+        "peak_rss_mib_ratio": 1.0499420450536714,
+        "baseline_process_seconds": 7.982179161161184,
+        "baseline_process_seconds_range": [
+          7.380647957324982,
+          8.281372962519526
+        ],
+        "combined_process_seconds": 4.673948921263218,
+        "combined_process_seconds_range": [
+          4.574180463328958,
+          4.975711932405829
+        ],
+        "process_seconds_ratio": 1.7078019669508622,
+        "baseline_grid_seconds": 1.5971251912415028,
+        "baseline_grid_seconds_range": [
+          1.3398777339607477,
+          1.6349202059209347
+        ],
+        "combined_grid_seconds": 0.7481245808303356,
+        "combined_grid_seconds_range": [
+          0.6644902676343918,
+          0.8035360835492611
+        ],
+        "grid_seconds_ratio": 2.1348385444959854
+      },
+      {
+        "mode": "grid-build",
+        "case": "water20-rks",
+        "xc": null,
+        "threads": 24,
+        "nao": 1160,
+        "grid_points": 439040,
+        "errors": {
+          "energy_hartree": 0.0,
+          "dm_absolute": 0.0
+        },
+        "baseline_peak_rss_mib": 162.4296875,
+        "baseline_peak_rss_mib_range": [
+          161.96875,
+          163.50390625
+        ],
+        "combined_peak_rss_mib": 154.15234375,
+        "combined_peak_rss_mib_range": [
+          153.22265625,
+          154.19140625
+        ],
+        "peak_rss_mib_ratio": 1.0536958670146719,
+        "baseline_process_seconds": 6.47730578482151,
+        "baseline_process_seconds_range": [
+          6.378504687920213,
+          6.578521177172661
+        ],
+        "combined_process_seconds": 3.6726466361433268,
+        "combined_process_seconds_range": [
+          3.3711095079779625,
+          3.7722160313278437
+        ],
+        "process_seconds_ratio": 1.7636615842855432,
+        "baseline_grid_seconds": 1.225060360506177,
+        "baseline_grid_seconds_range": [
+          1.146490402519703,
+          1.2566093187779188
+        ],
+        "combined_grid_seconds": 0.47952096723020077,
+        "combined_grid_seconds_range": [
+          0.3721964452415705,
+          0.5207924712449312
+        ],
+        "grid_seconds_ratio": 2.5547586950834407
+      },
+      {
+        "mode": "scf",
+        "case": "water4",
+        "xc": "LDA,VWN",
+        "threads": 8,
+        "nao": 96,
+        "grid_points": 134792,
+        "errors": {
+          "energy_hartree": 4.547473508864641e-13,
+          "dm_absolute": 1.8851586958135158e-13
+        },
+        "baseline_peak_rss_mib": 234.84765625,
+        "baseline_peak_rss_mib_range": [
+          230.82421875,
+          237.375
+        ],
+        "combined_peak_rss_mib": 235.609375,
+        "combined_peak_rss_mib_range": [
+          235.2265625,
+          235.73046875
+        ],
+        "peak_rss_mib_ratio": 0.9967670269911798,
+        "baseline_process_seconds": 6.027478124946356,
+        "baseline_process_seconds_range": [
+          6.027201194316149,
+          6.077389508485794
+        ],
+        "combined_process_seconds": 5.877216421067715,
+        "combined_process_seconds_range": [
+          5.626176683232188,
+          6.378011269494891
+        ],
+        "process_seconds_ratio": 1.0255668148173014,
+        "baseline_kernel_seconds": 4.6349884159862995,
+        "baseline_kernel_seconds_range": [
+          4.633026007562876,
+          4.65376603230834
+        ],
+        "combined_kernel_seconds": 4.444161493331194,
+        "combined_kernel_seconds_range": [
+          4.2304384503513575,
+          4.9590096566826105
+        ],
+        "kernel_seconds_ratio": 1.0429387912526258,
+        "baseline_cycles": [
+          8,
+          8,
+          8
+        ],
+        "combined_cycles": [
+          8,
+          8,
+          8
+        ]
+      },
+      {
+        "mode": "scf",
+        "case": "water4",
+        "xc": "PBE",
+        "threads": 8,
+        "nao": 96,
+        "grid_points": 134792,
+        "errors": {
+          "energy_hartree": 5.115907697472721e-13,
+          "dm_absolute": 1.3034018309099338e-13
+        },
+        "baseline_peak_rss_mib": 405.43359375,
+        "baseline_peak_rss_mib_range": [
+          394.79296875,
+          406.90625
+        ],
+        "combined_peak_rss_mib": 398.65234375,
+        "combined_peak_rss_mib_range": [
+          395.73046875,
+          414.36328125
+        ],
+        "peak_rss_mib_ratio": 1.0170104355494587,
+        "baseline_process_seconds": 6.879311468452215,
+        "baseline_process_seconds_range": [
+          6.729613441973925,
+          7.631001900881529
+        ],
+        "combined_process_seconds": 6.779240498319268,
+        "combined_process_seconds_range": [
+          6.5784268993884325,
+          7.281985342502594
+        ],
+        "process_seconds_ratio": 1.0147613836915443,
+        "baseline_kernel_seconds": 5.446916652843356,
+        "baseline_kernel_seconds_range": [
+          5.37436898611486,
+          6.121824759989977
+        ],
+        "combined_kernel_seconds": 5.346804089844227,
+        "combined_kernel_seconds_range": [
+          5.108171096071601,
+          5.835745772346854
+        ],
+        "kernel_seconds_ratio": 1.0187238135747827,
+        "baseline_cycles": [
+          8,
+          8,
+          8
+        ],
+        "combined_cycles": [
+          8,
+          8,
+          8
+        ]
+      },
+      {
+        "mode": "scf",
+        "case": "water4",
+        "xc": "MN15",
+        "threads": 8,
+        "nao": 96,
+        "grid_points": 134792,
+        "errors": {
+          "energy_hartree": 5.115907697472721e-13,
+          "dm_absolute": 2.696731726814505e-13
+        },
+        "baseline_peak_rss_mib": 442.55078125,
+        "baseline_peak_rss_mib_range": [
+          437.77734375,
+          443.26171875
+        ],
+        "combined_peak_rss_mib": 428.515625,
+        "combined_peak_rss_mib_range": [
+          426.23046875,
+          442.45703125
+        ],
+        "peak_rss_mib_ratio": 1.0327529626253418,
+        "baseline_process_seconds": 10.135859364643693,
+        "baseline_process_seconds_range": [
+          9.886098412796855,
+          10.336456280201674
+        ],
+        "combined_process_seconds": 10.13619008846581,
+        "combined_process_seconds_range": [
+          9.986042030155659,
+          10.48700969107449
+        ],
+        "process_seconds_ratio": 0.9999673719790937,
+        "baseline_kernel_seconds": 8.653153266757727,
+        "baseline_kernel_seconds_range": [
+          8.447621623054147,
+          8.864807803183794
+        ],
+        "combined_kernel_seconds": 8.59759940393269,
+        "combined_kernel_seconds_range": [
+          8.51643991470337,
+          9.057393537834287
+        ],
+        "kernel_seconds_ratio": 1.0064615551638316,
+        "baseline_cycles": [
+          9,
+          9,
+          9
+        ],
+        "combined_cycles": [
+          9,
+          9,
+          9
+        ]
+      },
+      {
+        "mode": "scf",
+        "case": "o2",
+        "xc": "LDA,VWN",
+        "threads": 8,
+        "nao": 60,
+        "grid_points": 28168,
+        "errors": {
+          "energy_hartree": 1.7053025658242404e-13,
+          "dm_absolute": 3.4231548151630875e-11
+        },
+        "baseline_peak_rss_mib": 150.34765625,
+        "baseline_peak_rss_mib_range": [
+          131.70703125,
+          151.40625
+        ],
+        "combined_peak_rss_mib": 131.578125,
+        "combined_peak_rss_mib_range": [
+          130.83203125,
+          131.9453125
+        ],
+        "peak_rss_mib_ratio": 1.1426493290583066,
+        "baseline_process_seconds": 3.0699123349040747,
+        "baseline_process_seconds_range": [
+          2.9199389051645994,
+          3.070770988240838
+        ],
+        "combined_process_seconds": 3.020343102514744,
+        "combined_process_seconds_range": [
+          2.870394678786397,
+          3.170168336480856
+        ],
+        "process_seconds_ratio": 1.0164117885640407,
+        "baseline_kernel_seconds": 1.5611232798546553,
+        "baseline_kernel_seconds_range": [
+          1.4540143888443708,
+          1.5921922288835049
+        ],
+        "combined_kernel_seconds": 1.590947924181819,
+        "combined_kernel_seconds_range": [
+          1.3683641534298658,
+          1.6485590804368258
+        ],
+        "kernel_seconds_ratio": 0.9812535383001291,
+        "baseline_cycles": [
+          8,
+          8,
+          8
+        ],
+        "combined_cycles": [
+          8,
+          8,
+          8
+        ]
+      },
+      {
+        "mode": "scf",
+        "case": "o2",
+        "xc": "PBE",
+        "threads": 8,
+        "nao": 60,
+        "grid_points": 28168,
+        "errors": {
+          "energy_hartree": 2.5579538487363607e-13,
+          "dm_absolute": 4.391974284256861e-11
+        },
+        "baseline_peak_rss_mib": 176.5390625,
+        "baseline_peak_rss_mib_range": [
+          174.80859375,
+          185.0703125
+        ],
+        "combined_peak_rss_mib": 176.5703125,
+        "combined_peak_rss_mib_range": [
+          175.515625,
+          192.89453125
+        ],
+        "peak_rss_mib_ratio": 0.9998230166806779,
+        "baseline_process_seconds": 3.2712237369269133,
+        "baseline_process_seconds_range": [
+          2.9704321324825287,
+          3.2719514928758144
+        ],
+        "combined_process_seconds": 3.120674869045615,
+        "combined_process_seconds_range": [
+          3.0711840242147446,
+          3.320883359760046
+        ],
+        "process_seconds_ratio": 1.0482424072352465,
+        "baseline_kernel_seconds": 1.7335184141993523,
+        "baseline_kernel_seconds_range": [
+          1.5274025034159422,
+          1.819117108359933
+        ],
+        "combined_kernel_seconds": 1.702952641993761,
+        "combined_kernel_seconds_range": [
+          1.6145152729004622,
+          1.765257054939866
+        ],
+        "kernel_seconds_ratio": 1.01794869184959,
+        "baseline_cycles": [
+          8,
+          8,
+          8
+        ],
+        "combined_cycles": [
+          8,
+          8,
+          8
+        ]
+      },
+      {
+        "mode": "scf",
+        "case": "o2",
+        "xc": "MN15",
+        "threads": 8,
+        "nao": 60,
+        "grid_points": 28168,
+        "errors": {
+          "energy_hartree": 1.4210854715202004e-13,
+          "dm_absolute": 5.269673586383306e-13
+        },
+        "baseline_peak_rss_mib": 191.95703125,
+        "baseline_peak_rss_mib_range": [
+          190.58984375,
+          195.9609375
+        ],
+        "combined_peak_rss_mib": 208.0,
+        "combined_peak_rss_mib_range": [
+          207.58984375,
+          208.14453125
+        ],
+        "peak_rss_mib_ratio": 0.9228703425480769,
+        "baseline_process_seconds": 4.02276998758316,
+        "baseline_process_seconds_range": [
+          3.7225462272763252,
+          4.123310498893261
+        ],
+        "combined_process_seconds": 3.7723004203289747,
+        "combined_process_seconds_range": [
+          3.7713949028402567,
+          3.973094966262579
+        ],
+        "process_seconds_ratio": 1.0663970361173787,
+        "baseline_kernel_seconds": 2.453247234225273,
+        "baseline_kernel_seconds_range": [
+          2.366501249372959,
+          2.5716181825846434
+        ],
+        "combined_kernel_seconds": 2.378659497946501,
+        "combined_kernel_seconds_range": [
+          2.3530846405774355,
+          2.481760738417506
+        ],
+        "kernel_seconds_ratio": 1.0313570464133954,
+        "baseline_cycles": [
+          8,
+          8,
+          8
+        ],
+        "combined_cycles": [
+          8,
+          8,
+          8
+        ]
+      }
+    ]
+  }
+}

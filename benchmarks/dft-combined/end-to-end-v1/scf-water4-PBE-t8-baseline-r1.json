@@ -1,0 +1,771 @@
+{
+  "source": {
+    "root": "/home/lyl/soft/pyscf-split-20261026/base",
+    "commit": "44313dfb457b93358918c391fc66285fa44153ef",
+    "tracked_changes": ""
+  },
+  "pyscf_import": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/__init__.py",
+  "case": "water4",
+  "mode": "scf",
+  "threads": 8,
+  "affinity": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "protocol_sha256": "18545781d31fc5db1b5e7eb670ca5714a3d1fc8302a6ee79467a7deafb510831",
+  "worker_sha256": "62235d93cd1a31f6b5b959a87f843ef07a77d618ea3c9c82b6ec13a84dfdc542",
+  "python": "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+  "numpy_version": "1.26.4",
+  "xc": "PBE",
+  "energy": -305.32435699997035,
+  "converged": true,
+  "kernel_wall_seconds": 5.37436898611486,
+  "cycles": 8,
+  "history": [
+    {
+      "cycle": 1,
+      "energy": -305.26533235786286,
+      "energy_delta": -0.550865102825469,
+      "gradient": 0.5523726543057107
+    },
+    {
+      "cycle": 2,
+      "energy": -305.30629341257514,
+      "energy_delta": -0.04096105471228384,
+      "gradient": 0.3105936049801454
+    },
+    {
+      "cycle": 3,
+      "energy": -305.32136483528774,
+      "energy_delta": -0.01507142271259454,
+      "gradient": 0.12919249813808167
+    },
+    {
+      "cycle": 4,
+      "energy": -305.3243495411314,
+      "energy_delta": -0.002984705843687152,
+      "gradient": 0.006154571334784322
+    },
+    {
+      "cycle": 5,
+      "energy": -305.3243566961892,
+      "energy_delta": -7.155057801355724e-06,
+      "gradient": 0.0011382624250628897
+    },
+    {
+      "cycle": 6,
+      "energy": -305.3243569956616,
+      "energy_delta": -2.9947238999739056e-07,
+      "gradient": 0.0001351954599209538
+    },
+    {
+      "cycle": 7,
+      "energy": -305.324356999918,
+      "energy_delta": -4.256378360878443e-09,
+      "gradient": 1.4444038760403684e-05
+    },
+    {
+      "cycle": 8,
+      "energy": -305.3243569999701,
+      "energy_delta": -5.212541509536095e-11,
+      "gradient": 4.0714776527250525e-07
+    }
+  ],
+  "overlap_electrons": 40.00000000000011,
+  "output_arrays": "/home/lyl/soft/pyscf-combined-bench-20261027/end-to-end-v1/scf-water4-PBE-t8-baseline-r1.npz",
+  "status": "succeeded",
+  "nao": 96,
+  "grid_points": 134792,
+  "grid_coords_sha256": "c714b6043e5bb2a68b74561538b2a81a70f028ef65e582a16bc23a3c3f9733af",
+  "grid_weights_sha256": "35184dac92db82442b2393daff232a0b0a8dc5e15e01e00103e8e423fcc2a067",
+  "grid_mask_sha256": "0711c2e043773c48dcc5f42ef7a42f476704aa9183a462d3396e3a2aaadfa2dc",
+  "peak_rss_mib": 405.43359375,
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "version": "0.3.23.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "version": "0.3.29.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "version": null,
+      "threading_layer": "disabled",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgomp.so.1.0.0",
+      "version": null
+    }
+  ],
+  "native_maps": [
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libatomic.so.1.2.0",
+      "sha256": "6c71b0db6868df269ea5f6c1ea4f2c3eab264a528a6cc71796b0371dd07dc040"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libbz2.so.1.0.8",
+      "sha256": "cc570bce44ed3ab1b0f480bdb95c04e8224432811bfb5a55b533135a6001a03b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libcrypto.so.3",
+      "sha256": "f5b95b23ecad4d0f293541bd8e1a45f8fc34c83ff36ee2fd9a31c831093d2a4d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libffi.so.8.2.0",
+      "sha256": "cff0ea6932fe2986f3a33410d2008692cc93caecfde282a2b2a961f7963a13df"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgcc_s.so.1",
+      "sha256": "25dd0774b7b2774e922a56971a2aef67f79b73373b77a06e7c7fa540f90541bc"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgomp.so.1.0.0",
+      "sha256": "fb3a0f069de0eecc09e8bf8fb040f99dad4588fb6d2632873829e3f332e5104b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/liblzma.so.5",
+      "sha256": "07dceced575343c83860aedde6e7e2ac5deb7a0fa31b0f195c44388544817abc"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libstdc++.so.6.0.34",
+      "sha256": "38e5308c07cbb5f4858fda88461b336ddffc44caa227ee22bd2e0d8a09e51374"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libuuid.so.1.3.0",
+      "sha256": "1687447943140732b07a1cb42ed991eb405d5720b1d7a4353640e65fb0f284c0"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/libz.so.1.3.2",
+      "sha256": "22f1601237b86f0f48ed5b83071d1505167ae2e16365b33b4eed6e96dbf71ab0"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_bisect.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "bb61bb7adb97f31d03ddc45bb82c5eeb1d6565084937256eb66bb24b2a60b9b8"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_blake2.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "fa8484047f9cb9f27c3851b52347fab7e06d042d00f2bfb7e7760dd7c8cea24c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_bz2.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "13ee988957b5fc2b7a958d3a4acf4e19e00a71da797e22163d38b8a43a38abeb"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_contextvars.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "efb76c2ed875aa71669903e8494c3539f199553ca039dc9b7cd24400a9889a45"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_ctypes.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "b6d602077f2fe580b4ff7104228722bf400bc6bcc563a28a8196fcf5b21ccc91"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_datetime.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "869857e5fde9b2409603031bf82549eda3ef68d694dd26f483e88be9fe02dc7d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_decimal.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "37cb9b6a98175a7ae2aec50f775ff94bbdc5edf46517e5c4e274a906b52b3435"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_hashlib.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "b3c41ce451e1af1242f2c2e934901604cd54e70f0b387a99e0c7e6be676f7a2a"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_heapq.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "95b877441d1f210766af81802a9ee433d202940309a292e9c2fd8c99b395f09f"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_json.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "2d3235bef8f772af4d8f3b82ff2fd8945988f8a33951428c634404acde899678"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_lzma.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "7f997447bd93f3ef5a1c384ec537fde75d91432144adac65a690b75c74e7d9ed"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_opcode.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "8474bb9539ea7b4d9142fa0d7b36cb0ee70e2468e1b25c5f1f4a562566f34766"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_pickle.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "078f40eb88677d4c34028fdd4b42dbd3f2117c206d972ee058714878cb2e0e72"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_posixsubprocess.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "360773f8d0e8743ed298220d1ab9067f9223fd9424694b0d77ecbeb018f1fed1"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_queue.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "03bf47e5f1b73d91668d3406ee80e30d129ffd596280e082d5db96cb47623494"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_random.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "514306d47a50b8a1991149340d3afb14e352523fcb63f804436f3705ac25f931"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_sha512.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "5336978637517abf6481ae525721382dd81bf5e058b910b38cc10f08db4d2d6d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_socket.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "db6ef42088a071afb3fb8c42f90cadefcbb286aa62be2b2565ca6a481997aaa4"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_statistics.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "0ec4794fee8e34f449715a97d4a2a262fdf8785f102ad4ec027daf3de399c817"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_struct.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "57d609dfddaa527950e2807250e841ea5d8a6e728228ed742f59dd99a504970c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_typing.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "d2d78f7b0c4adf4623258920dbf7739ffe07312aa5294e545dfe866fa34bfe94"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/_uuid.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "65192876d2d2b2dc8018cdd733b2196da9fc5437683ad60058ae4d1028287c1f"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/array.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "b8fee3d2c3d3effae349d5eb3b205dcefe5806b2f22d8aff81a3fc1cd5d1d0de"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/binascii.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "0f46b00346108e41cb63fd06a77caa87fe38d15498253022aa5e3fb9975996b3"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/fcntl.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "66508c2129c22577c1b56c28306b7522161192bb859be4a549fdd7d43f607fa5"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/math.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "fb6b37502e11d11193ef004c91e17f30ece00dbd162de9ce7fe0a2725f5e46df"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/resource.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "f7ca8c5448f27f809889d2a067c04455edb9df13da3afaa1b8ee2327d0e68eab"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/select.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "f45c9d00e4832f80a6f8d341526ad2f57263eb583828973826311056135a6651"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/lib-dynload/zlib.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "e17f644fc0b41a84646fb07313035f40efda5045a9b0298e54d21d5cfdc59629"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py.libs/libaec-001fb5f0.so.0.0.12",
+      "sha256": "45a19d02621c4b7cdffaf6c684d00582e02ced4dca68aaad9d8dd7ced07dd5ed"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py.libs/libhdf5-7f639dcd.so.310.2.0",
+      "sha256": "661a0daa381376e31b63ecfce2d689aa8ecec0f827dcd2b99202a34d98eb57d3"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py.libs/libhdf5_hl-123198ff.so.310.0.2",
+      "sha256": "33e6c04dc560491cc15800201869ee7b11fd1721b85feac041ef203551ad3914"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py.libs/libsz-b66d1717.so.2.0.1",
+      "sha256": "26928e78d1b489305feb18098732b5f90aee809dc208029c8f2b2e0302cdf1e2"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/_conv.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "7d166226d828193d168e61b3cf062d3052a99931ec5186921508c6a150febec4"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/_errors.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "72a7914265f6877462b2e89935a309a7005d8f413672056547c3377c17d57bad"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/_objects.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "c45033d78defb2d1b7aaf2fc4ea77b204c0ecfed5e47c3644461e65668c3991c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/_proxy.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "4d247eb03dd989083b6a9db0343390cd7253c4826fc97c06e360c95156e87b3b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/_selector.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "1b5206885d767d4da7184834eb6241e6c01ae3903d15ed3c479a71be16392f0c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/defs.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "70161bd01ed0c3b0bd52d1afaada384cbb6f41bac6b3f9b9b30c8d398ef0dc50"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "66b7f47e61bb77ab37893f15930bb7fe53143f3a32b4a287040279859bc568eb"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5a.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "4a22611738d033adf92c5d2e460db471f7a66bf406fdca5182b09b659ee97f3d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5ac.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "06403ad1879cee885a2799bb236e561741fdfd609662103251047b7f64906d76"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5d.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "f154396429bdfaec442f09acb90404f78f6ac64d9f7ebfdaeae9aa66d34534ad"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5ds.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "fdaeafddbef299906e33e88df8308689953f4c7ffed29fe96b8585bea3c0d1de"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5f.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "a8f6eabdb4590160164100ab9caa269f24a4371d69fffa43ac81c7c4721a8e45"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5fd.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "b17a123ca563108be23128661f4855d11827d976c1d885fdf2b5c539ca061cb6"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5g.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "6222b23bdbb29861f0068bce0106914c3348758413c336555e65a30d42211361"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5i.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "163117cefda88267d87b1ebaaf8de8c90678f0e7dfe49ca1c3deffc9fe9bc61c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5l.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "cf9da53e04502089f0f543732d627c673d041cd6ede4db8561c3e859cb5ce779"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5o.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "9e3e9c96d2676dbe032cb0507dd3f216b55e5b0afb70b9a6799766b70e10d3a8"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5p.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "1345d4e4ed1ceddd6c33ab88ac5085144c8faf36793c08612b73c22ac3705347"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5pl.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "58a3b849644715863026419c8af7e6e0d8e0f3343226addda4a3841676d1caaa"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5r.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "cfdeecc4974a4eae6bdedc9c88b4a7d05deb8e74fe68dcf1980909be0b59bb1f"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5s.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "bb16adba7f65184ab7b0c589ae31c80f77350861ae7b17f0b0a0d14387ef196a"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5t.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "596a2d230f19341c3147131a918983621467d7b04cd4424395291b763fd33da5"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/h5z.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "7f1012d2ed896df9ccb071d16c33ef0109da99e40551163dbcf8fa0e82be553e"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/h5py/utils.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "e6b1fb2449bd49c7ceae68af1b00540c54e0779b971179bfabf2ab39c14716ab"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libgfortran-040039e1.so.5.0.0",
+      "sha256": "14afb3129b1a8b50bc40a3b0820c7f1152ea9bc10121aab152943f7057472886"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "sha256": "9254d0854dd7615e11de28d771ae408878ca8123a7ac204f21e4cc7a376cc2e5"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libquadmath-96973f99.so.0.0.0",
+      "sha256": "934c22ded0e7d169c4d4678876c96051adf3d94545da962f60b41659b075da3b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/core/_multiarray_tests.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "7c4195087f00564c13cd7e3b5682bef7eb2059e51acc3c17450c0ee4650aeabf"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/core/_multiarray_umath.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "a735e4e8355b75c800112af8a5b1731b891b2016ed57067352eea6cab0aa00bc"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/fft/_pocketfft_internal.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "5f36850f3c48eacf11a9d1e3b5957a36b2b7dd3eb7d21f68c1017cfab4fd0006"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/linalg/_umath_linalg.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "0587df84ed9751090867a4a1441d2c394c39735420aa388b8bf698b7255f24bd"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/_bounded_integers.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "f1c44733f16f7b1be33ba0c888a2a2a231078cf650f403c4f6ee20a129c2add5"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/_common.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "eadcee6d2cdfd7ce294cb69554c410d8dc9d7457f6ba862bf4e9d5d7f2851f9c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/_generator.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "8c23f8e487f474185f11f28fc7b8eb2ebbc60712f68c3eb5f3cf014f2c7ec46c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/_mt19937.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "d39b0e5a9e90613deede597857f8abec29cfb2ccccaff6ed6f11cbc10f684a82"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/_pcg64.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "c617a5a7ec182d04e3c2baf93e505705af32ac410d0f332c857536d473c32793"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/_philox.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "0b00972840c5eb3c0daac37fc35c66b16573ee31a5c0590cf2f928b025cd6a92"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/_sfc64.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "23bc5f7b1001a6ce6eb20fcad0d68885d9da3fa6d2857eb15c37eb6e9c779431"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/bit_generator.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "b4498c107393d71027b88b81505ba7b00591b1085dab86f08262ca675407a990"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy/random/mtrand.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "2ef986be94cc5ed1acad874d323f864a9c0f88a0c4dd2b171dafb512c0aca496"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "sha256": "a43904e4fa297301d4640dc1bb3c8a3480b406f99e498eba9b1914b68aab604a"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libhwloc-a765a097.so.15.2.0",
+      "sha256": "380758b45a97ae01adc5d44b2cb674351a279626234e88a3dfa61f86df73fc67"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libtblis-bd980ccd.so",
+      "sha256": "31f8d4ddb26fd688f6827a7fea5b74dc842b4d45dba6bb8f0d388f92e3fb31e8"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis/_pytblis_impl.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "bb99e3d9b2c2210c863be894d20795d23fb2de516b1bbc3558ccf70f6f86f787"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libgfortran-040039e1-0352e75f.so.5.0.0",
+      "sha256": "c6090048eccc763522c12ef016f81da6b627cb3a044f55cf0479a839c41c0980"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libquadmath-96973f99-934c22de.so.0.0.0",
+      "sha256": "6ed5137f412781ad7863439fb543613f620b43c32b63292a0029246162f5bbc6"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "sha256": "fa75c980087c08189e30c0d8110aab96783e3664425ba5bf32a73d7345fc8d3d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/_cyutility.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "c0035ce171c3901e9247bdb40818faca7fa4339ce2c7f043723cde5902d67962"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/_lib/_ccallback_c.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "14031a3264fe7565ba1db41398d91059d7116466314719c03966436d652c62ff"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/_lib/_uarray/_uarray.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "d3283105286727aa100229b301d39c9e9513238a7aa0322f10102441ab498eab"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/_lib/messagestream.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "89213e18c3ff738c0ae6adaa3b9e4445c0c4b0515d2f20c93b61d6840efaa756"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/fft/_pocketfft/pypocketfft.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "fa2175ac7303cee18a6db1ead87b468f63deafa5124206312927e7fd4847751c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_cythonized_array_utils.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "699347928760ecc9b12aa62906159e04b71d19df481c0ef6e1d8ec8d19d64f45"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_decomp_interpolative.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "b57cecc1cd45f839f212a58dbd85f0d3698a36cc81efc80f334b44d3010dcdbf"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_decomp_lu_cython.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "e4224f975b5b3ca6e78793623b746355048e7aa9af47521e85946cd7d0f828bb"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_decomp_update.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "6791f1f20451fb3532285bfd868cd43e1c28160ad6473ca8b59d6cef49a6052b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_fblas.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "cabe65adcad10a298aa18fa06f996bb183db35bc4130f28920603cafa1ea054a"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_flapack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "fbe289bcd814b6596f48bf687716b958dde242353db36ca867893ddad7da540f"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_linalg_pythran.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "5b2d8cc498a89cfb314d994b78da9856b6fe57372eb0a873f96130af9a8af54d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_matfuncs_expm.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "c4250781b6910cd0b8b671fe35abd1018166dd9477b90b68f57ebfaec7355184"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_matfuncs_schur_sqrtm.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "5880c152c29f3ef4f1427c35e0a53ff31613b5d624ca0788d6d34aac7a39f55d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/_solve_toeplitz.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "9ff46170b29c6d7ebe943355c3dafa66574c14e77b2e2b6f1f64df892a8e136c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/cython_blas.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "9da29b47460dcf4de90b7e214b92de47f2e4373d024b2349062198cbc5216717"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/linalg/cython_lapack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "5a0c459275b01f4dac28104db0ea9f543ce98715fd2e9b0409ffff98495f112d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_bglu_dense.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "e5f8c293f6d5dc648731a95eae61c790fbac9d7d303a9e2e9c86504d8f5f420f"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_direct.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "8cb4b477e856831338287daf54e57b4cf3c79070bd93bb4a66c48fcebd232f1b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_group_columns.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "4947f359bf8654c7e206b26923d96329a38b69bcb94e0cc166e06073f8b24bbf"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_highspy/_core.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "119fda8ddcf9d42bd6ae92f4eac57043468749c1228c7ab1f4ed73bb2c37296f"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_highspy/_highs_options.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "abc41e085f23baf6ee779689465f56866208fda2b84442f81f5abedfd1898172"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_lbfgsb.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "6849d98c2b2a8068dbbe42eec0bd7ace175a36571c493e01c77f1053b96bb96c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_lsap.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "bc26e5e0c844f9fd86ddb777159e6804287153d26bd84f023221fe8db3a675bd"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_lsq/givens_elimination.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "4d91738eca90fd707e730b76c2d86161859a9b28f71313a5b968b284a4cba3ee"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_minpack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "48c01966c1c188323fa3ef0462819ca2a11bf91935ea00c6739c3e8114cfb9bb"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_moduleTNC.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "e1bf03aefa5760fcff367a92a351e9fc1eabd12d1aeba8c5ee9a82cfe611c636"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_pava_pybind.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "c79bae70bb56522475828ae8b8af0314b192f68f71c7d5858655820809cd1fb9"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_slsqplib.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "5e0b688b1198c110afc4a4f75b43ec5af6238eda79a2962e3bc4b01f3643617d"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_trlib/_trlib.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "5e962478c5dc2b3253424b5506bfb35313a9e084686898101f1f209ab71f1d03"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/optimize/_zeros.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "344b4fd345a31e19f1bdbeeffba398b28dd329f74d8f48b8e547e579f8aa95b5"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/_csparsetools.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "9d6c90f40c31c5bae32f4cfa822ead1de4742ec7e6128502c101344f6675dc18"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/_sparsetools.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "44b0f21492099d40ccd2085aee904ff862e714c814bc98389fceccec8f9bd0af"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/linalg/_dsolve/_superlu.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "158ca721086100c81fc442314e2eae146a600442d15d60f3c77cc4d0988fe51e"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/linalg/_eigen/arpack/_arpack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "17797b9d89ef78ce00de3c728580ee9bd2e12d6762bea8a2320e69f082f58567"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/linalg/_propack/_cpropack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "2f342f44201a02ced576af27884f80328e688a628ddb8074bf9c80add208e151"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/linalg/_propack/_dpropack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "331bfb6778682290f5c55ceb9e5ed7cbb87dd7560cc157630aec6af21eb47992"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/linalg/_propack/_spropack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "f31e8579fcc104defbecca83a20c9aac101fcc252628402d9b9ae74f1d755859"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/sparse/linalg/_propack/_zpropack.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "2aef7924a28ea3b06b2ae0a6c07470ff517ee5b9280bb4980dafa2985a4e7c2b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/_ckdtree.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "4035615d5108500096bd90a9cfac18a78310cd4713921949b010c7afb733281c"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/_distance_pybind.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "7f967abddcaa51b02796a6baeb2bb308d5765dc9ca873375c47be67222eb7cf4"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/_distance_wrap.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "360a86a4152aa0e6dd00746f54b39fdee3bbdef1a5836985261d07f1d16dc37b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/_hausdorff.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "aa4e023b7e43c7bea6cf70099babf05776a80374a734b5cfbb2e37803aecb32b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/_qhull.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "02628bceb311f4567d52a38b7e09ed577f2cd94bd15fef178da76915efc330da"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/_voronoi.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "62a6b5718dfa0049797a1cc63a78c98ec4bdc6b3175464644f4a856d314a91e4"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/transform/_rigid_transform.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "56ef476df2c99f0b38625b2fbb168425fa03308d39b8fa61d5f206f20c843cd3"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/spatial/transform/_rotation.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "c9557e129ce9589b68446508ff85db8fbd70711cd35cf52d0ca6ebdcef200f90"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/special/_comb.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "151c331df616bc024f617de6d781b174d396b554ee707325f2f783db892f062b"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/special/_ellip_harm_2.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "bb5ee23072f38bd061753f62e9cffae2c5c2a91658491b5bfaa1412d5f9548af"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/special/_gufuncs.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "e7d8dea114bb0661c2a4b5ad0f410fecf462739fb4384d521db2ae9081a0a534"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/special/_specfun.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "ba2722d6b39f5fc310357125f213e58220e8e82c23819ebd13fdecad1f8371e9"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/special/_special_ufuncs.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "d519be459d173b20b9a3a7f8e811edce35a69083314c5314119b363d2a8c81ed"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/special/_ufuncs.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "e1b2eaa009bd36e195d897875411be6abebc2d22fe8252ba8dc1a8e91eb18db3"
+    },
+    {
+      "path": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy/special/_ufuncs_cxx.cpython-311-x86_64-linux-gnu.so",
+      "sha256": "131c9684102c05962be569e49acc7d90e29ae4b7a046ed09112a84ae81da6e81"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib/libcint.so",
+      "sha256": "e1991bf380f3427d6d6d0c5fd9e4fba7b17477a5d6a6a3ca0abf2215c02c46e0"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib/libxc.so",
+      "sha256": "58ec23b3b6040aa695c108c96248a3d6d7535a837e534581b183da020ce6a535"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib64/libxcfun.so",
+      "sha256": "846ad237fd4cfe0fcbf8614ba47e67d3b6c0ac5b66ad82281a0b8831f1c2ac5c"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libao2mo.so",
+      "sha256": "d973ef7529bc0f5812435b4e5b5951fb6def872b61f0f4830fe213b95a96a330"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libcgto.so",
+      "sha256": "eaf0f56f27f2a8e9072b34888c492b6a11767b48df447856ce39e641ac430f5a"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libcvhf.so",
+      "sha256": "13c637fd9ccdf2b577f4946c83826bb103c7567669d5960f9636d576e6084c6d"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libdft.so",
+      "sha256": "4ab1c990e5e423d12134916d934d0992b5c00eab8f032f01202b903f2da9bdca"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0",
+      "sha256": "35a33c62f2597b58e53dcc388f96acb67ef62b15ca2b905db6ef4270f7d87d68"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libnp_helper.so",
+      "sha256": "edaff8d657571dbd82276745e31f0138d10b0cf3e8382516299aa597c13bb4ed"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "sha256": "e0c67e59f25028996a8cba0a149d879ad09ace955d85bedd1bafd323f5b0647f"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libpbc.so",
+      "sha256": "d4317a385bd15de6b2925ae116e56d23d88a75c193f1b2b09bbb41b0b4b9fc97"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libri.so",
+      "sha256": "a38b1cdfbfea0b56ea1969eab0eb3337707d0eee601547e4f1c78dc86a55ffc9"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libxc_itrf.so",
+      "sha256": "d188cda855b90762c194219d63977e982f662987e1010940e02f155885998015"
+    },
+    {
+      "path": "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libxcfun_itrf.so",
+      "sha256": "0dca29b8c7cd028eb6f3afea4a6a29487ed880375b879fac04094a2c5150b8d1"
+    }
+  ]
+}

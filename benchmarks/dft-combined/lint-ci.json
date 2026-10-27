@@ -1,0 +1,23 @@
+{
+  "commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+  "scope": "pyscf/dft; same recursive exclusions and rules as .github/workflows/lint.yml",
+  "checks": [
+    {
+      "command": "ruff check --config .ruff.toml pyscf/dft",
+      "exitcode": 0
+    },
+    {
+      "command": "ruff check --select NPY --ignore NPY002 pyscf/dft",
+      "exitcode": 0
+    },
+    {
+      "command": "flake8 --config .flake8 pyscf/dft",
+      "exitcode": 0
+    },
+    {
+      "command": "pycodestyle --select=E111,W191,W293 pyscf/dft",
+      "exitcode": 0
+    }
+  ],
+  "note": "Explicit per-file lint additionally includes test files excluded by upstream CI; those diagnostics retained in lint.json. No source files changed during benchmarking."
+}

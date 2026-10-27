@@ -1,0 +1,16 @@
+{
+  "commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+  "passed": 44,
+  "failed": 0,
+  "seconds": 24.247,
+  "modules": [
+    "test_numint",
+    "test_numint_rho_fused",
+    "test_numint_pair_tiles",
+    "test_grids"
+  ],
+  "openmp_threads": 4,
+  "blas_threads": 1,
+  "affinity": "28-31",
+  "log": "tests.log"
+}

@@ -1,0 +1,434 @@
+{
+  "accepted": true,
+  "expected": 48,
+  "checked": 48,
+  "failures": [],
+  "gates": {
+    "energy_hartree": 1e-08,
+    "dm_absolute": 1e-06,
+    "overlap_electrons": 1e-09,
+    "grid_identity": "exact coordinates, weights and screening index"
+  },
+  "comparisons": [
+    {
+      "mode": "grid-build",
+      "case": "water20-rks",
+      "xc": null,
+      "threads": 8,
+      "nao": 1160,
+      "grid_points": 439040,
+      "errors": {
+        "energy_hartree": 0.0,
+        "dm_absolute": 0.0
+      },
+      "baseline_peak_rss_mib": 162.765625,
+      "baseline_peak_rss_mib_range": [
+        162.2421875,
+        162.84765625
+      ],
+      "combined_peak_rss_mib": 155.0234375,
+      "combined_peak_rss_mib_range": [
+        154.171875,
+        155.51953125
+      ],
+      "peak_rss_mib_ratio": 1.0499420450536714,
+      "baseline_process_seconds": 7.982179161161184,
+      "baseline_process_seconds_range": [
+        7.380647957324982,
+        8.281372962519526
+      ],
+      "combined_process_seconds": 4.673948921263218,
+      "combined_process_seconds_range": [
+        4.574180463328958,
+        4.975711932405829
+      ],
+      "process_seconds_ratio": 1.7078019669508622,
+      "baseline_grid_seconds": 1.5971251912415028,
+      "baseline_grid_seconds_range": [
+        1.3398777339607477,
+        1.6349202059209347
+      ],
+      "combined_grid_seconds": 0.7481245808303356,
+      "combined_grid_seconds_range": [
+        0.6644902676343918,
+        0.8035360835492611
+      ],
+      "grid_seconds_ratio": 2.1348385444959854
+    },
+    {
+      "mode": "grid-build",
+      "case": "water20-rks",
+      "xc": null,
+      "threads": 24,
+      "nao": 1160,
+      "grid_points": 439040,
+      "errors": {
+        "energy_hartree": 0.0,
+        "dm_absolute": 0.0
+      },
+      "baseline_peak_rss_mib": 162.4296875,
+      "baseline_peak_rss_mib_range": [
+        161.96875,
+        163.50390625
+      ],
+      "combined_peak_rss_mib": 154.15234375,
+      "combined_peak_rss_mib_range": [
+        153.22265625,
+        154.19140625
+      ],
+      "peak_rss_mib_ratio": 1.0536958670146719,
+      "baseline_process_seconds": 6.47730578482151,
+      "baseline_process_seconds_range": [
+        6.378504687920213,
+        6.578521177172661
+      ],
+      "combined_process_seconds": 3.6726466361433268,
+      "combined_process_seconds_range": [
+        3.3711095079779625,
+        3.7722160313278437
+      ],
+      "process_seconds_ratio": 1.7636615842855432,
+      "baseline_grid_seconds": 1.225060360506177,
+      "baseline_grid_seconds_range": [
+        1.146490402519703,
+        1.2566093187779188
+      ],
+      "combined_grid_seconds": 0.47952096723020077,
+      "combined_grid_seconds_range": [
+        0.3721964452415705,
+        0.5207924712449312
+      ],
+      "grid_seconds_ratio": 2.5547586950834407
+    },
+    {
+      "mode": "scf",
+      "case": "water4",
+      "xc": "LDA,VWN",
+      "threads": 8,
+      "nao": 96,
+      "grid_points": 134792,
+      "errors": {
+        "energy_hartree": 4.547473508864641e-13,
+        "dm_absolute": 1.8851586958135158e-13
+      },
+      "baseline_peak_rss_mib": 234.84765625,
+      "baseline_peak_rss_mib_range": [
+        230.82421875,
+        237.375
+      ],
+      "combined_peak_rss_mib": 235.609375,
+      "combined_peak_rss_mib_range": [
+        235.2265625,
+        235.73046875
+      ],
+      "peak_rss_mib_ratio": 0.9967670269911798,
+      "baseline_process_seconds": 6.027478124946356,
+      "baseline_process_seconds_range": [
+        6.027201194316149,
+        6.077389508485794
+      ],
+      "combined_process_seconds": 5.877216421067715,
+      "combined_process_seconds_range": [
+        5.626176683232188,
+        6.378011269494891
+      ],
+      "process_seconds_ratio": 1.0255668148173014,
+      "baseline_kernel_seconds": 4.6349884159862995,
+      "baseline_kernel_seconds_range": [
+        4.633026007562876,
+        4.65376603230834
+      ],
+      "combined_kernel_seconds": 4.444161493331194,
+      "combined_kernel_seconds_range": [
+        4.2304384503513575,
+        4.9590096566826105
+      ],
+      "kernel_seconds_ratio": 1.0429387912526258,
+      "baseline_cycles": [
+        8,
+        8,
+        8
+      ],
+      "combined_cycles": [
+        8,
+        8,
+        8
+      ]
+    },
+    {
+      "mode": "scf",
+      "case": "water4",
+      "xc": "PBE",
+      "threads": 8,
+      "nao": 96,
+      "grid_points": 134792,
+      "errors": {
+        "energy_hartree": 5.115907697472721e-13,
+        "dm_absolute": 1.3034018309099338e-13
+      },
+      "baseline_peak_rss_mib": 405.43359375,
+      "baseline_peak_rss_mib_range": [
+        394.79296875,
+        406.90625
+      ],
+      "combined_peak_rss_mib": 398.65234375,
+      "combined_peak_rss_mib_range": [
+        395.73046875,
+        414.36328125
+      ],
+      "peak_rss_mib_ratio": 1.0170104355494587,
+      "baseline_process_seconds": 6.879311468452215,
+      "baseline_process_seconds_range": [
+        6.729613441973925,
+        7.631001900881529
+      ],
+      "combined_process_seconds": 6.779240498319268,
+      "combined_process_seconds_range": [
+        6.5784268993884325,
+        7.281985342502594
+      ],
+      "process_seconds_ratio": 1.0147613836915443,
+      "baseline_kernel_seconds": 5.446916652843356,
+      "baseline_kernel_seconds_range": [
+        5.37436898611486,
+        6.121824759989977
+      ],
+      "combined_kernel_seconds": 5.346804089844227,
+      "combined_kernel_seconds_range": [
+        5.108171096071601,
+        5.835745772346854
+      ],
+      "kernel_seconds_ratio": 1.0187238135747827,
+      "baseline_cycles": [
+        8,
+        8,
+        8
+      ],
+      "combined_cycles": [
+        8,
+        8,
+        8
+      ]
+    },
+    {
+      "mode": "scf",
+      "case": "water4",
+      "xc": "MN15",
+      "threads": 8,
+      "nao": 96,
+      "grid_points": 134792,
+      "errors": {
+        "energy_hartree": 5.115907697472721e-13,
+        "dm_absolute": 2.696731726814505e-13
+      },
+      "baseline_peak_rss_mib": 442.55078125,
+      "baseline_peak_rss_mib_range": [
+        437.77734375,
+        443.26171875
+      ],
+      "combined_peak_rss_mib": 428.515625,
+      "combined_peak_rss_mib_range": [
+        426.23046875,
+        442.45703125
+      ],
+      "peak_rss_mib_ratio": 1.0327529626253418,
+      "baseline_process_seconds": 10.135859364643693,
+      "baseline_process_seconds_range": [
+        9.886098412796855,
+        10.336456280201674
+      ],
+      "combined_process_seconds": 10.13619008846581,
+      "combined_process_seconds_range": [
+        9.986042030155659,
+        10.48700969107449
+      ],
+      "process_seconds_ratio": 0.9999673719790937,
+      "baseline_kernel_seconds": 8.653153266757727,
+      "baseline_kernel_seconds_range": [
+        8.447621623054147,
+        8.864807803183794
+      ],
+      "combined_kernel_seconds": 8.59759940393269,
+      "combined_kernel_seconds_range": [
+        8.51643991470337,
+        9.057393537834287
+      ],
+      "kernel_seconds_ratio": 1.0064615551638316,
+      "baseline_cycles": [
+        9,
+        9,
+        9
+      ],
+      "combined_cycles": [
+        9,
+        9,
+        9
+      ]
+    },
+    {
+      "mode": "scf",
+      "case": "o2",
+      "xc": "LDA,VWN",
+      "threads": 8,
+      "nao": 60,
+      "grid_points": 28168,
+      "errors": {
+        "energy_hartree": 1.7053025658242404e-13,
+        "dm_absolute": 3.4231548151630875e-11
+      },
+      "baseline_peak_rss_mib": 150.34765625,
+      "baseline_peak_rss_mib_range": [
+        131.70703125,
+        151.40625
+      ],
+      "combined_peak_rss_mib": 131.578125,
+      "combined_peak_rss_mib_range": [
+        130.83203125,
+        131.9453125
+      ],
+      "peak_rss_mib_ratio": 1.1426493290583066,
+      "baseline_process_seconds": 3.0699123349040747,
+      "baseline_process_seconds_range": [
+        2.9199389051645994,
+        3.070770988240838
+      ],
+      "combined_process_seconds": 3.020343102514744,
+      "combined_process_seconds_range": [
+        2.870394678786397,
+        3.170168336480856
+      ],
+      "process_seconds_ratio": 1.0164117885640407,
+      "baseline_kernel_seconds": 1.5611232798546553,
+      "baseline_kernel_seconds_range": [
+        1.4540143888443708,
+        1.5921922288835049
+      ],
+      "combined_kernel_seconds": 1.590947924181819,
+      "combined_kernel_seconds_range": [
+        1.3683641534298658,
+        1.6485590804368258
+      ],
+      "kernel_seconds_ratio": 0.9812535383001291,
+      "baseline_cycles": [
+        8,
+        8,
+        8
+      ],
+      "combined_cycles": [
+        8,
+        8,
+        8
+      ]
+    },
+    {
+      "mode": "scf",
+      "case": "o2",
+      "xc": "PBE",
+      "threads": 8,
+      "nao": 60,
+      "grid_points": 28168,
+      "errors": {
+        "energy_hartree": 2.5579538487363607e-13,
+        "dm_absolute": 4.391974284256861e-11
+      },
+      "baseline_peak_rss_mib": 176.5390625,
+      "baseline_peak_rss_mib_range": [
+        174.80859375,
+        185.0703125
+      ],
+      "combined_peak_rss_mib": 176.5703125,
+      "combined_peak_rss_mib_range": [
+        175.515625,
+        192.89453125
+      ],
+      "peak_rss_mib_ratio": 0.9998230166806779,
+      "baseline_process_seconds": 3.2712237369269133,
+      "baseline_process_seconds_range": [
+        2.9704321324825287,
+        3.2719514928758144
+      ],
+      "combined_process_seconds": 3.120674869045615,
+      "combined_process_seconds_range": [
+        3.0711840242147446,
+        3.320883359760046
+      ],
+      "process_seconds_ratio": 1.0482424072352465,
+      "baseline_kernel_seconds": 1.7335184141993523,
+      "baseline_kernel_seconds_range": [
+        1.5274025034159422,
+        1.819117108359933
+      ],
+      "combined_kernel_seconds": 1.702952641993761,
+      "combined_kernel_seconds_range": [
+        1.6145152729004622,
+        1.765257054939866
+      ],
+      "kernel_seconds_ratio": 1.01794869184959,
+      "baseline_cycles": [
+        8,
+        8,
+        8
+      ],
+      "combined_cycles": [
+        8,
+        8,
+        8
+      ]
+    },
+    {
+      "mode": "scf",
+      "case": "o2",
+      "xc": "MN15",
+      "threads": 8,
+      "nao": 60,
+      "grid_points": 28168,
+      "errors": {
+        "energy_hartree": 1.4210854715202004e-13,
+        "dm_absolute": 5.269673586383306e-13
+      },
+      "baseline_peak_rss_mib": 191.95703125,
+      "baseline_peak_rss_mib_range": [
+        190.58984375,
+        195.9609375
+      ],
+      "combined_peak_rss_mib": 208.0,
+      "combined_peak_rss_mib_range": [
+        207.58984375,
+        208.14453125
+      ],
+      "peak_rss_mib_ratio": 0.9228703425480769,
+      "baseline_process_seconds": 4.02276998758316,
+      "baseline_process_seconds_range": [
+        3.7225462272763252,
+        4.123310498893261
+      ],
+      "combined_process_seconds": 3.7723004203289747,
+      "combined_process_seconds_range": [
+        3.7713949028402567,
+        3.973094966262579
+      ],
+      "process_seconds_ratio": 1.0663970361173787,
+      "baseline_kernel_seconds": 2.453247234225273,
+      "baseline_kernel_seconds_range": [
+        2.366501249372959,
+        2.5716181825846434
+      ],
+      "combined_kernel_seconds": 2.378659497946501,
+      "combined_kernel_seconds_range": [
+        2.3530846405774355,
+        2.481760738417506
+      ],
+      "kernel_seconds_ratio": 1.0313570464133954,
+      "baseline_cycles": [
+        8,
+        8,
+        8
+      ],
+      "combined_cycles": [
+        8,
+        8,
+        8
+      ]
+    }
+  ]
+}

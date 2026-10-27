@@ -1,0 +1,75 @@
+[
+  {
+    "command": [
+      "/home/lyl/soft/pyscf-pr-tools/python/bin/ruff",
+      "check",
+      "--config",
+      ".ruff.toml",
+      "pyscf/dft/gen_grid.py",
+      "pyscf/dft/numint.py",
+      "pyscf/dft/test/test_grids.py",
+      "pyscf/dft/test/test_numint.py",
+      "pyscf/dft/test/test_numint_pair_tiles.py",
+      "pyscf/dft/test/test_numint_rho_fused.py"
+    ],
+    "exitcode": 1,
+    "output": "F841 Local variable `ao_loc` is assigned to but never used\n  --> pyscf/dft/test/test_numint.py:37:9\n   |\n35 |         mf.grids.build(with_non0tab=True)\n36 |         nao = mol.nao_nr()\n37 |         ao_loc = mol.ao_loc_nr()\n   |         ^^^^^^\n38 |\n39 |         h4 = gto.Mole()\n   |\nhelp: Remove assignment to unused variable `ao_loc`\n\nF841 Local variable `nao` is assigned to but never used\n   --> pyscf/dft/test/test_numint.py:128:9\n    |\n126 |         ao_loc = h4.ao_loc_nr()\n127 |         ao = mf_h4._numint.eval_ao(h4, mf_h4.grids.coords).copy() + 0j\n128 |         nao = ao.shape[1]\n    |         ^^^\n129 |         v1 = dft.numint._dot_ao_dm(h4, ao, dm, mf_h4.grids.non0tab, (0,h4.nbas), ao_loc)\n130 |         v2 = dft.numint._dot_ao_dm(h4, ao, dm, None, None, None)\n    |\nhelp: Remove assignment to unused variable `nao`\n\nF841 Local variable `dm` is assigned to but never used\n   --> pyscf/dft/test/test_numint.py:167:9\n    |\n165 |         self.assertAlmostEqual(abs(v1-v2).max(), 0, 9)\n166 |\n167 |         dm = mf_he2.get_init_guess(key='minao')\n    |         ^^\n168 |         ao_loc = he2.ao_loc_nr()\n169 |         ao = mf_he2._numint.eval_ao(he2, mf_he2.grids.coords).copy()\n    |\nhelp: Remove assignment to unused variable `dm`\n\nF841 Local variable `nao` is assigned to but never used\n   --> pyscf/dft/test/test_numint.py:170:9\n    |\n168 |         ao_loc = he2.ao_loc_nr()\n169 |         ao = mf_he2._numint.eval_ao(he2, mf_he2.grids.coords).copy()\n170 |         nao = he2.nao_nr()\n    |         ^^^\n171 |         v1 = dft.numint._dot_ao_ao(he2, ao, ao, mf_he2.grids.non0tab, (0,he2.nbas), ao_loc)\n172 |         v2 = dft.numint._dot_ao_ao(he2, ao, ao, None, None, None)\n    |\nhelp: Remove assignment to unused variable `nao`\n\nF841 Local variable `nao` is assigned to but never used\n   --> pyscf/dft/test/test_numint.py:197:9\n    |\n195 |         non0tab = mf.grids.make_mask(mol, mf.grids.coords)\n196 |         ao = dft.numint.eval_ao(mol, mf.grids.coords, deriv=1)\n197 |         nao = ao.shape[1]\n    |         ^^^\n198 |         ao_loc = mol.ao_loc_nr()\n199 |         cutoff = mf.grids.cutoff * 1e2\n    |\nhelp: Remove assignment to unused variable `nao`\n\nFound 5 errors.\nNo fixes available (5 hidden fixes can be enabled with the `--unsafe-fixes` option).\n"
+  },
+  {
+    "command": [
+      "/home/lyl/soft/pyscf-pr-tools/python/bin/ruff",
+      "check",
+      "--select",
+      "NPY",
+      "--ignore",
+      "NPY002",
+      "pyscf/dft/gen_grid.py",
+      "pyscf/dft/numint.py",
+      "pyscf/dft/test/test_grids.py",
+      "pyscf/dft/test/test_numint.py",
+      "pyscf/dft/test/test_numint_pair_tiles.py",
+      "pyscf/dft/test/test_numint_rho_fused.py"
+    ],
+    "exitcode": 0,
+    "output": "All checks passed!\n"
+  },
+  {
+    "command": [
+      "flake8",
+      "--config",
+      ".flake8",
+      "pyscf/dft/gen_grid.py",
+      "pyscf/dft/numint.py",
+      "pyscf/dft/test/test_grids.py",
+      "pyscf/dft/test/test_numint.py",
+      "pyscf/dft/test/test_numint_pair_tiles.py",
+      "pyscf/dft/test/test_numint_rho_fused.py"
+    ],
+    "exitcode": 1,
+    "output": "pyscf/dft/test/test_numint.py:37:9: F841 local variable 'ao_loc' is assigned to but never used\npyscf/dft/test/test_numint.py:128:9: F841 local variable 'nao' is assigned to but never used\npyscf/dft/test/test_numint.py:167:9: F841 local variable 'dm' is assigned to but never used\npyscf/dft/test/test_numint.py:170:9: F841 local variable 'nao' is assigned to but never used\npyscf/dft/test/test_numint.py:197:9: F841 local variable 'nao' is assigned to but never used\npyscf/dft/test/test_numint.py:229:121: E501 line too long (125 > 120 characters)\npyscf/dft/test/test_numint.py:230:121: E501 line too long (125 > 120 characters)\npyscf/dft/test/test_numint.py:231:121: E501 line too long (125 > 120 characters)\npyscf/dft/test/test_numint.py:232:121: E501 line too long (125 > 120 characters)\npyscf/dft/test/test_numint.py:233:121: E501 line too long (125 > 120 characters)\npyscf/dft/test/test_numint.py:234:121: E501 line too long (125 > 120 characters)\npyscf/dft/test/test_numint.py:266:121: E501 line too long (137 > 120 characters)\npyscf/dft/test/test_numint.py:267:121: E501 line too long (137 > 120 characters)\npyscf/dft/test/test_numint.py:268:121: E501 line too long (137 > 120 characters)\npyscf/dft/test/test_numint.py:693:15: E271 multiple spaces after keyword\npyscf/dft/test/test_numint.py:722:15: E271 multiple spaces after keyword\npyscf/dft/test/test_numint.py:753:15: E271 multiple spaces after keyword\npyscf/dft/test/test_numint.py:785:15: E271 multiple spaces after keyword\npyscf/dft/test/test_numint_rho_fused.py:60:121: E501 line too long (133 > 120 characters)\n"
+  },
+  {
+    "command": [
+      "pycodestyle",
+      "--select=E111,W191,W293",
+      "pyscf/dft/gen_grid.py",
+      "pyscf/dft/numint.py",
+      "pyscf/dft/test/test_grids.py",
+      "pyscf/dft/test/test_numint.py",
+      "pyscf/dft/test/test_numint_pair_tiles.py",
+      "pyscf/dft/test/test_numint_rho_fused.py"
+    ],
+    "exitcode": 0,
+    "output": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "44313dfb4..HEAD",
+      "--check"
+    ],
+    "exitcode": 0,
+    "output": ""
+  }
+]

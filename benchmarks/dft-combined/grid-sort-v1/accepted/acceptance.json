@@ -1,0 +1,57 @@
+{
+  "accepted": true,
+  "expected": 6,
+  "completed": 6,
+  "numerically_validated": 6,
+  "failures": [],
+  "comparisons": [
+    {
+      "case": "water20-rks",
+      "threads": 1,
+      "mode": "grid",
+      "baseline": "baseline",
+      "candidate": "combined",
+      "baseline_commit": "44313dfb457b93358918c391fc66285fa44153ef",
+      "candidate_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+      "numerically_accepted": true,
+      "repeats": 3,
+      "baseline_seconds_median": 0.8222289122641087,
+      "candidate_seconds_median": 0.09220497868955135,
+      "baseline_seconds_range": [
+        0.8151494655758142,
+        0.8414512928575277
+      ],
+      "candidate_seconds_range": [
+        0.0861376766115427,
+        0.09333544783294201
+      ],
+      "speedup": 8.917402551900198,
+      "baseline_peak_rss_mib_median": 163.10546875,
+      "candidate_peak_rss_mib_median": 148.97265625,
+      "baseline_peak_rss_mib_range": [
+        162.0703125,
+        163.16796875
+      ],
+      "candidate_peak_rss_mib_range": [
+        148.96875,
+        149.15234375
+      ],
+      "max_absolute_errors": {
+        "values": 0.0
+      }
+    }
+  ],
+  "source_batch": "/home/lyl/soft/pyscf-combined-bench-20261027/grid-sort-v1/batch.json",
+  "gates": {
+    "nelec": 1e-08,
+    "exc": 1e-08,
+    "vxc": 1e-09
+  },
+  "micro_gates": {
+    "grid": 0.0,
+    "ao": 1e-12,
+    "libxc": 1e-10
+  },
+  "statistic": "ordinary median of independent process medians; observed min/max ranges, not confidence intervals",
+  "native_provenance": "Recorded paths and hashes checked present; caller must bind native build manifest to source commit"
+}

@@ -1,0 +1,34 @@
+{
+  "branch": "DFT-combined",
+  "base": "44313dfb457b93358918c391fc66285fa44153ef",
+  "head": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+  "components": [
+    {
+      "change": "stable integer grid sorting",
+      "source_branch": "DFT-grid",
+      "source_commit": "3721140b263c8a974fe9ef97e7ccdfe97be7d775",
+      "combined_commit": "fb38dc2064f4c22bc7785a632d38d94d1723e707"
+    },
+    {
+      "change": "sparse AO-pair tiling",
+      "source_branch": "DFT-sparse-tiles",
+      "source_commit": "38d820b97fa81cba1fa4e8a23d41b547cffc1bac",
+      "combined_commit": "066330bd5b5487eb7546e07dc2a36527b0f5ec5a"
+    },
+    {
+      "change": "sparse DM density contractions",
+      "source_branch": "DFT-density-dm",
+      "source_commit": "a5d33360cd0fd9c16e48fed7e752690b98a78b61",
+      "combined_commit": "a8cbddc874d7846dedfdc482944fc299d76f2409"
+    }
+  ],
+  "changed_files": [
+    "pyscf/dft/gen_grid.py",
+    "pyscf/dft/numint.py",
+    "pyscf/dft/test/test_grids.py",
+    "pyscf/dft/test/test_numint.py",
+    "pyscf/dft/test/test_numint_pair_tiles.py",
+    "pyscf/dft/test/test_numint_rho_fused.py",
+    "pyscf/lib/dft/nr_numint_sparse.c"
+  ]
+}

@@ -1,0 +1,14 @@
+..WARN: eval_rho1 does not support complex density, eval_rho is called instead
+...../home/lyl/soft/pyscf-split-20261026/combined/pyscf/dft/numint.py:673: UserWarning: Note the output of libxc.eval_xc cannot be directly used in eval_mat.
+vsigma from eval_xc should be restructured as (vsigma[:,0],vsigma[:,1])
+
+  warnings.warn('Note the output of libxc.eval_xc cannot be '
+..............................WARN: n_ang 11 for atom 0 O is not the supported Lebedev angular grids. Set n_ang to 50
+WARN: n_ang 11 for atom 1 H is not the supported Lebedev angular grids. Set n_ang to 50
+.......
+----------------------------------------------------------------------
+Ran 44 tests in 24.247s
+
+OK
+output file: /dev/null
+output file: /dev/null

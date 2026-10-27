@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "cells": [
+    {
+      "case": "water12-rks",
+      "xc": "LDA,VWN",
+      "threads": 8
+    },
+    {
+      "case": "water12-rks",
+      "xc": "PBE",
+      "threads": 8
+    },
+    {
+      "case": "water12-rks",
+      "xc": "MN15",
+      "threads": 8
+    },
+    {
+      "case": "water11oh-uks",
+      "xc": "LDA,VWN",
+      "threads": 8
+    },
+    {
+      "case": "water11oh-uks",
+      "xc": "PBE",
+      "threads": 8
+    },
+    {
+      "case": "water11oh-uks",
+      "xc": "MN15",
+      "threads": 8
+    },
+    {
+      "case": "water20-rks",
+      "xc": "MN15",
+      "threads": 24
+    },
+    {
+      "case": "water19oh-uks",
+      "xc": "MN15",
+      "threads": 24
+    }
+  ],
+  "grid_level": 2,
+  "max_memory_mb": 1024,
+  "fresh_process_repeats": 3,
+  "warmups_per_process": 1,
+  "timed_calls_per_process": 3,
+  "main_statistic": "median of three independent process medians",
+  "precision_gates_absolute": {
+    "nelec": 1e-08,
+    "exc_hartree": 1e-08,
+    "vxc": 1e-09
+  },
+  "timing_boundary": "NumInt.nr_rks/nr_uks; excludes fixture construction, grid construction, J/K and SCF",
+  "fixture_density": "Frozen occupied core-Hamiltonian orbital projectors; not SCF densities",
+  "expected_cells": 8,
+  "expected_two_version_processes": 48
+}

@@ -1,0 +1,96 @@
+START water12-rks-LDA_VWN-t8-baseline-r0
+DONE 1/48 water12-rks-LDA_VWN-t8-baseline-r0 3.472s
+START water12-rks-LDA_VWN-t8-combined-r0
+DONE 2/48 water12-rks-LDA_VWN-t8-combined-r0 2.319s
+START water12-rks-LDA_VWN-t8-combined-r1
+DONE 3/48 water12-rks-LDA_VWN-t8-combined-r1 2.319s
+START water12-rks-LDA_VWN-t8-baseline-r1
+DONE 4/48 water12-rks-LDA_VWN-t8-baseline-r1 3.572s
+START water12-rks-LDA_VWN-t8-baseline-r2
+DONE 5/48 water12-rks-LDA_VWN-t8-baseline-r2 3.523s
+START water12-rks-LDA_VWN-t8-combined-r2
+DONE 6/48 water12-rks-LDA_VWN-t8-combined-r2 2.370s
+START water12-rks-PBE-t8-baseline-r0
+DONE 7/48 water12-rks-PBE-t8-baseline-r0 5.126s
+START water12-rks-PBE-t8-combined-r0
+DONE 8/48 water12-rks-PBE-t8-combined-r0 3.472s
+START water12-rks-PBE-t8-combined-r1
+DONE 9/48 water12-rks-PBE-t8-combined-r1 3.423s
+START water12-rks-PBE-t8-baseline-r1
+DONE 10/48 water12-rks-PBE-t8-baseline-r1 4.925s
+START water12-rks-PBE-t8-baseline-r2
+DONE 11/48 water12-rks-PBE-t8-baseline-r2 5.126s
+START water12-rks-PBE-t8-combined-r2
+DONE 12/48 water12-rks-PBE-t8-combined-r2 3.422s
+START water12-rks-MN15-t8-baseline-r0
+DONE 13/48 water12-rks-MN15-t8-baseline-r0 10.439s
+START water12-rks-MN15-t8-combined-r0
+DONE 14/48 water12-rks-MN15-t8-combined-r0 4.775s
+START water12-rks-MN15-t8-combined-r1
+DONE 15/48 water12-rks-MN15-t8-combined-r1 4.675s
+START water12-rks-MN15-t8-baseline-r1
+DONE 16/48 water12-rks-MN15-t8-baseline-r1 10.439s
+START water12-rks-MN15-t8-baseline-r2
+DONE 17/48 water12-rks-MN15-t8-baseline-r2 10.538s
+START water12-rks-MN15-t8-combined-r2
+DONE 18/48 water12-rks-MN15-t8-combined-r2 4.775s
+START water11oh-uks-LDA_VWN-t8-baseline-r0
+DONE 19/48 water11oh-uks-LDA_VWN-t8-baseline-r0 5.276s
+START water11oh-uks-LDA_VWN-t8-combined-r0
+DONE 20/48 water11oh-uks-LDA_VWN-t8-combined-r0 2.921s
+START water11oh-uks-LDA_VWN-t8-combined-r1
+DONE 21/48 water11oh-uks-LDA_VWN-t8-combined-r1 2.871s
+START water11oh-uks-LDA_VWN-t8-baseline-r1
+DONE 22/48 water11oh-uks-LDA_VWN-t8-baseline-r1 5.177s
+START water11oh-uks-LDA_VWN-t8-baseline-r2
+DONE 23/48 water11oh-uks-LDA_VWN-t8-baseline-r2 5.226s
+START water11oh-uks-LDA_VWN-t8-combined-r2
+DONE 24/48 water11oh-uks-LDA_VWN-t8-combined-r2 2.971s
+START water11oh-uks-PBE-t8-baseline-r0
+DONE 25/48 water11oh-uks-PBE-t8-baseline-r0 7.583s
+START water11oh-uks-PBE-t8-combined-r0
+DONE 26/48 water11oh-uks-PBE-t8-combined-r0 4.325s
+START water11oh-uks-PBE-t8-combined-r1
+DONE 27/48 water11oh-uks-PBE-t8-combined-r1 4.475s
+START water11oh-uks-PBE-t8-baseline-r1
+DONE 28/48 water11oh-uks-PBE-t8-baseline-r1 7.733s
+START water11oh-uks-PBE-t8-baseline-r2
+DONE 29/48 water11oh-uks-PBE-t8-baseline-r2 7.532s
+START water11oh-uks-PBE-t8-combined-r2
+DONE 30/48 water11oh-uks-PBE-t8-combined-r2 4.424s
+START water11oh-uks-MN15-t8-baseline-r0
+DONE 31/48 water11oh-uks-MN15-t8-baseline-r0 17.908s
+START water11oh-uks-MN15-t8-combined-r0
+DONE 32/48 water11oh-uks-MN15-t8-combined-r0 6.780s
+START water11oh-uks-MN15-t8-combined-r1
+DONE 33/48 water11oh-uks-MN15-t8-combined-r1 6.980s
+START water11oh-uks-MN15-t8-baseline-r1
+DONE 34/48 water11oh-uks-MN15-t8-baseline-r1 17.905s
+START water11oh-uks-MN15-t8-baseline-r2
+DONE 35/48 water11oh-uks-MN15-t8-baseline-r2 18.054s
+START water11oh-uks-MN15-t8-combined-r2
+DONE 36/48 water11oh-uks-MN15-t8-combined-r2 6.828s
+START water20-rks-MN15-t24-baseline-r0
+DONE 37/48 water20-rks-MN15-t24-baseline-r0 28.832s
+START water20-rks-MN15-t24-combined-r0
+DONE 38/48 water20-rks-MN15-t24-combined-r0 11.539s
+START water20-rks-MN15-t24-combined-r1
+DONE 39/48 water20-rks-MN15-t24-combined-r1 11.591s
+START water20-rks-MN15-t24-baseline-r1
+DONE 40/48 water20-rks-MN15-t24-baseline-r1 29.430s
+START water20-rks-MN15-t24-baseline-r2
+DONE 41/48 water20-rks-MN15-t24-baseline-r2 31.386s
+START water20-rks-MN15-t24-combined-r2
+DONE 42/48 water20-rks-MN15-t24-combined-r2 13.193s
+START water19oh-uks-MN15-t24-baseline-r0
+DONE 43/48 water19oh-uks-MN15-t24-baseline-r0 59.095s
+START water19oh-uks-MN15-t24-combined-r0
+DONE 44/48 water19oh-uks-MN15-t24-combined-r0 22.210s
+START water19oh-uks-MN15-t24-combined-r1
+DONE 45/48 water19oh-uks-MN15-t24-combined-r1 22.063s
+START water19oh-uks-MN15-t24-baseline-r1
+DONE 46/48 water19oh-uks-MN15-t24-baseline-r1 58.896s
+START water19oh-uks-MN15-t24-baseline-r2
+DONE 47/48 water19oh-uks-MN15-t24-baseline-r2 58.446s
+START water19oh-uks-MN15-t24-combined-r2
+DONE 48/48 water19oh-uks-MN15-t24-combined-r2 22.164s
