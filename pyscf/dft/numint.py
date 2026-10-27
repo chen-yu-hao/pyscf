@@ -282,6 +282,28 @@ def eval_rho1(mol, ao, dm, screen_index=None, xctype='LDA', hermi=0,
         pair_mask = numpy.asarray(ovlp_cond < -numpy.log(cutoff), dtype=numpy.uint8)
 
     ao_loc = mol.ao_loc_nr()
+    if xctype in ('LDA', 'HF', 'GGA', 'NLC'):
+        lda = xctype in ('LDA', 'HF')
+        ao0 = ao if lda else ao[0]
+        if (screen_index is not None and ngrids % ALIGNMENT_UNIT == 0
+            and ao0.flags.f_contiguous and (lda or hermi == 1)
+            and screen_index.dtype == numpy.uint8 and screen_index.flags.c_contiguous
+            and pair_mask.dtype == numpy.uint8 and pair_mask.flags.c_contiguous):
+            nvar = 1 if lda else 4
+            rho = numpy.empty(ngrids if lda else (4, ngrids))
+            dm = numpy.asarray(dm, order='C')
+            libdft.VXCeval_rho_lda_gga_sparse(
+                rho.ctypes.data_as(ctypes.c_void_p),
+                ao.ctypes.data_as(ctypes.c_void_p),
+                dm.ctypes.data_as(ctypes.c_void_p),
+                ctypes.c_int(dm.shape[0]), ctypes.c_int(ngrids),
+                ctypes.c_int(screen_index.shape[1]), ctypes.c_int(nbins),
+                screen_index.ctypes.data_as(ctypes.c_void_p),
+                pair_mask.ctypes.data_as(ctypes.c_void_p),
+                ao_loc.ctypes.data_as(ctypes.c_void_p),
+                ctypes.c_ssize_t(0 if lda else ao.strides[0] // ao.itemsize),
+                ctypes.c_int(nvar))
+            return rho
     if xctype == 'LDA' or xctype == 'HF':
         c0 = _dot_ao_dm_sparse(ao, dm, nbins, screen_index, pair_mask, ao_loc)
         rho = _contract_rho_sparse(ao, c0, screen_index, ao_loc)
@@ -307,6 +329,20 @@ def eval_rho1(mol, ao, dm, screen_index=None, xctype='LDA', hermi=0,
         else:
             rho = numpy.empty((5,ngrids))
             tau_idx = 4
+            if (screen_index is not None and ngrids % ALIGNMENT_UNIT == 0
+                and all(ao[i].flags.f_contiguous for i in range(4))):
+                dm = numpy.asarray(dm, order='C')
+                libdft.VXCeval_rho_mgga_sparse(
+                    rho.ctypes.data_as(ctypes.c_void_p),
+                    ao.ctypes.data_as(ctypes.c_void_p),
+                    dm.ctypes.data_as(ctypes.c_void_p),
+                    ctypes.c_int(dm.shape[0]), ctypes.c_int(ngrids),
+                    ctypes.c_int(screen_index.shape[1]), ctypes.c_int(nbins),
+                    ctypes.c_int(hermi), screen_index.ctypes.data_as(ctypes.c_void_p),
+                    pair_mask.ctypes.data_as(ctypes.c_void_p),
+                    ao_loc.ctypes.data_as(ctypes.c_void_p),
+                    ctypes.c_ssize_t(ao.strides[0] // ao.itemsize))
+                return rho
         c0 = _dot_ao_dm_sparse(ao[0], dm, nbins, screen_index, pair_mask, ao_loc)
         rho[0] = _contract_rho_sparse(ao[0], c0, screen_index, ao_loc)
 
@@ -2917,7 +2953,7 @@ class NumInt(lib.StreamObject, LibXCMixin):
         for ip0, ip1 in lib.prange(0, ngrids, blksize):
             coords = grids.coords[ip0:ip1]
             weight = grids.weights[ip0:ip1]
-            mask = screen_index[ip0//BLKSIZE:]
+            mask = screen_index[ip0//BLKSIZE:(ip1+BLKSIZE-1)//BLKSIZE]
             # TODO: pass grids.cutoff to eval_ao
             ao = self.eval_ao(mol, coords, deriv=deriv, non0tab=mask,
                               cutoff=grids.cutoff, out=buf)
