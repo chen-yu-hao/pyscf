@@ -1,0 +1,7063 @@
+{
+  "status": "finished_unvalidated",
+  "expected": 36,
+  "completed": 36,
+  "rows": [
+    {
+      "case": "water4",
+      "engine": "legacy-original",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-legacy-original-r0",
+      "started_utc": "2026-10-27T08:56:32.823135+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450819407,
+          "busy": 73359552
+        },
+        "cpu6": {
+          "total": 1450596341,
+          "busy": 76861419
+        },
+        "cpu7": {
+          "total": 1450543236,
+          "busy": 76067870
+        },
+        "cpu8": {
+          "total": 1450638135,
+          "busy": 67491117
+        },
+        "cpu9": {
+          "total": 1450345341,
+          "busy": 70872249
+        },
+        "cpu10": {
+          "total": 1450373428,
+          "busy": 66885595
+        },
+        "cpu11": {
+          "total": 1450456590,
+          "busy": 68442439
+        },
+        "cpu12": {
+          "total": 1450585767,
+          "busy": 69946853
+        },
+        "cpu61": {
+          "total": 1451030308,
+          "busy": 35427202
+        },
+        "cpu62": {
+          "total": 1451057293,
+          "busy": 34624265
+        },
+        "cpu63": {
+          "total": 1450976812,
+          "busy": 35016303
+        },
+        "cpu64": {
+          "total": 1451049472,
+          "busy": 34408464
+        },
+        "cpu65": {
+          "total": 1450979121,
+          "busy": 35805570
+        },
+        "cpu66": {
+          "total": 1450818533,
+          "busy": 40409804
+        },
+        "cpu67": {
+          "total": 1450825149,
+          "busy": 35925547
+        },
+        "cpu68": {
+          "total": 1450889638,
+          "busy": 36946594
+        }
+      },
+      "process_wall_s": 22.46583130210638,
+      "returncode": 0,
+      "process_cpu_seconds": 90.816314,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450821650,
+          "busy": 73361119
+        },
+        "cpu6": {
+          "total": 1450598587,
+          "busy": 76862779
+        },
+        "cpu7": {
+          "total": 1450545478,
+          "busy": 76069022
+        },
+        "cpu8": {
+          "total": 1450640378,
+          "busy": 67492284
+        },
+        "cpu9": {
+          "total": 1450347582,
+          "busy": 70873390
+        },
+        "cpu10": {
+          "total": 1450375671,
+          "busy": 66886792
+        },
+        "cpu11": {
+          "total": 1450458831,
+          "busy": 68443535
+        },
+        "cpu12": {
+          "total": 1450588010,
+          "busy": 69948013
+        },
+        "cpu61": {
+          "total": 1451032552,
+          "busy": 35427330
+        },
+        "cpu62": {
+          "total": 1451059535,
+          "busy": 34624323
+        },
+        "cpu63": {
+          "total": 1450979056,
+          "busy": 35016358
+        },
+        "cpu64": {
+          "total": 1451051709,
+          "busy": 34408491
+        },
+        "cpu65": {
+          "total": 1450981363,
+          "busy": 35805606
+        },
+        "cpu66": {
+          "total": 1450820777,
+          "busy": 40409842
+        },
+        "cpu67": {
+          "total": 1450827394,
+          "busy": 35925571
+        },
+        "cpu68": {
+          "total": 1450891881,
+          "busy": 36946617
+        }
+      },
+      "ended_utc": "2026-10-27T08:56:55.291297+00:00",
+      "energy": -305.35020983391274,
+      "cycles": 11,
+      "kernel_wall_s": 21.657172856852412,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "upstream",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-upstream-r0",
+      "started_utc": "2026-10-27T08:56:55.292583+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450821650,
+          "busy": 73361119
+        },
+        "cpu6": {
+          "total": 1450598587,
+          "busy": 76862779
+        },
+        "cpu7": {
+          "total": 1450545478,
+          "busy": 76069022
+        },
+        "cpu8": {
+          "total": 1450640378,
+          "busy": 67492284
+        },
+        "cpu9": {
+          "total": 1450347582,
+          "busy": 70873390
+        },
+        "cpu10": {
+          "total": 1450375671,
+          "busy": 66886792
+        },
+        "cpu11": {
+          "total": 1450458831,
+          "busy": 68443535
+        },
+        "cpu12": {
+          "total": 1450588010,
+          "busy": 69948013
+        },
+        "cpu61": {
+          "total": 1451032552,
+          "busy": 35427330
+        },
+        "cpu62": {
+          "total": 1451059535,
+          "busy": 34624323
+        },
+        "cpu63": {
+          "total": 1450979056,
+          "busy": 35016358
+        },
+        "cpu64": {
+          "total": 1451051710,
+          "busy": 34408491
+        },
+        "cpu65": {
+          "total": 1450981364,
+          "busy": 35805606
+        },
+        "cpu66": {
+          "total": 1450820777,
+          "busy": 40409842
+        },
+        "cpu67": {
+          "total": 1450827394,
+          "busy": 35925571
+        },
+        "cpu68": {
+          "total": 1450891881,
+          "busy": 36946617
+        }
+      },
+      "process_wall_s": 22.71881373040378,
+      "returncode": 0,
+      "process_cpu_seconds": 90.04863800000001,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450823917,
+          "busy": 73362572
+        },
+        "cpu6": {
+          "total": 1450600853,
+          "busy": 76864157
+        },
+        "cpu7": {
+          "total": 1450547745,
+          "busy": 76070242
+        },
+        "cpu8": {
+          "total": 1450642647,
+          "busy": 67493414
+        },
+        "cpu9": {
+          "total": 1450349849,
+          "busy": 70874552
+        },
+        "cpu10": {
+          "total": 1450377942,
+          "busy": 66887938
+        },
+        "cpu11": {
+          "total": 1450461101,
+          "busy": 68444627
+        },
+        "cpu12": {
+          "total": 1450590278,
+          "busy": 69949139
+        },
+        "cpu61": {
+          "total": 1451034823,
+          "busy": 35427447
+        },
+        "cpu62": {
+          "total": 1451061802,
+          "busy": 34624390
+        },
+        "cpu63": {
+          "total": 1450981324,
+          "busy": 35016398
+        },
+        "cpu64": {
+          "total": 1451053976,
+          "busy": 34408560
+        },
+        "cpu65": {
+          "total": 1450983627,
+          "busy": 35805646
+        },
+        "cpu66": {
+          "total": 1450823046,
+          "busy": 40409865
+        },
+        "cpu67": {
+          "total": 1450829663,
+          "busy": 35925596
+        },
+        "cpu68": {
+          "total": 1450894152,
+          "busy": 36946662
+        }
+      },
+      "ended_utc": "2026-10-27T08:57:18.013194+00:00",
+      "energy": -305.35020983391223,
+      "cycles": 11,
+      "kernel_wall_s": 22.129944631829858,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "combined",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-combined-r0",
+      "started_utc": "2026-10-27T08:57:18.014624+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450823917,
+          "busy": 73362572
+        },
+        "cpu6": {
+          "total": 1450600853,
+          "busy": 76864157
+        },
+        "cpu7": {
+          "total": 1450547745,
+          "busy": 76070242
+        },
+        "cpu8": {
+          "total": 1450642647,
+          "busy": 67493414
+        },
+        "cpu9": {
+          "total": 1450349849,
+          "busy": 70874552
+        },
+        "cpu10": {
+          "total": 1450377942,
+          "busy": 66887938
+        },
+        "cpu11": {
+          "total": 1450461101,
+          "busy": 68444627
+        },
+        "cpu12": {
+          "total": 1450590278,
+          "busy": 69949139
+        },
+        "cpu61": {
+          "total": 1451034823,
+          "busy": 35427447
+        },
+        "cpu62": {
+          "total": 1451061802,
+          "busy": 34624390
+        },
+        "cpu63": {
+          "total": 1450981324,
+          "busy": 35016398
+        },
+        "cpu64": {
+          "total": 1451053976,
+          "busy": 34408560
+        },
+        "cpu65": {
+          "total": 1450983627,
+          "busy": 35805646
+        },
+        "cpu66": {
+          "total": 1450823046,
+          "busy": 40409865
+        },
+        "cpu67": {
+          "total": 1450829664,
+          "busy": 35925596
+        },
+        "cpu68": {
+          "total": 1450894152,
+          "busy": 36946662
+        }
+      },
+      "process_wall_s": 20.365415362641215,
+      "returncode": 0,
+      "process_cpu_seconds": 88.00650500000002,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450825953,
+          "busy": 73363897
+        },
+        "cpu6": {
+          "total": 1450602890,
+          "busy": 76865469
+        },
+        "cpu7": {
+          "total": 1450549781,
+          "busy": 76071579
+        },
+        "cpu8": {
+          "total": 1450644684,
+          "busy": 67494616
+        },
+        "cpu9": {
+          "total": 1450351884,
+          "busy": 70875786
+        },
+        "cpu10": {
+          "total": 1450379976,
+          "busy": 66889216
+        },
+        "cpu11": {
+          "total": 1450463138,
+          "busy": 68445819
+        },
+        "cpu12": {
+          "total": 1450592311,
+          "busy": 69950231
+        },
+        "cpu61": {
+          "total": 1451036851,
+          "busy": 35427487
+        },
+        "cpu62": {
+          "total": 1451063834,
+          "busy": 34624415
+        },
+        "cpu63": {
+          "total": 1450983357,
+          "busy": 35016426
+        },
+        "cpu64": {
+          "total": 1451056006,
+          "busy": 34408582
+        },
+        "cpu65": {
+          "total": 1450985656,
+          "busy": 35805677
+        },
+        "cpu66": {
+          "total": 1450825080,
+          "busy": 40409887
+        },
+        "cpu67": {
+          "total": 1450831696,
+          "busy": 35925629
+        },
+        "cpu68": {
+          "total": 1450896182,
+          "busy": 36946691
+        }
+      },
+      "ended_utc": "2026-10-27T08:57:38.381933+00:00",
+      "energy": -305.35020983391104,
+      "cycles": 11,
+      "kernel_wall_s": 19.82694004662335,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "full-optimized",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-full-optimized-r0",
+      "started_utc": "2026-10-27T08:57:38.383513+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450825953,
+          "busy": 73363897
+        },
+        "cpu6": {
+          "total": 1450602890,
+          "busy": 76865469
+        },
+        "cpu7": {
+          "total": 1450549781,
+          "busy": 76071579
+        },
+        "cpu8": {
+          "total": 1450644684,
+          "busy": 67494616
+        },
+        "cpu9": {
+          "total": 1450351884,
+          "busy": 70875786
+        },
+        "cpu10": {
+          "total": 1450379976,
+          "busy": 66889216
+        },
+        "cpu11": {
+          "total": 1450463138,
+          "busy": 68445819
+        },
+        "cpu12": {
+          "total": 1450592311,
+          "busy": 69950231
+        },
+        "cpu61": {
+          "total": 1451036851,
+          "busy": 35427487
+        },
+        "cpu62": {
+          "total": 1451063835,
+          "busy": 34624415
+        },
+        "cpu63": {
+          "total": 1450983357,
+          "busy": 35016426
+        },
+        "cpu64": {
+          "total": 1451056007,
+          "busy": 34408582
+        },
+        "cpu65": {
+          "total": 1450985656,
+          "busy": 35805677
+        },
+        "cpu66": {
+          "total": 1450825080,
+          "busy": 40409887
+        },
+        "cpu67": {
+          "total": 1450831696,
+          "busy": 35925629
+        },
+        "cpu68": {
+          "total": 1450896182,
+          "busy": 36946691
+        }
+      },
+      "process_wall_s": 13.948346186429262,
+      "returncode": 0,
+      "process_cpu_seconds": 70.61276200000005,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450827347,
+          "busy": 73364894
+        },
+        "cpu6": {
+          "total": 1450604283,
+          "busy": 76866383
+        },
+        "cpu7": {
+          "total": 1450551177,
+          "busy": 76072527
+        },
+        "cpu8": {
+          "total": 1450646078,
+          "busy": 67495453
+        },
+        "cpu9": {
+          "total": 1450353276,
+          "busy": 70876707
+        },
+        "cpu10": {
+          "total": 1450381373,
+          "busy": 66890085
+        },
+        "cpu11": {
+          "total": 1450464533,
+          "busy": 68446653
+        },
+        "cpu12": {
+          "total": 1450593707,
+          "busy": 69951129
+        },
+        "cpu61": {
+          "total": 1451038245,
+          "busy": 35427525
+        },
+        "cpu62": {
+          "total": 1451065230,
+          "busy": 34624437
+        },
+        "cpu63": {
+          "total": 1450984751,
+          "busy": 35016474
+        },
+        "cpu64": {
+          "total": 1451057400,
+          "busy": 34408600
+        },
+        "cpu65": {
+          "total": 1450987044,
+          "busy": 35805701
+        },
+        "cpu66": {
+          "total": 1450826474,
+          "busy": 40409896
+        },
+        "cpu67": {
+          "total": 1450833089,
+          "busy": 35925643
+        },
+        "cpu68": {
+          "total": 1450897575,
+          "busy": 36946716
+        }
+      },
+      "ended_utc": "2026-10-27T08:57:52.334021+00:00",
+      "energy": -305.35020983391104,
+      "cycles": 11,
+      "kernel_wall_s": 13.39291214197874,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "upstream",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-upstream-r1",
+      "started_utc": "2026-10-27T08:57:52.335669+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450827347,
+          "busy": 73364894
+        },
+        "cpu6": {
+          "total": 1450604283,
+          "busy": 76866383
+        },
+        "cpu7": {
+          "total": 1450551177,
+          "busy": 76072527
+        },
+        "cpu8": {
+          "total": 1450646078,
+          "busy": 67495453
+        },
+        "cpu9": {
+          "total": 1450353276,
+          "busy": 70876707
+        },
+        "cpu10": {
+          "total": 1450381373,
+          "busy": 66890085
+        },
+        "cpu11": {
+          "total": 1450464534,
+          "busy": 68446653
+        },
+        "cpu12": {
+          "total": 1450593707,
+          "busy": 69951129
+        },
+        "cpu61": {
+          "total": 1451038246,
+          "busy": 35427525
+        },
+        "cpu62": {
+          "total": 1451065230,
+          "busy": 34624437
+        },
+        "cpu63": {
+          "total": 1450984751,
+          "busy": 35016474
+        },
+        "cpu64": {
+          "total": 1451057400,
+          "busy": 34408600
+        },
+        "cpu65": {
+          "total": 1450987045,
+          "busy": 35805701
+        },
+        "cpu66": {
+          "total": 1450826474,
+          "busy": 40409896
+        },
+        "cpu67": {
+          "total": 1450833089,
+          "busy": 35925643
+        },
+        "cpu68": {
+          "total": 1450897575,
+          "busy": 36946716
+        }
+      },
+      "process_wall_s": 22.96990337409079,
+      "returncode": 0,
+      "process_cpu_seconds": 90.42070699999996,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450829641,
+          "busy": 73366117
+        },
+        "cpu6": {
+          "total": 1450606577,
+          "busy": 76867648
+        },
+        "cpu7": {
+          "total": 1450553471,
+          "busy": 76073709
+        },
+        "cpu8": {
+          "total": 1450648372,
+          "busy": 67497036
+        },
+        "cpu9": {
+          "total": 1450355572,
+          "busy": 70877898
+        },
+        "cpu10": {
+          "total": 1450383666,
+          "busy": 66891202
+        },
+        "cpu11": {
+          "total": 1450466827,
+          "busy": 68447784
+        },
+        "cpu12": {
+          "total": 1450596002,
+          "busy": 69952302
+        },
+        "cpu61": {
+          "total": 1451040538,
+          "busy": 35427575
+        },
+        "cpu62": {
+          "total": 1451067521,
+          "busy": 34624497
+        },
+        "cpu63": {
+          "total": 1450987042,
+          "busy": 35016518
+        },
+        "cpu64": {
+          "total": 1451059693,
+          "busy": 34408638
+        },
+        "cpu65": {
+          "total": 1450989337,
+          "busy": 35805733
+        },
+        "cpu66": {
+          "total": 1450828771,
+          "busy": 40409918
+        },
+        "cpu67": {
+          "total": 1450835385,
+          "busy": 35925664
+        },
+        "cpu68": {
+          "total": 1450899868,
+          "busy": 36946735
+        }
+      },
+      "ended_utc": "2026-10-27T08:58:15.307772+00:00",
+      "energy": -305.35020983391206,
+      "cycles": 11,
+      "kernel_wall_s": 22.389826230704784,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "combined",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-combined-r1",
+      "started_utc": "2026-10-27T08:58:15.310103+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450829642,
+          "busy": 73366118
+        },
+        "cpu6": {
+          "total": 1450606577,
+          "busy": 76867648
+        },
+        "cpu7": {
+          "total": 1450553471,
+          "busy": 76073709
+        },
+        "cpu8": {
+          "total": 1450648372,
+          "busy": 67497036
+        },
+        "cpu9": {
+          "total": 1450355572,
+          "busy": 70877898
+        },
+        "cpu10": {
+          "total": 1450383666,
+          "busy": 66891202
+        },
+        "cpu11": {
+          "total": 1450466827,
+          "busy": 68447784
+        },
+        "cpu12": {
+          "total": 1450596002,
+          "busy": 69952302
+        },
+        "cpu61": {
+          "total": 1451040539,
+          "busy": 35427575
+        },
+        "cpu62": {
+          "total": 1451067521,
+          "busy": 34624497
+        },
+        "cpu63": {
+          "total": 1450987042,
+          "busy": 35016518
+        },
+        "cpu64": {
+          "total": 1451059693,
+          "busy": 34408638
+        },
+        "cpu65": {
+          "total": 1450989338,
+          "busy": 35805733
+        },
+        "cpu66": {
+          "total": 1450828771,
+          "busy": 40409918
+        },
+        "cpu67": {
+          "total": 1450835386,
+          "busy": 35925664
+        },
+        "cpu68": {
+          "total": 1450899868,
+          "busy": 36946735
+        }
+      },
+      "process_wall_s": 20.762875886633992,
+      "returncode": 0,
+      "process_cpu_seconds": 88.31444400000004,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450831715,
+          "busy": 73367544
+        },
+        "cpu6": {
+          "total": 1450608650,
+          "busy": 76868837
+        },
+        "cpu7": {
+          "total": 1450555543,
+          "busy": 76075018
+        },
+        "cpu8": {
+          "total": 1450650445,
+          "busy": 67498321
+        },
+        "cpu9": {
+          "total": 1450357643,
+          "busy": 70879064
+        },
+        "cpu10": {
+          "total": 1450385737,
+          "busy": 66892461
+        },
+        "cpu11": {
+          "total": 1450468901,
+          "busy": 68449045
+        },
+        "cpu12": {
+          "total": 1450598074,
+          "busy": 69953554
+        },
+        "cpu61": {
+          "total": 1451042610,
+          "busy": 35427599
+        },
+        "cpu62": {
+          "total": 1451069593,
+          "busy": 34624553
+        },
+        "cpu63": {
+          "total": 1450989117,
+          "busy": 35016538
+        },
+        "cpu64": {
+          "total": 1451061762,
+          "busy": 34408704
+        },
+        "cpu65": {
+          "total": 1450991405,
+          "busy": 35805794
+        },
+        "cpu66": {
+          "total": 1450830843,
+          "busy": 40409941
+        },
+        "cpu67": {
+          "total": 1450837459,
+          "busy": 35925685
+        },
+        "cpu68": {
+          "total": 1450901944,
+          "busy": 36946758
+        }
+      },
+      "ended_utc": "2026-10-27T08:58:36.075878+00:00",
+      "energy": -305.35020983391183,
+      "cycles": 11,
+      "kernel_wall_s": 20.200966641306877,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "full-optimized",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-full-optimized-r1",
+      "started_utc": "2026-10-27T08:58:36.078355+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450831715,
+          "busy": 73367544
+        },
+        "cpu6": {
+          "total": 1450608650,
+          "busy": 76868837
+        },
+        "cpu7": {
+          "total": 1450555543,
+          "busy": 76075018
+        },
+        "cpu8": {
+          "total": 1450650445,
+          "busy": 67498321
+        },
+        "cpu9": {
+          "total": 1450357643,
+          "busy": 70879064
+        },
+        "cpu10": {
+          "total": 1450385737,
+          "busy": 66892461
+        },
+        "cpu11": {
+          "total": 1450468901,
+          "busy": 68449045
+        },
+        "cpu12": {
+          "total": 1450598074,
+          "busy": 69953554
+        },
+        "cpu61": {
+          "total": 1451042610,
+          "busy": 35427599
+        },
+        "cpu62": {
+          "total": 1451069593,
+          "busy": 34624553
+        },
+        "cpu63": {
+          "total": 1450989117,
+          "busy": 35016538
+        },
+        "cpu64": {
+          "total": 1451061762,
+          "busy": 34408704
+        },
+        "cpu65": {
+          "total": 1450991405,
+          "busy": 35805794
+        },
+        "cpu66": {
+          "total": 1450830844,
+          "busy": 40409941
+        },
+        "cpu67": {
+          "total": 1450837459,
+          "busy": 35925685
+        },
+        "cpu68": {
+          "total": 1450901944,
+          "busy": 36946758
+        }
+      },
+      "process_wall_s": 13.545672858133912,
+      "returncode": 0,
+      "process_cpu_seconds": 68.78397499999997,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450833069,
+          "busy": 73368432
+        },
+        "cpu6": {
+          "total": 1450610004,
+          "busy": 76869704
+        },
+        "cpu7": {
+          "total": 1450556898,
+          "busy": 76075872
+        },
+        "cpu8": {
+          "total": 1450651800,
+          "busy": 67499170
+        },
+        "cpu9": {
+          "total": 1450359000,
+          "busy": 70879911
+        },
+        "cpu10": {
+          "total": 1450387090,
+          "busy": 66893372
+        },
+        "cpu11": {
+          "total": 1450470256,
+          "busy": 68449914
+        },
+        "cpu12": {
+          "total": 1450599429,
+          "busy": 69954445
+        },
+        "cpu61": {
+          "total": 1451043964,
+          "busy": 35427616
+        },
+        "cpu62": {
+          "total": 1451070947,
+          "busy": 34624568
+        },
+        "cpu63": {
+          "total": 1450990470,
+          "busy": 35016552
+        },
+        "cpu64": {
+          "total": 1451063115,
+          "busy": 34408736
+        },
+        "cpu65": {
+          "total": 1450992757,
+          "busy": 35805810
+        },
+        "cpu66": {
+          "total": 1450832196,
+          "busy": 40409953
+        },
+        "cpu67": {
+          "total": 1450838814,
+          "busy": 35925709
+        },
+        "cpu68": {
+          "total": 1450903298,
+          "busy": 36946770
+        }
+      },
+      "ended_utc": "2026-10-27T08:58:49.627080+00:00",
+      "energy": -305.3502098339116,
+      "cycles": 11,
+      "kernel_wall_s": 13.000149516388774,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "legacy-original",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-legacy-original-r1",
+      "started_utc": "2026-10-27T08:58:49.629177+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450833069,
+          "busy": 73368432
+        },
+        "cpu6": {
+          "total": 1450610004,
+          "busy": 76869704
+        },
+        "cpu7": {
+          "total": 1450556898,
+          "busy": 76075872
+        },
+        "cpu8": {
+          "total": 1450651800,
+          "busy": 67499170
+        },
+        "cpu9": {
+          "total": 1450359000,
+          "busy": 70879911
+        },
+        "cpu10": {
+          "total": 1450387091,
+          "busy": 66893372
+        },
+        "cpu11": {
+          "total": 1450470257,
+          "busy": 68449914
+        },
+        "cpu12": {
+          "total": 1450599429,
+          "busy": 69954445
+        },
+        "cpu61": {
+          "total": 1451043964,
+          "busy": 35427616
+        },
+        "cpu62": {
+          "total": 1451070947,
+          "busy": 34624568
+        },
+        "cpu63": {
+          "total": 1450990470,
+          "busy": 35016552
+        },
+        "cpu64": {
+          "total": 1451063115,
+          "busy": 34408736
+        },
+        "cpu65": {
+          "total": 1450992757,
+          "busy": 35805810
+        },
+        "cpu66": {
+          "total": 1450832197,
+          "busy": 40409953
+        },
+        "cpu67": {
+          "total": 1450838814,
+          "busy": 35925709
+        },
+        "cpu68": {
+          "total": 1450903298,
+          "busy": 36946770
+        }
+      },
+      "process_wall_s": 22.267032688483596,
+      "returncode": 0,
+      "process_cpu_seconds": 90.18355799999992,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450835289,
+          "busy": 73369756
+        },
+        "cpu6": {
+          "total": 1450612227,
+          "busy": 76870886
+        },
+        "cpu7": {
+          "total": 1450559122,
+          "busy": 76077038
+        },
+        "cpu8": {
+          "total": 1450654024,
+          "busy": 67500240
+        },
+        "cpu9": {
+          "total": 1450361223,
+          "busy": 70881103
+        },
+        "cpu10": {
+          "total": 1450389315,
+          "busy": 66894519
+        },
+        "cpu11": {
+          "total": 1450472481,
+          "busy": 68451021
+        },
+        "cpu12": {
+          "total": 1450601653,
+          "busy": 69955861
+        },
+        "cpu61": {
+          "total": 1451046189,
+          "busy": 35427653
+        },
+        "cpu62": {
+          "total": 1451073171,
+          "busy": 34624601
+        },
+        "cpu63": {
+          "total": 1450992694,
+          "busy": 35016569
+        },
+        "cpu64": {
+          "total": 1451065339,
+          "busy": 34408758
+        },
+        "cpu65": {
+          "total": 1450994981,
+          "busy": 35805840
+        },
+        "cpu66": {
+          "total": 1450834414,
+          "busy": 40409990
+        },
+        "cpu67": {
+          "total": 1450841037,
+          "busy": 35925730
+        },
+        "cpu68": {
+          "total": 1450905525,
+          "busy": 36946790
+        }
+      },
+      "ended_utc": "2026-10-27T08:59:11.899031+00:00",
+      "energy": -305.3502098339124,
+      "cycles": 11,
+      "kernel_wall_s": 21.43115576915443,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "combined",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-combined-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-combined-r2",
+      "started_utc": "2026-10-27T08:59:11.901785+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450835290,
+          "busy": 73369756
+        },
+        "cpu6": {
+          "total": 1450612228,
+          "busy": 76870886
+        },
+        "cpu7": {
+          "total": 1450559123,
+          "busy": 76077038
+        },
+        "cpu8": {
+          "total": 1450654025,
+          "busy": 67500240
+        },
+        "cpu9": {
+          "total": 1450361223,
+          "busy": 70881103
+        },
+        "cpu10": {
+          "total": 1450389315,
+          "busy": 66894519
+        },
+        "cpu11": {
+          "total": 1450472481,
+          "busy": 68451021
+        },
+        "cpu12": {
+          "total": 1450601653,
+          "busy": 69955861
+        },
+        "cpu61": {
+          "total": 1451046189,
+          "busy": 35427653
+        },
+        "cpu62": {
+          "total": 1451073172,
+          "busy": 34624601
+        },
+        "cpu63": {
+          "total": 1450992694,
+          "busy": 35016569
+        },
+        "cpu64": {
+          "total": 1451065339,
+          "busy": 34408758
+        },
+        "cpu65": {
+          "total": 1450994981,
+          "busy": 35805840
+        },
+        "cpu66": {
+          "total": 1450834415,
+          "busy": 40409990
+        },
+        "cpu67": {
+          "total": 1450841037,
+          "busy": 35925730
+        },
+        "cpu68": {
+          "total": 1450905525,
+          "busy": 36946790
+        }
+      },
+      "process_wall_s": 21.465083736926317,
+      "returncode": 0,
+      "process_cpu_seconds": 87.95096600000007,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450837436,
+          "busy": 73371196
+        },
+        "cpu6": {
+          "total": 1450614371,
+          "busy": 76872199
+        },
+        "cpu7": {
+          "total": 1450561266,
+          "busy": 76078478
+        },
+        "cpu8": {
+          "total": 1450656170,
+          "busy": 67501491
+        },
+        "cpu9": {
+          "total": 1450363368,
+          "busy": 70882365
+        },
+        "cpu10": {
+          "total": 1450391460,
+          "busy": 66895811
+        },
+        "cpu11": {
+          "total": 1450474627,
+          "busy": 68452287
+        },
+        "cpu12": {
+          "total": 1450603797,
+          "busy": 69957082
+        },
+        "cpu61": {
+          "total": 1451048335,
+          "busy": 35427712
+        },
+        "cpu62": {
+          "total": 1451075316,
+          "busy": 34624638
+        },
+        "cpu63": {
+          "total": 1450994837,
+          "busy": 35016595
+        },
+        "cpu64": {
+          "total": 1451067477,
+          "busy": 34408785
+        },
+        "cpu65": {
+          "total": 1450997121,
+          "busy": 35805876
+        },
+        "cpu66": {
+          "total": 1450836557,
+          "busy": 40410020
+        },
+        "cpu67": {
+          "total": 1450843180,
+          "busy": 35925748
+        },
+        "cpu68": {
+          "total": 1450907667,
+          "busy": 36946807
+        }
+      },
+      "ended_utc": "2026-10-27T08:59:33.370141+00:00",
+      "energy": -305.3502098339107,
+      "cycles": 11,
+      "kernel_wall_s": 20.90824200026691,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "full-optimized",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-full-optimized-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-full-optimized-r2",
+      "started_utc": "2026-10-27T08:59:33.372616+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450837436,
+          "busy": 73371196
+        },
+        "cpu6": {
+          "total": 1450614371,
+          "busy": 76872199
+        },
+        "cpu7": {
+          "total": 1450561266,
+          "busy": 76078478
+        },
+        "cpu8": {
+          "total": 1450656171,
+          "busy": 67501491
+        },
+        "cpu9": {
+          "total": 1450363368,
+          "busy": 70882365
+        },
+        "cpu10": {
+          "total": 1450391460,
+          "busy": 66895811
+        },
+        "cpu11": {
+          "total": 1450474627,
+          "busy": 68452287
+        },
+        "cpu12": {
+          "total": 1450603797,
+          "busy": 69957082
+        },
+        "cpu61": {
+          "total": 1451048335,
+          "busy": 35427712
+        },
+        "cpu62": {
+          "total": 1451075316,
+          "busy": 34624638
+        },
+        "cpu63": {
+          "total": 1450994837,
+          "busy": 35016595
+        },
+        "cpu64": {
+          "total": 1451067478,
+          "busy": 34408785
+        },
+        "cpu65": {
+          "total": 1450997121,
+          "busy": 35805876
+        },
+        "cpu66": {
+          "total": 1450836557,
+          "busy": 40410020
+        },
+        "cpu67": {
+          "total": 1450843181,
+          "busy": 35925748
+        },
+        "cpu68": {
+          "total": 1450907667,
+          "busy": 36946807
+        }
+      },
+      "process_wall_s": 14.49953631684184,
+      "returncode": 0,
+      "process_cpu_seconds": 70.18871899999999,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450838885,
+          "busy": 73372103
+        },
+        "cpu6": {
+          "total": 1450615821,
+          "busy": 76873085
+        },
+        "cpu7": {
+          "total": 1450562716,
+          "busy": 76079462
+        },
+        "cpu8": {
+          "total": 1450657618,
+          "busy": 67502456
+        },
+        "cpu9": {
+          "total": 1450364815,
+          "busy": 70883316
+        },
+        "cpu10": {
+          "total": 1450392909,
+          "busy": 66896744
+        },
+        "cpu11": {
+          "total": 1450476075,
+          "busy": 68453289
+        },
+        "cpu12": {
+          "total": 1450605247,
+          "busy": 69957972
+        },
+        "cpu61": {
+          "total": 1451049783,
+          "busy": 35427732
+        },
+        "cpu62": {
+          "total": 1451076764,
+          "busy": 34624661
+        },
+        "cpu63": {
+          "total": 1450996285,
+          "busy": 35016612
+        },
+        "cpu64": {
+          "total": 1451068923,
+          "busy": 34408818
+        },
+        "cpu65": {
+          "total": 1450998570,
+          "busy": 35805892
+        },
+        "cpu66": {
+          "total": 1450838004,
+          "busy": 40410054
+        },
+        "cpu67": {
+          "total": 1450844628,
+          "busy": 35925756
+        },
+        "cpu68": {
+          "total": 1450909115,
+          "busy": 36946827
+        }
+      },
+      "ended_utc": "2026-10-27T08:59:47.875136+00:00",
+      "energy": -305.35020983391155,
+      "cycles": 11,
+      "kernel_wall_s": 13.912071365863085,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "legacy-original",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-legacy-original-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-legacy-original-r2",
+      "started_utc": "2026-10-27T08:59:47.878355+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450838885,
+          "busy": 73372103
+        },
+        "cpu6": {
+          "total": 1450615821,
+          "busy": 76873085
+        },
+        "cpu7": {
+          "total": 1450562717,
+          "busy": 76079462
+        },
+        "cpu8": {
+          "total": 1450657619,
+          "busy": 67502456
+        },
+        "cpu9": {
+          "total": 1450364815,
+          "busy": 70883316
+        },
+        "cpu10": {
+          "total": 1450392909,
+          "busy": 66896744
+        },
+        "cpu11": {
+          "total": 1450476076,
+          "busy": 68453289
+        },
+        "cpu12": {
+          "total": 1450605247,
+          "busy": 69957972
+        },
+        "cpu61": {
+          "total": 1451049783,
+          "busy": 35427732
+        },
+        "cpu62": {
+          "total": 1451076765,
+          "busy": 34624662
+        },
+        "cpu63": {
+          "total": 1450996285,
+          "busy": 35016612
+        },
+        "cpu64": {
+          "total": 1451068923,
+          "busy": 34408818
+        },
+        "cpu65": {
+          "total": 1450998570,
+          "busy": 35805892
+        },
+        "cpu66": {
+          "total": 1450838004,
+          "busy": 40410054
+        },
+        "cpu67": {
+          "total": 1450844628,
+          "busy": 35925756
+        },
+        "cpu68": {
+          "total": 1450909115,
+          "busy": 36946827
+        }
+      },
+      "process_wall_s": 21.466966876760125,
+      "returncode": 0,
+      "process_cpu_seconds": 91.06946899999994,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450841028,
+          "busy": 73373204
+        },
+        "cpu6": {
+          "total": 1450617964,
+          "busy": 76874136
+        },
+        "cpu7": {
+          "total": 1450564860,
+          "busy": 76080601
+        },
+        "cpu8": {
+          "total": 1450659763,
+          "busy": 67503757
+        },
+        "cpu9": {
+          "total": 1450366959,
+          "busy": 70884417
+        },
+        "cpu10": {
+          "total": 1450395055,
+          "busy": 66897927
+        },
+        "cpu11": {
+          "total": 1450478218,
+          "busy": 68454374
+        },
+        "cpu12": {
+          "total": 1450607390,
+          "busy": 69959199
+        },
+        "cpu61": {
+          "total": 1451051929,
+          "busy": 35427782
+        },
+        "cpu62": {
+          "total": 1451078908,
+          "busy": 34624692
+        },
+        "cpu63": {
+          "total": 1450998429,
+          "busy": 35016654
+        },
+        "cpu64": {
+          "total": 1451071068,
+          "busy": 34408856
+        },
+        "cpu65": {
+          "total": 1451000714,
+          "busy": 35805922
+        },
+        "cpu66": {
+          "total": 1450840150,
+          "busy": 40410072
+        },
+        "cpu67": {
+          "total": 1450846773,
+          "busy": 35925788
+        },
+        "cpu68": {
+          "total": 1450911258,
+          "busy": 36946846
+        }
+      },
+      "ended_utc": "2026-10-27T09:00:09.349183+00:00",
+      "energy": -305.35020983391223,
+      "cycles": 11,
+      "kernel_wall_s": 20.624889424070716,
+      "strict": true
+    },
+    {
+      "case": "water4",
+      "engine": "upstream",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water4",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water4-upstream-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water4-upstream-r2",
+      "started_utc": "2026-10-27T09:00:09.352440+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450841028,
+          "busy": 73373204
+        },
+        "cpu6": {
+          "total": 1450617964,
+          "busy": 76874136
+        },
+        "cpu7": {
+          "total": 1450564860,
+          "busy": 76080601
+        },
+        "cpu8": {
+          "total": 1450659763,
+          "busy": 67503757
+        },
+        "cpu9": {
+          "total": 1450366959,
+          "busy": 70884417
+        },
+        "cpu10": {
+          "total": 1450395056,
+          "busy": 66897927
+        },
+        "cpu11": {
+          "total": 1450478218,
+          "busy": 68454374
+        },
+        "cpu12": {
+          "total": 1450607391,
+          "busy": 69959199
+        },
+        "cpu61": {
+          "total": 1451051930,
+          "busy": 35427783
+        },
+        "cpu62": {
+          "total": 1451078908,
+          "busy": 34624692
+        },
+        "cpu63": {
+          "total": 1450998429,
+          "busy": 35016654
+        },
+        "cpu64": {
+          "total": 1451071069,
+          "busy": 34408856
+        },
+        "cpu65": {
+          "total": 1451000714,
+          "busy": 35805922
+        },
+        "cpu66": {
+          "total": 1450840150,
+          "busy": 40410072
+        },
+        "cpu67": {
+          "total": 1450846773,
+          "busy": 35925788
+        },
+        "cpu68": {
+          "total": 1450911259,
+          "busy": 36946846
+        }
+      },
+      "process_wall_s": 24.171880276873708,
+      "returncode": 0,
+      "process_cpu_seconds": 89.69881900000001,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450843442,
+          "busy": 73374528
+        },
+        "cpu6": {
+          "total": 1450620382,
+          "busy": 76875390
+        },
+        "cpu7": {
+          "total": 1450567277,
+          "busy": 76082007
+        },
+        "cpu8": {
+          "total": 1450662180,
+          "busy": 67504996
+        },
+        "cpu9": {
+          "total": 1450369374,
+          "busy": 70885986
+        },
+        "cpu10": {
+          "total": 1450397469,
+          "busy": 66899315
+        },
+        "cpu11": {
+          "total": 1450480635,
+          "busy": 68455881
+        },
+        "cpu12": {
+          "total": 1450609808,
+          "busy": 69960358
+        },
+        "cpu61": {
+          "total": 1451054340,
+          "busy": 35427824
+        },
+        "cpu62": {
+          "total": 1451081321,
+          "busy": 34624718
+        },
+        "cpu63": {
+          "total": 1451000846,
+          "busy": 35016697
+        },
+        "cpu64": {
+          "total": 1451073481,
+          "busy": 34408885
+        },
+        "cpu65": {
+          "total": 1451003124,
+          "busy": 35805948
+        },
+        "cpu66": {
+          "total": 1450842565,
+          "busy": 40410088
+        },
+        "cpu67": {
+          "total": 1450849185,
+          "busy": 35925806
+        },
+        "cpu68": {
+          "total": 1450913668,
+          "busy": 36946865
+        }
+      },
+      "ended_utc": "2026-10-27T09:00:33.528019+00:00",
+      "energy": -305.3502098339115,
+      "cycles": 11,
+      "kernel_wall_s": 23.626630241051316,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "upstream",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-upstream-r0",
+      "started_utc": "2026-10-27T09:00:33.531132+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450843442,
+          "busy": 73374528
+        },
+        "cpu6": {
+          "total": 1450620383,
+          "busy": 76875390
+        },
+        "cpu7": {
+          "total": 1450567277,
+          "busy": 76082007
+        },
+        "cpu8": {
+          "total": 1450662180,
+          "busy": 67504996
+        },
+        "cpu9": {
+          "total": 1450369374,
+          "busy": 70885986
+        },
+        "cpu10": {
+          "total": 1450397469,
+          "busy": 66899315
+        },
+        "cpu11": {
+          "total": 1450480635,
+          "busy": 68455881
+        },
+        "cpu12": {
+          "total": 1450609809,
+          "busy": 69960358
+        },
+        "cpu61": {
+          "total": 1451054340,
+          "busy": 35427824
+        },
+        "cpu62": {
+          "total": 1451081322,
+          "busy": 34624718
+        },
+        "cpu63": {
+          "total": 1451000846,
+          "busy": 35016697
+        },
+        "cpu64": {
+          "total": 1451073482,
+          "busy": 34408885
+        },
+        "cpu65": {
+          "total": 1451003124,
+          "busy": 35805948
+        },
+        "cpu66": {
+          "total": 1450842566,
+          "busy": 40410088
+        },
+        "cpu67": {
+          "total": 1450849185,
+          "busy": 35925806
+        },
+        "cpu68": {
+          "total": 1450913669,
+          "busy": 36946865
+        }
+      },
+      "process_wall_s": 5.227334160357714,
+      "returncode": 0,
+      "process_cpu_seconds": 16.069125999999983,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450843967,
+          "busy": 73374830
+        },
+        "cpu6": {
+          "total": 1450620905,
+          "busy": 76875689
+        },
+        "cpu7": {
+          "total": 1450567802,
+          "busy": 76082279
+        },
+        "cpu8": {
+          "total": 1450662706,
+          "busy": 67505260
+        },
+        "cpu9": {
+          "total": 1450369899,
+          "busy": 70886269
+        },
+        "cpu10": {
+          "total": 1450397995,
+          "busy": 66899569
+        },
+        "cpu11": {
+          "total": 1450481159,
+          "busy": 68456225
+        },
+        "cpu12": {
+          "total": 1450610331,
+          "busy": 69960612
+        },
+        "cpu61": {
+          "total": 1451054863,
+          "busy": 35427831
+        },
+        "cpu62": {
+          "total": 1451081843,
+          "busy": 34624722
+        },
+        "cpu63": {
+          "total": 1451001369,
+          "busy": 35016702
+        },
+        "cpu64": {
+          "total": 1451074003,
+          "busy": 34408897
+        },
+        "cpu65": {
+          "total": 1451003647,
+          "busy": 35805953
+        },
+        "cpu66": {
+          "total": 1450843088,
+          "busy": 40410088
+        },
+        "cpu67": {
+          "total": 1450849708,
+          "busy": 35925807
+        },
+        "cpu68": {
+          "total": 1450914191,
+          "busy": 36946866
+        }
+      },
+      "ended_utc": "2026-10-27T09:00:38.762034+00:00",
+      "energy": -150.22510930475025,
+      "cycles": 10,
+      "kernel_wall_s": 4.687592465430498,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "combined",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-combined-r0",
+      "started_utc": "2026-10-27T09:00:38.765078+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450843968,
+          "busy": 73374830
+        },
+        "cpu6": {
+          "total": 1450620905,
+          "busy": 76875689
+        },
+        "cpu7": {
+          "total": 1450567803,
+          "busy": 76082279
+        },
+        "cpu8": {
+          "total": 1450662707,
+          "busy": 67505260
+        },
+        "cpu9": {
+          "total": 1450369899,
+          "busy": 70886269
+        },
+        "cpu10": {
+          "total": 1450397995,
+          "busy": 66899569
+        },
+        "cpu11": {
+          "total": 1450481159,
+          "busy": 68456225
+        },
+        "cpu12": {
+          "total": 1450610331,
+          "busy": 69960612
+        },
+        "cpu61": {
+          "total": 1451054863,
+          "busy": 35427831
+        },
+        "cpu62": {
+          "total": 1451081843,
+          "busy": 34624722
+        },
+        "cpu63": {
+          "total": 1451001369,
+          "busy": 35016702
+        },
+        "cpu64": {
+          "total": 1451074003,
+          "busy": 34408897
+        },
+        "cpu65": {
+          "total": 1451003647,
+          "busy": 35805953
+        },
+        "cpu66": {
+          "total": 1450843088,
+          "busy": 40410088
+        },
+        "cpu67": {
+          "total": 1450849709,
+          "busy": 35925807
+        },
+        "cpu68": {
+          "total": 1450914192,
+          "busy": 36946866
+        }
+      },
+      "process_wall_s": 5.226789455860853,
+      "returncode": 0,
+      "process_cpu_seconds": 15.618396000000047,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450844487,
+          "busy": 73375150
+        },
+        "cpu6": {
+          "total": 1450621426,
+          "busy": 76876014
+        },
+        "cpu7": {
+          "total": 1450568324,
+          "busy": 76082568
+        },
+        "cpu8": {
+          "total": 1450663225,
+          "busy": 67505493
+        },
+        "cpu9": {
+          "total": 1450370420,
+          "busy": 70886507
+        },
+        "cpu10": {
+          "total": 1450398517,
+          "busy": 66899828
+        },
+        "cpu11": {
+          "total": 1450481679,
+          "busy": 68456528
+        },
+        "cpu12": {
+          "total": 1450610852,
+          "busy": 69960814
+        },
+        "cpu61": {
+          "total": 1451055386,
+          "busy": 35427845
+        },
+        "cpu62": {
+          "total": 1451082365,
+          "busy": 34624728
+        },
+        "cpu63": {
+          "total": 1451001891,
+          "busy": 35016712
+        },
+        "cpu64": {
+          "total": 1451074523,
+          "busy": 34408899
+        },
+        "cpu65": {
+          "total": 1451004169,
+          "busy": 35805954
+        },
+        "cpu66": {
+          "total": 1450843611,
+          "busy": 40410088
+        },
+        "cpu67": {
+          "total": 1450850230,
+          "busy": 35925809
+        },
+        "cpu68": {
+          "total": 1450914713,
+          "busy": 36946869
+        }
+      },
+      "ended_utc": "2026-10-27T09:00:43.995547+00:00",
+      "energy": -150.22510930475033,
+      "cycles": 10,
+      "kernel_wall_s": 4.719833619892597,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "full-optimized",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-full-optimized-r0",
+      "started_utc": "2026-10-27T09:00:43.999447+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450844487,
+          "busy": 73375150
+        },
+        "cpu6": {
+          "total": 1450621427,
+          "busy": 76876014
+        },
+        "cpu7": {
+          "total": 1450568324,
+          "busy": 76082568
+        },
+        "cpu8": {
+          "total": 1450663226,
+          "busy": 67505493
+        },
+        "cpu9": {
+          "total": 1450370420,
+          "busy": 70886507
+        },
+        "cpu10": {
+          "total": 1450398517,
+          "busy": 66899828
+        },
+        "cpu11": {
+          "total": 1450481679,
+          "busy": 68456528
+        },
+        "cpu12": {
+          "total": 1450610852,
+          "busy": 69960814
+        },
+        "cpu61": {
+          "total": 1451055387,
+          "busy": 35427845
+        },
+        "cpu62": {
+          "total": 1451082365,
+          "busy": 34624728
+        },
+        "cpu63": {
+          "total": 1451001891,
+          "busy": 35016712
+        },
+        "cpu64": {
+          "total": 1451074524,
+          "busy": 34408899
+        },
+        "cpu65": {
+          "total": 1451004170,
+          "busy": 35805954
+        },
+        "cpu66": {
+          "total": 1450843611,
+          "busy": 40410088
+        },
+        "cpu67": {
+          "total": 1450850231,
+          "busy": 35925809
+        },
+        "cpu68": {
+          "total": 1450914714,
+          "busy": 36946869
+        }
+      },
+      "process_wall_s": 4.375577280297875,
+      "returncode": 0,
+      "process_cpu_seconds": 14.178099999999915,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450844926,
+          "busy": 73375363
+        },
+        "cpu6": {
+          "total": 1450621865,
+          "busy": 76876258
+        },
+        "cpu7": {
+          "total": 1450568764,
+          "busy": 76082874
+        },
+        "cpu8": {
+          "total": 1450663662,
+          "busy": 67505675
+        },
+        "cpu9": {
+          "total": 1450370860,
+          "busy": 70886694
+        },
+        "cpu10": {
+          "total": 1450398956,
+          "busy": 66900015
+        },
+        "cpu11": {
+          "total": 1450482118,
+          "busy": 68456822
+        },
+        "cpu12": {
+          "total": 1450611292,
+          "busy": 69961012
+        },
+        "cpu61": {
+          "total": 1451055824,
+          "busy": 35427852
+        },
+        "cpu62": {
+          "total": 1451082803,
+          "busy": 34624734
+        },
+        "cpu63": {
+          "total": 1451002329,
+          "busy": 35016721
+        },
+        "cpu64": {
+          "total": 1451074961,
+          "busy": 34408906
+        },
+        "cpu65": {
+          "total": 1451004606,
+          "busy": 35805962
+        },
+        "cpu66": {
+          "total": 1450844050,
+          "busy": 40410098
+        },
+        "cpu67": {
+          "total": 1450850669,
+          "busy": 35925812
+        },
+        "cpu68": {
+          "total": 1450915150,
+          "busy": 36946873
+        }
+      },
+      "ended_utc": "2026-10-27T09:00:48.379464+00:00",
+      "energy": -150.22510930475062,
+      "cycles": 10,
+      "kernel_wall_s": 3.8808365873992443,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "legacy-original",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-legacy-original-r0",
+      "started_utc": "2026-10-27T09:00:48.382624+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450844926,
+          "busy": 73375363
+        },
+        "cpu6": {
+          "total": 1450621866,
+          "busy": 76876258
+        },
+        "cpu7": {
+          "total": 1450568764,
+          "busy": 76082874
+        },
+        "cpu8": {
+          "total": 1450663663,
+          "busy": 67505675
+        },
+        "cpu9": {
+          "total": 1450370861,
+          "busy": 70886694
+        },
+        "cpu10": {
+          "total": 1450398956,
+          "busy": 66900015
+        },
+        "cpu11": {
+          "total": 1450482118,
+          "busy": 68456822
+        },
+        "cpu12": {
+          "total": 1450611292,
+          "busy": 69961012
+        },
+        "cpu61": {
+          "total": 1451055824,
+          "busy": 35427852
+        },
+        "cpu62": {
+          "total": 1451082803,
+          "busy": 34624734
+        },
+        "cpu63": {
+          "total": 1451002330,
+          "busy": 35016721
+        },
+        "cpu64": {
+          "total": 1451074961,
+          "busy": 34408906
+        },
+        "cpu65": {
+          "total": 1451004607,
+          "busy": 35805962
+        },
+        "cpu66": {
+          "total": 1450844050,
+          "busy": 40410098
+        },
+        "cpu67": {
+          "total": 1450850669,
+          "busy": 35925812
+        },
+        "cpu68": {
+          "total": 1450915151,
+          "busy": 36946873
+        }
+      },
+      "process_wall_s": 4.926827600225806,
+      "returncode": 0,
+      "process_cpu_seconds": 16.014612000000085,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450845418,
+          "busy": 73375680
+        },
+        "cpu6": {
+          "total": 1450622358,
+          "busy": 76876501
+        },
+        "cpu7": {
+          "total": 1450569256,
+          "busy": 76083138
+        },
+        "cpu8": {
+          "total": 1450664156,
+          "busy": 67505928
+        },
+        "cpu9": {
+          "total": 1450371351,
+          "busy": 70886894
+        },
+        "cpu10": {
+          "total": 1450399449,
+          "busy": 66900230
+        },
+        "cpu11": {
+          "total": 1450482609,
+          "busy": 68457059
+        },
+        "cpu12": {
+          "total": 1450611783,
+          "busy": 69961217
+        },
+        "cpu61": {
+          "total": 1451056315,
+          "busy": 35427852
+        },
+        "cpu62": {
+          "total": 1451083296,
+          "busy": 34624741
+        },
+        "cpu63": {
+          "total": 1451002819,
+          "busy": 35016725
+        },
+        "cpu64": {
+          "total": 1451075452,
+          "busy": 34408909
+        },
+        "cpu65": {
+          "total": 1451005098,
+          "busy": 35805965
+        },
+        "cpu66": {
+          "total": 1450844541,
+          "busy": 40410100
+        },
+        "cpu67": {
+          "total": 1450851162,
+          "busy": 35925814
+        },
+        "cpu68": {
+          "total": 1450915644,
+          "busy": 36946878
+        }
+      },
+      "ended_utc": "2026-10-27T09:00:53.313164+00:00",
+      "energy": -150.22510930475028,
+      "cycles": 10,
+      "kernel_wall_s": 4.202513800933957,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "combined",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-combined-r1",
+      "started_utc": "2026-10-27T09:00:53.316464+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450845418,
+          "busy": 73375680
+        },
+        "cpu6": {
+          "total": 1450622359,
+          "busy": 76876502
+        },
+        "cpu7": {
+          "total": 1450569257,
+          "busy": 76083138
+        },
+        "cpu8": {
+          "total": 1450664156,
+          "busy": 67505928
+        },
+        "cpu9": {
+          "total": 1450371351,
+          "busy": 70886894
+        },
+        "cpu10": {
+          "total": 1450399449,
+          "busy": 66900230
+        },
+        "cpu11": {
+          "total": 1450482610,
+          "busy": 68457059
+        },
+        "cpu12": {
+          "total": 1450611783,
+          "busy": 69961217
+        },
+        "cpu61": {
+          "total": 1451056316,
+          "busy": 35427852
+        },
+        "cpu62": {
+          "total": 1451083296,
+          "busy": 34624741
+        },
+        "cpu63": {
+          "total": 1451002819,
+          "busy": 35016725
+        },
+        "cpu64": {
+          "total": 1451075452,
+          "busy": 34408909
+        },
+        "cpu65": {
+          "total": 1451005098,
+          "busy": 35805965
+        },
+        "cpu66": {
+          "total": 1450844542,
+          "busy": 40410100
+        },
+        "cpu67": {
+          "total": 1450851162,
+          "busy": 35925814
+        },
+        "cpu68": {
+          "total": 1450915644,
+          "busy": 36946878
+        }
+      },
+      "process_wall_s": 4.776025917381048,
+      "returncode": 0,
+      "process_cpu_seconds": 16.0286549999999,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450845894,
+          "busy": 73375926
+        },
+        "cpu6": {
+          "total": 1450622836,
+          "busy": 76876802
+        },
+        "cpu7": {
+          "total": 1450569732,
+          "busy": 76083411
+        },
+        "cpu8": {
+          "total": 1450664634,
+          "busy": 67506152
+        },
+        "cpu9": {
+          "total": 1450371828,
+          "busy": 70887103
+        },
+        "cpu10": {
+          "total": 1450399927,
+          "busy": 66900460
+        },
+        "cpu11": {
+          "total": 1450483088,
+          "busy": 68457324
+        },
+        "cpu12": {
+          "total": 1450612261,
+          "busy": 69961448
+        },
+        "cpu61": {
+          "total": 1451056792,
+          "busy": 35427855
+        },
+        "cpu62": {
+          "total": 1451083775,
+          "busy": 34624753
+        },
+        "cpu63": {
+          "total": 1451003297,
+          "busy": 35016730
+        },
+        "cpu64": {
+          "total": 1451075927,
+          "busy": 34408935
+        },
+        "cpu65": {
+          "total": 1451005575,
+          "busy": 35805976
+        },
+        "cpu66": {
+          "total": 1450845020,
+          "busy": 40410109
+        },
+        "cpu67": {
+          "total": 1450851639,
+          "busy": 35925818
+        },
+        "cpu68": {
+          "total": 1450916119,
+          "busy": 36946883
+        }
+      },
+      "ended_utc": "2026-10-27T09:00:58.096270+00:00",
+      "energy": -150.22510930475048,
+      "cycles": 10,
+      "kernel_wall_s": 4.313197534531355,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "full-optimized",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-full-optimized-r1",
+      "started_utc": "2026-10-27T09:00:58.099945+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450845895,
+          "busy": 73375926
+        },
+        "cpu6": {
+          "total": 1450622836,
+          "busy": 76876802
+        },
+        "cpu7": {
+          "total": 1450569733,
+          "busy": 76083411
+        },
+        "cpu8": {
+          "total": 1450664635,
+          "busy": 67506152
+        },
+        "cpu9": {
+          "total": 1450371828,
+          "busy": 70887103
+        },
+        "cpu10": {
+          "total": 1450399928,
+          "busy": 66900460
+        },
+        "cpu11": {
+          "total": 1450483088,
+          "busy": 68457324
+        },
+        "cpu12": {
+          "total": 1450612261,
+          "busy": 69961448
+        },
+        "cpu61": {
+          "total": 1451056793,
+          "busy": 35427855
+        },
+        "cpu62": {
+          "total": 1451083775,
+          "busy": 34624753
+        },
+        "cpu63": {
+          "total": 1451003298,
+          "busy": 35016730
+        },
+        "cpu64": {
+          "total": 1451075928,
+          "busy": 34408935
+        },
+        "cpu65": {
+          "total": 1451005575,
+          "busy": 35805976
+        },
+        "cpu66": {
+          "total": 1450845020,
+          "busy": 40410109
+        },
+        "cpu67": {
+          "total": 1450851639,
+          "busy": 35925818
+        },
+        "cpu68": {
+          "total": 1450916120,
+          "busy": 36946883
+        }
+      },
+      "process_wall_s": 4.07493551261723,
+      "returncode": 0,
+      "process_cpu_seconds": 13.968925999999954,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450846303,
+          "busy": 73376165
+        },
+        "cpu6": {
+          "total": 1450623244,
+          "busy": 76877044
+        },
+        "cpu7": {
+          "total": 1450570140,
+          "busy": 76083625
+        },
+        "cpu8": {
+          "total": 1450665041,
+          "busy": 67506348
+        },
+        "cpu9": {
+          "total": 1450372235,
+          "busy": 70887332
+        },
+        "cpu10": {
+          "total": 1450400335,
+          "busy": 66900640
+        },
+        "cpu11": {
+          "total": 1450483495,
+          "busy": 68457523
+        },
+        "cpu12": {
+          "total": 1450612669,
+          "busy": 69961632
+        },
+        "cpu61": {
+          "total": 1451057201,
+          "busy": 35427862
+        },
+        "cpu62": {
+          "total": 1451084182,
+          "busy": 34624756
+        },
+        "cpu63": {
+          "total": 1451003705,
+          "busy": 35016734
+        },
+        "cpu64": {
+          "total": 1451076335,
+          "busy": 34408942
+        },
+        "cpu65": {
+          "total": 1451005982,
+          "busy": 35805978
+        },
+        "cpu66": {
+          "total": 1450845427,
+          "busy": 40410110
+        },
+        "cpu67": {
+          "total": 1450852046,
+          "busy": 35925821
+        },
+        "cpu68": {
+          "total": 1450916528,
+          "busy": 36946889
+        }
+      },
+      "ended_utc": "2026-10-27T09:01:02.179032+00:00",
+      "energy": -150.2251093047505,
+      "cycles": 10,
+      "kernel_wall_s": 3.5794862043112516,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "legacy-original",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-legacy-original-r1",
+      "started_utc": "2026-10-27T09:01:02.183330+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450846303,
+          "busy": 73376165
+        },
+        "cpu6": {
+          "total": 1450623245,
+          "busy": 76877044
+        },
+        "cpu7": {
+          "total": 1450570141,
+          "busy": 76083625
+        },
+        "cpu8": {
+          "total": 1450665042,
+          "busy": 67506348
+        },
+        "cpu9": {
+          "total": 1450372236,
+          "busy": 70887332
+        },
+        "cpu10": {
+          "total": 1450400335,
+          "busy": 66900640
+        },
+        "cpu11": {
+          "total": 1450483496,
+          "busy": 68457523
+        },
+        "cpu12": {
+          "total": 1450612669,
+          "busy": 69961632
+        },
+        "cpu61": {
+          "total": 1451057202,
+          "busy": 35427862
+        },
+        "cpu62": {
+          "total": 1451084183,
+          "busy": 34624756
+        },
+        "cpu63": {
+          "total": 1451003706,
+          "busy": 35016734
+        },
+        "cpu64": {
+          "total": 1451076336,
+          "busy": 34408942
+        },
+        "cpu65": {
+          "total": 1451005983,
+          "busy": 35805978
+        },
+        "cpu66": {
+          "total": 1450845427,
+          "busy": 40410110
+        },
+        "cpu67": {
+          "total": 1450852047,
+          "busy": 35925821
+        },
+        "cpu68": {
+          "total": 1450916529,
+          "busy": 36946889
+        }
+      },
+      "process_wall_s": 5.277289664372802,
+      "returncode": 0,
+      "process_cpu_seconds": 16.439667000000043,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450846828,
+          "busy": 73376542
+        },
+        "cpu6": {
+          "total": 1450623768,
+          "busy": 76877271
+        },
+        "cpu7": {
+          "total": 1450570665,
+          "busy": 76083835
+        },
+        "cpu8": {
+          "total": 1450665566,
+          "busy": 67506592
+        },
+        "cpu9": {
+          "total": 1450372762,
+          "busy": 70887591
+        },
+        "cpu10": {
+          "total": 1450400859,
+          "busy": 66900840
+        },
+        "cpu11": {
+          "total": 1450484022,
+          "busy": 68457738
+        },
+        "cpu12": {
+          "total": 1450613195,
+          "busy": 69961860
+        },
+        "cpu61": {
+          "total": 1451057726,
+          "busy": 35427866
+        },
+        "cpu62": {
+          "total": 1451084709,
+          "busy": 34624765
+        },
+        "cpu63": {
+          "total": 1451004233,
+          "busy": 35016745
+        },
+        "cpu64": {
+          "total": 1451076863,
+          "busy": 34408954
+        },
+        "cpu65": {
+          "total": 1451006508,
+          "busy": 35805987
+        },
+        "cpu66": {
+          "total": 1450845956,
+          "busy": 40410120
+        },
+        "cpu67": {
+          "total": 1450852574,
+          "busy": 35925828
+        },
+        "cpu68": {
+          "total": 1450917056,
+          "busy": 36946894
+        }
+      },
+      "ended_utc": "2026-10-27T09:01:07.465214+00:00",
+      "energy": -150.2251093047505,
+      "cycles": 10,
+      "kernel_wall_s": 4.524887366220355,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "upstream",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-upstream-r1",
+      "started_utc": "2026-10-27T09:01:07.469296+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450846829,
+          "busy": 73376542
+        },
+        "cpu6": {
+          "total": 1450623769,
+          "busy": 76877271
+        },
+        "cpu7": {
+          "total": 1450570666,
+          "busy": 76083835
+        },
+        "cpu8": {
+          "total": 1450665566,
+          "busy": 67506592
+        },
+        "cpu9": {
+          "total": 1450372763,
+          "busy": 70887591
+        },
+        "cpu10": {
+          "total": 1450400859,
+          "busy": 66900840
+        },
+        "cpu11": {
+          "total": 1450484022,
+          "busy": 68457738
+        },
+        "cpu12": {
+          "total": 1450613195,
+          "busy": 69961860
+        },
+        "cpu61": {
+          "total": 1451057727,
+          "busy": 35427866
+        },
+        "cpu62": {
+          "total": 1451084710,
+          "busy": 34624765
+        },
+        "cpu63": {
+          "total": 1451004234,
+          "busy": 35016745
+        },
+        "cpu64": {
+          "total": 1451076864,
+          "busy": 34408954
+        },
+        "cpu65": {
+          "total": 1451006508,
+          "busy": 35805987
+        },
+        "cpu66": {
+          "total": 1450845956,
+          "busy": 40410120
+        },
+        "cpu67": {
+          "total": 1450852574,
+          "busy": 35925828
+        },
+        "cpu68": {
+          "total": 1450917056,
+          "busy": 36946894
+        }
+      },
+      "process_wall_s": 4.4257770124822855,
+      "returncode": 0,
+      "process_cpu_seconds": 15.806725,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450847271,
+          "busy": 73376760
+        },
+        "cpu6": {
+          "total": 1450624213,
+          "busy": 76877454
+        },
+        "cpu7": {
+          "total": 1450571108,
+          "busy": 76084003
+        },
+        "cpu8": {
+          "total": 1450666008,
+          "busy": 67506838
+        },
+        "cpu9": {
+          "total": 1450373206,
+          "busy": 70887757
+        },
+        "cpu10": {
+          "total": 1450401302,
+          "busy": 66901043
+        },
+        "cpu11": {
+          "total": 1450484464,
+          "busy": 68457988
+        },
+        "cpu12": {
+          "total": 1450613637,
+          "busy": 69962028
+        },
+        "cpu61": {
+          "total": 1451058170,
+          "busy": 35427872
+        },
+        "cpu62": {
+          "total": 1451085152,
+          "busy": 34624773
+        },
+        "cpu63": {
+          "total": 1451004676,
+          "busy": 35016751
+        },
+        "cpu64": {
+          "total": 1451077305,
+          "busy": 34408959
+        },
+        "cpu65": {
+          "total": 1451006951,
+          "busy": 35805996
+        },
+        "cpu66": {
+          "total": 1450846398,
+          "busy": 40410125
+        },
+        "cpu67": {
+          "total": 1450853016,
+          "busy": 35925838
+        },
+        "cpu68": {
+          "total": 1450917498,
+          "busy": 36946904
+        }
+      },
+      "ended_utc": "2026-10-27T09:01:11.899817+00:00",
+      "energy": -150.2251093047504,
+      "cycles": 10,
+      "kernel_wall_s": 3.8983600698411465,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "full-optimized",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-full-optimized-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-full-optimized-r2",
+      "started_utc": "2026-10-27T09:01:11.904768+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450847272,
+          "busy": 73376760
+        },
+        "cpu6": {
+          "total": 1450624214,
+          "busy": 76877454
+        },
+        "cpu7": {
+          "total": 1450571108,
+          "busy": 76084003
+        },
+        "cpu8": {
+          "total": 1450666009,
+          "busy": 67506838
+        },
+        "cpu9": {
+          "total": 1450373207,
+          "busy": 70887757
+        },
+        "cpu10": {
+          "total": 1450401303,
+          "busy": 66901043
+        },
+        "cpu11": {
+          "total": 1450484464,
+          "busy": 68457988
+        },
+        "cpu12": {
+          "total": 1450613638,
+          "busy": 69962028
+        },
+        "cpu61": {
+          "total": 1451058171,
+          "busy": 35427872
+        },
+        "cpu62": {
+          "total": 1451085153,
+          "busy": 34624773
+        },
+        "cpu63": {
+          "total": 1451004677,
+          "busy": 35016751
+        },
+        "cpu64": {
+          "total": 1451077306,
+          "busy": 34408959
+        },
+        "cpu65": {
+          "total": 1451006952,
+          "busy": 35805996
+        },
+        "cpu66": {
+          "total": 1450846398,
+          "busy": 40410125
+        },
+        "cpu67": {
+          "total": 1450853016,
+          "busy": 35925838
+        },
+        "cpu68": {
+          "total": 1450917499,
+          "busy": 36946904
+        }
+      },
+      "process_wall_s": 3.9748022630810738,
+      "returncode": 0,
+      "process_cpu_seconds": 14.513835999999998,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450847671,
+          "busy": 73377029
+        },
+        "cpu6": {
+          "total": 1450624610,
+          "busy": 76877616
+        },
+        "cpu7": {
+          "total": 1450571508,
+          "busy": 76084193
+        },
+        "cpu8": {
+          "total": 1450666407,
+          "busy": 67507004
+        },
+        "cpu9": {
+          "total": 1450373605,
+          "busy": 70887933
+        },
+        "cpu10": {
+          "total": 1450401700,
+          "busy": 66901196
+        },
+        "cpu11": {
+          "total": 1450484861,
+          "busy": 68458156
+        },
+        "cpu12": {
+          "total": 1450614035,
+          "busy": 69962210
+        },
+        "cpu61": {
+          "total": 1451058569,
+          "busy": 35427878
+        },
+        "cpu62": {
+          "total": 1451085551,
+          "busy": 34624780
+        },
+        "cpu63": {
+          "total": 1451005073,
+          "busy": 35016756
+        },
+        "cpu64": {
+          "total": 1451077703,
+          "busy": 34408962
+        },
+        "cpu65": {
+          "total": 1451007347,
+          "busy": 35806004
+        },
+        "cpu66": {
+          "total": 1450846794,
+          "busy": 40410129
+        },
+        "cpu67": {
+          "total": 1450853414,
+          "busy": 35925843
+        },
+        "cpu68": {
+          "total": 1450917896,
+          "busy": 36946911
+        }
+      },
+      "ended_utc": "2026-10-27T09:01:15.885065+00:00",
+      "energy": -150.2251093047507,
+      "cycles": 10,
+      "kernel_wall_s": 3.4826180189847946,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "legacy-original",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-legacy-original-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-legacy-original-r2",
+      "started_utc": "2026-10-27T09:01:15.889400+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450847671,
+          "busy": 73377029
+        },
+        "cpu6": {
+          "total": 1450624611,
+          "busy": 76877616
+        },
+        "cpu7": {
+          "total": 1450571508,
+          "busy": 76084193
+        },
+        "cpu8": {
+          "total": 1450666407,
+          "busy": 67507004
+        },
+        "cpu9": {
+          "total": 1450373606,
+          "busy": 70887933
+        },
+        "cpu10": {
+          "total": 1450401700,
+          "busy": 66901196
+        },
+        "cpu11": {
+          "total": 1450484862,
+          "busy": 68458156
+        },
+        "cpu12": {
+          "total": 1450614036,
+          "busy": 69962210
+        },
+        "cpu61": {
+          "total": 1451058569,
+          "busy": 35427878
+        },
+        "cpu62": {
+          "total": 1451085552,
+          "busy": 34624780
+        },
+        "cpu63": {
+          "total": 1451005074,
+          "busy": 35016756
+        },
+        "cpu64": {
+          "total": 1451077703,
+          "busy": 34408962
+        },
+        "cpu65": {
+          "total": 1451007348,
+          "busy": 35806004
+        },
+        "cpu66": {
+          "total": 1450846795,
+          "busy": 40410129
+        },
+        "cpu67": {
+          "total": 1450853414,
+          "busy": 35925843
+        },
+        "cpu68": {
+          "total": 1450917896,
+          "busy": 36946911
+        }
+      },
+      "process_wall_s": 4.725832303985953,
+      "returncode": 0,
+      "process_cpu_seconds": 16.115138000000115,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450848142,
+          "busy": 73377276
+        },
+        "cpu6": {
+          "total": 1450625083,
+          "busy": 76877903
+        },
+        "cpu7": {
+          "total": 1450571981,
+          "busy": 76084394
+        },
+        "cpu8": {
+          "total": 1450666880,
+          "busy": 67507224
+        },
+        "cpu9": {
+          "total": 1450374077,
+          "busy": 70888096
+        },
+        "cpu10": {
+          "total": 1450402174,
+          "busy": 66901362
+        },
+        "cpu11": {
+          "total": 1450485335,
+          "busy": 68458334
+        },
+        "cpu12": {
+          "total": 1450614508,
+          "busy": 69962378
+        },
+        "cpu61": {
+          "total": 1451059042,
+          "busy": 35427886
+        },
+        "cpu62": {
+          "total": 1451086022,
+          "busy": 34624790
+        },
+        "cpu63": {
+          "total": 1451005546,
+          "busy": 35016764
+        },
+        "cpu64": {
+          "total": 1451078176,
+          "busy": 34408970
+        },
+        "cpu65": {
+          "total": 1451007821,
+          "busy": 35806012
+        },
+        "cpu66": {
+          "total": 1450847265,
+          "busy": 40410135
+        },
+        "cpu67": {
+          "total": 1450853887,
+          "busy": 35925852
+        },
+        "cpu68": {
+          "total": 1450918369,
+          "busy": 36946919
+        }
+      },
+      "ended_utc": "2026-10-27T09:01:20.620046+00:00",
+      "energy": -150.22510930475056,
+      "cycles": 10,
+      "kernel_wall_s": 3.9505746625363827,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "upstream",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-upstream-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-upstream-r2",
+      "started_utc": "2026-10-27T09:01:20.624599+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450848142,
+          "busy": 73377276
+        },
+        "cpu6": {
+          "total": 1450625083,
+          "busy": 76877903
+        },
+        "cpu7": {
+          "total": 1450571981,
+          "busy": 76084394
+        },
+        "cpu8": {
+          "total": 1450666880,
+          "busy": 67507224
+        },
+        "cpu9": {
+          "total": 1450374078,
+          "busy": 70888096
+        },
+        "cpu10": {
+          "total": 1450402174,
+          "busy": 66901362
+        },
+        "cpu11": {
+          "total": 1450485335,
+          "busy": 68458334
+        },
+        "cpu12": {
+          "total": 1450614509,
+          "busy": 69962378
+        },
+        "cpu61": {
+          "total": 1451059043,
+          "busy": 35427886
+        },
+        "cpu62": {
+          "total": 1451086022,
+          "busy": 34624790
+        },
+        "cpu63": {
+          "total": 1451005547,
+          "busy": 35016764
+        },
+        "cpu64": {
+          "total": 1451078177,
+          "busy": 34408970
+        },
+        "cpu65": {
+          "total": 1451007821,
+          "busy": 35806012
+        },
+        "cpu66": {
+          "total": 1450847265,
+          "busy": 40410135
+        },
+        "cpu67": {
+          "total": 1450853888,
+          "busy": 35925852
+        },
+        "cpu68": {
+          "total": 1450918369,
+          "busy": 36946919
+        }
+      },
+      "process_wall_s": 4.426383616402745,
+      "returncode": 0,
+      "process_cpu_seconds": 16.11222699999996,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450848586,
+          "busy": 73377520
+        },
+        "cpu6": {
+          "total": 1450625525,
+          "busy": 76878115
+        },
+        "cpu7": {
+          "total": 1450572423,
+          "busy": 76084566
+        },
+        "cpu8": {
+          "total": 1450667323,
+          "busy": 67507423
+        },
+        "cpu9": {
+          "total": 1450374522,
+          "busy": 70888267
+        },
+        "cpu10": {
+          "total": 1450402616,
+          "busy": 66901544
+        },
+        "cpu11": {
+          "total": 1450485779,
+          "busy": 68458517
+        },
+        "cpu12": {
+          "total": 1450614952,
+          "busy": 69962647
+        },
+        "cpu61": {
+          "total": 1451059486,
+          "busy": 35427893
+        },
+        "cpu62": {
+          "total": 1451086464,
+          "busy": 34624798
+        },
+        "cpu63": {
+          "total": 1451005990,
+          "busy": 35016772
+        },
+        "cpu64": {
+          "total": 1451078619,
+          "busy": 34408975
+        },
+        "cpu65": {
+          "total": 1451008263,
+          "busy": 35806017
+        },
+        "cpu66": {
+          "total": 1450847709,
+          "busy": 40410144
+        },
+        "cpu67": {
+          "total": 1450854328,
+          "busy": 35925854
+        },
+        "cpu68": {
+          "total": 1450918811,
+          "busy": 36946920
+        }
+      },
+      "ended_utc": "2026-10-27T09:01:25.056165+00:00",
+      "energy": -150.2251093047506,
+      "cycles": 10,
+      "kernel_wall_s": 3.9785890206694603,
+      "strict": true
+    },
+    {
+      "case": "o2",
+      "engine": "combined",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "o2",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/o2-combined-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/o2-combined-r2",
+      "started_utc": "2026-10-27T09:01:25.061669+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450848586,
+          "busy": 73377520
+        },
+        "cpu6": {
+          "total": 1450625526,
+          "busy": 76878115
+        },
+        "cpu7": {
+          "total": 1450572424,
+          "busy": 76084566
+        },
+        "cpu8": {
+          "total": 1450667323,
+          "busy": 67507423
+        },
+        "cpu9": {
+          "total": 1450374522,
+          "busy": 70888267
+        },
+        "cpu10": {
+          "total": 1450402616,
+          "busy": 66901544
+        },
+        "cpu11": {
+          "total": 1450485780,
+          "busy": 68458517
+        },
+        "cpu12": {
+          "total": 1450614953,
+          "busy": 69962647
+        },
+        "cpu61": {
+          "total": 1451059487,
+          "busy": 35427893
+        },
+        "cpu62": {
+          "total": 1451086464,
+          "busy": 34624798
+        },
+        "cpu63": {
+          "total": 1451005991,
+          "busy": 35016772
+        },
+        "cpu64": {
+          "total": 1451078620,
+          "busy": 34408975
+        },
+        "cpu65": {
+          "total": 1451008263,
+          "busy": 35806017
+        },
+        "cpu66": {
+          "total": 1450847709,
+          "busy": 40410144
+        },
+        "cpu67": {
+          "total": 1450854329,
+          "busy": 35925854
+        },
+        "cpu68": {
+          "total": 1450918812,
+          "busy": 36946920
+        }
+      },
+      "process_wall_s": 4.47678641602397,
+      "returncode": 0,
+      "process_cpu_seconds": 16.210169999999778,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450849034,
+          "busy": 73377725
+        },
+        "cpu6": {
+          "total": 1450625975,
+          "busy": 76878314
+        },
+        "cpu7": {
+          "total": 1450572873,
+          "busy": 76084773
+        },
+        "cpu8": {
+          "total": 1450667772,
+          "busy": 67507635
+        },
+        "cpu9": {
+          "total": 1450374970,
+          "busy": 70888489
+        },
+        "cpu10": {
+          "total": 1450403063,
+          "busy": 66901788
+        },
+        "cpu11": {
+          "total": 1450486228,
+          "busy": 68458718
+        },
+        "cpu12": {
+          "total": 1450615402,
+          "busy": 69962822
+        },
+        "cpu61": {
+          "total": 1451059934,
+          "busy": 35427901
+        },
+        "cpu62": {
+          "total": 1451086911,
+          "busy": 34624804
+        },
+        "cpu63": {
+          "total": 1451006438,
+          "busy": 35016779
+        },
+        "cpu64": {
+          "total": 1451079067,
+          "busy": 34408984
+        },
+        "cpu65": {
+          "total": 1451008712,
+          "busy": 35806036
+        },
+        "cpu66": {
+          "total": 1450848157,
+          "busy": 40410183
+        },
+        "cpu67": {
+          "total": 1450854778,
+          "busy": 35925864
+        },
+        "cpu68": {
+          "total": 1450919260,
+          "busy": 36946923
+        }
+      },
+      "ended_utc": "2026-10-27T09:01:29.544360+00:00",
+      "energy": -150.22510930475062,
+      "cycles": 10,
+      "kernel_wall_s": 3.9514063354581594,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "combined",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-combined-r0",
+      "started_utc": "2026-10-27T09:01:29.548998+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450849034,
+          "busy": 73377725
+        },
+        "cpu6": {
+          "total": 1450625975,
+          "busy": 76878314
+        },
+        "cpu7": {
+          "total": 1450572873,
+          "busy": 76084773
+        },
+        "cpu8": {
+          "total": 1450667773,
+          "busy": 67507635
+        },
+        "cpu9": {
+          "total": 1450374970,
+          "busy": 70888489
+        },
+        "cpu10": {
+          "total": 1450403064,
+          "busy": 66901788
+        },
+        "cpu11": {
+          "total": 1450486228,
+          "busy": 68458718
+        },
+        "cpu12": {
+          "total": 1450615402,
+          "busy": 69962822
+        },
+        "cpu61": {
+          "total": 1451059934,
+          "busy": 35427901
+        },
+        "cpu62": {
+          "total": 1451086911,
+          "busy": 34624804
+        },
+        "cpu63": {
+          "total": 1451006439,
+          "busy": 35016779
+        },
+        "cpu64": {
+          "total": 1451079067,
+          "busy": 34408984
+        },
+        "cpu65": {
+          "total": 1451008713,
+          "busy": 35806036
+        },
+        "cpu66": {
+          "total": 1450848157,
+          "busy": 40410183
+        },
+        "cpu67": {
+          "total": 1450854778,
+          "busy": 35925864
+        },
+        "cpu68": {
+          "total": 1450919260,
+          "busy": 36946923
+        }
+      },
+      "process_wall_s": 104.66308784671128,
+      "returncode": 0,
+      "process_cpu_seconds": 626.0484930000001,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450859490,
+          "busy": 73386110
+        },
+        "cpu6": {
+          "total": 1450636431,
+          "busy": 76886725
+        },
+        "cpu7": {
+          "total": 1450583328,
+          "busy": 76093144
+        },
+        "cpu8": {
+          "total": 1450678225,
+          "busy": 67516133
+        },
+        "cpu9": {
+          "total": 1450385428,
+          "busy": 70896796
+        },
+        "cpu10": {
+          "total": 1450413518,
+          "busy": 66910062
+        },
+        "cpu11": {
+          "total": 1450496684,
+          "busy": 68467196
+        },
+        "cpu12": {
+          "total": 1450625857,
+          "busy": 69970999
+        },
+        "cpu61": {
+          "total": 1451070382,
+          "busy": 35428019
+        },
+        "cpu62": {
+          "total": 1451097356,
+          "busy": 34625010
+        },
+        "cpu63": {
+          "total": 1451016895,
+          "busy": 35016881
+        },
+        "cpu64": {
+          "total": 1451089501,
+          "busy": 34409122
+        },
+        "cpu65": {
+          "total": 1451019159,
+          "busy": 35806127
+        },
+        "cpu66": {
+          "total": 1450858610,
+          "busy": 40410332
+        },
+        "cpu67": {
+          "total": 1450865229,
+          "busy": 35925987
+        },
+        "cpu68": {
+          "total": 1450929714,
+          "busy": 36946978
+        }
+      },
+      "ended_utc": "2026-10-27T09:03:14.217214+00:00",
+      "energy": -916.0299700617032,
+      "cycles": 13,
+      "kernel_wall_s": 103.98320168070495,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "full-optimized",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-full-optimized-r0",
+      "started_utc": "2026-10-27T09:03:14.222155+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450859491,
+          "busy": 73386111
+        },
+        "cpu6": {
+          "total": 1450636432,
+          "busy": 76886725
+        },
+        "cpu7": {
+          "total": 1450583328,
+          "busy": 76093144
+        },
+        "cpu8": {
+          "total": 1450678225,
+          "busy": 67516133
+        },
+        "cpu9": {
+          "total": 1450385428,
+          "busy": 70896796
+        },
+        "cpu10": {
+          "total": 1450413519,
+          "busy": 66910062
+        },
+        "cpu11": {
+          "total": 1450496685,
+          "busy": 68467196
+        },
+        "cpu12": {
+          "total": 1450625858,
+          "busy": 69970999
+        },
+        "cpu61": {
+          "total": 1451070383,
+          "busy": 35428019
+        },
+        "cpu62": {
+          "total": 1451097356,
+          "busy": 34625010
+        },
+        "cpu63": {
+          "total": 1451016896,
+          "busy": 35016881
+        },
+        "cpu64": {
+          "total": 1451089501,
+          "busy": 34409122
+        },
+        "cpu65": {
+          "total": 1451019159,
+          "busy": 35806127
+        },
+        "cpu66": {
+          "total": 1450858611,
+          "busy": 40410332
+        },
+        "cpu67": {
+          "total": 1450865230,
+          "busy": 35925987
+        },
+        "cpu68": {
+          "total": 1450929714,
+          "busy": 36946978
+        }
+      },
+      "process_wall_s": 64.61551039107144,
+      "returncode": 0,
+      "process_cpu_seconds": 438.7133980000001,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450865947,
+          "busy": 73391822
+        },
+        "cpu6": {
+          "total": 1450642892,
+          "busy": 76892464
+        },
+        "cpu7": {
+          "total": 1450589785,
+          "busy": 76098851
+        },
+        "cpu8": {
+          "total": 1450684680,
+          "busy": 67521769
+        },
+        "cpu9": {
+          "total": 1450391884,
+          "busy": 70902583
+        },
+        "cpu10": {
+          "total": 1450419976,
+          "busy": 66915712
+        },
+        "cpu11": {
+          "total": 1450503143,
+          "busy": 68472964
+        },
+        "cpu12": {
+          "total": 1450632315,
+          "busy": 69976607
+        },
+        "cpu61": {
+          "total": 1451076840,
+          "busy": 35428073
+        },
+        "cpu62": {
+          "total": 1451103813,
+          "busy": 34625058
+        },
+        "cpu63": {
+          "total": 1451023353,
+          "busy": 35016923
+        },
+        "cpu64": {
+          "total": 1451095950,
+          "busy": 34409217
+        },
+        "cpu65": {
+          "total": 1451025611,
+          "busy": 35806188
+        },
+        "cpu66": {
+          "total": 1450865059,
+          "busy": 40410378
+        },
+        "cpu67": {
+          "total": 1450871687,
+          "busy": 35926022
+        },
+        "cpu68": {
+          "total": 1450936169,
+          "busy": 36947018
+        }
+      },
+      "ended_utc": "2026-10-27T09:04:18.843368+00:00",
+      "energy": -916.0299700617048,
+      "cycles": 13,
+      "kernel_wall_s": 63.938658099621534,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "legacy-original",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-legacy-original-r0",
+      "started_utc": "2026-10-27T09:04:18.849429+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450865948,
+          "busy": 73391822
+        },
+        "cpu6": {
+          "total": 1450642892,
+          "busy": 76892464
+        },
+        "cpu7": {
+          "total": 1450589785,
+          "busy": 76098851
+        },
+        "cpu8": {
+          "total": 1450684680,
+          "busy": 67521769
+        },
+        "cpu9": {
+          "total": 1450391885,
+          "busy": 70902583
+        },
+        "cpu10": {
+          "total": 1450419978,
+          "busy": 66915713
+        },
+        "cpu11": {
+          "total": 1450503143,
+          "busy": 68472964
+        },
+        "cpu12": {
+          "total": 1450632315,
+          "busy": 69976607
+        },
+        "cpu61": {
+          "total": 1451076841,
+          "busy": 35428073
+        },
+        "cpu62": {
+          "total": 1451103814,
+          "busy": 34625058
+        },
+        "cpu63": {
+          "total": 1451023353,
+          "busy": 35016923
+        },
+        "cpu64": {
+          "total": 1451095951,
+          "busy": 34409217
+        },
+        "cpu65": {
+          "total": 1451025612,
+          "busy": 35806188
+        },
+        "cpu66": {
+          "total": 1450865061,
+          "busy": 40410379
+        },
+        "cpu67": {
+          "total": 1450871688,
+          "busy": 35926022
+        },
+        "cpu68": {
+          "total": 1450936169,
+          "busy": 36947018
+        }
+      },
+      "process_wall_s": 167.70828785002232,
+      "returncode": 0,
+      "process_cpu_seconds": 676.0384809999997,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450882708,
+          "busy": 73401811
+        },
+        "cpu6": {
+          "total": 1450659655,
+          "busy": 76901943
+        },
+        "cpu7": {
+          "total": 1450606549,
+          "busy": 76109167
+        },
+        "cpu8": {
+          "total": 1450701446,
+          "busy": 67531647
+        },
+        "cpu9": {
+          "total": 1450408650,
+          "busy": 70912418
+        },
+        "cpu10": {
+          "total": 1450436739,
+          "busy": 66925875
+        },
+        "cpu11": {
+          "total": 1450519909,
+          "busy": 68482296
+        },
+        "cpu12": {
+          "total": 1450649074,
+          "busy": 69985251
+        },
+        "cpu61": {
+          "total": 1451093581,
+          "busy": 35428385
+        },
+        "cpu62": {
+          "total": 1451120560,
+          "busy": 34625334
+        },
+        "cpu63": {
+          "total": 1451040107,
+          "busy": 35017194
+        },
+        "cpu64": {
+          "total": 1451112681,
+          "busy": 34409490
+        },
+        "cpu65": {
+          "total": 1451042352,
+          "busy": 35806373
+        },
+        "cpu66": {
+          "total": 1450881798,
+          "busy": 40410582
+        },
+        "cpu67": {
+          "total": 1450888432,
+          "busy": 35926197
+        },
+        "cpu68": {
+          "total": 1450952907,
+          "busy": 36947213
+        }
+      },
+      "ended_utc": "2026-10-27T09:07:06.564452+00:00",
+      "energy": -916.0299700617046,
+      "cycles": 13,
+      "kernel_wall_s": 166.72140247561038,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "upstream",
+      "repeat": 0,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r0.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r0.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r0.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-upstream-r0",
+      "started_utc": "2026-10-27T09:07:06.571149+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450882709,
+          "busy": 73401811
+        },
+        "cpu6": {
+          "total": 1450659656,
+          "busy": 76901943
+        },
+        "cpu7": {
+          "total": 1450606550,
+          "busy": 76109167
+        },
+        "cpu8": {
+          "total": 1450701447,
+          "busy": 67531647
+        },
+        "cpu9": {
+          "total": 1450408651,
+          "busy": 70912418
+        },
+        "cpu10": {
+          "total": 1450436740,
+          "busy": 66925875
+        },
+        "cpu11": {
+          "total": 1450519910,
+          "busy": 68482296
+        },
+        "cpu12": {
+          "total": 1450649075,
+          "busy": 69985251
+        },
+        "cpu61": {
+          "total": 1451093582,
+          "busy": 35428385
+        },
+        "cpu62": {
+          "total": 1451120560,
+          "busy": 34625334
+        },
+        "cpu63": {
+          "total": 1451040108,
+          "busy": 35017194
+        },
+        "cpu64": {
+          "total": 1451112682,
+          "busy": 34409490
+        },
+        "cpu65": {
+          "total": 1451042352,
+          "busy": 35806373
+        },
+        "cpu66": {
+          "total": 1450881799,
+          "busy": 40410582
+        },
+        "cpu67": {
+          "total": 1450888432,
+          "busy": 35926197
+        },
+        "cpu68": {
+          "total": 1450952907,
+          "busy": 36947213
+        }
+      },
+      "process_wall_s": 169.15905073843896,
+      "returncode": 0,
+      "process_cpu_seconds": 685.0623969999999,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450899598,
+          "busy": 73411362
+        },
+        "cpu6": {
+          "total": 1450676548,
+          "busy": 76911866
+        },
+        "cpu7": {
+          "total": 1450623436,
+          "busy": 76119022
+        },
+        "cpu8": {
+          "total": 1450718337,
+          "busy": 67541085
+        },
+        "cpu9": {
+          "total": 1450425540,
+          "busy": 70922426
+        },
+        "cpu10": {
+          "total": 1450453634,
+          "busy": 66935186
+        },
+        "cpu11": {
+          "total": 1450536804,
+          "busy": 68491418
+        },
+        "cpu12": {
+          "total": 1450665979,
+          "busy": 69993793
+        },
+        "cpu61": {
+          "total": 1451110460,
+          "busy": 35428760
+        },
+        "cpu62": {
+          "total": 1451137442,
+          "busy": 34625547
+        },
+        "cpu63": {
+          "total": 1451057000,
+          "busy": 35017396
+        },
+        "cpu64": {
+          "total": 1451129566,
+          "busy": 34409826
+        },
+        "cpu65": {
+          "total": 1451059224,
+          "busy": 35806652
+        },
+        "cpu66": {
+          "total": 1450898682,
+          "busy": 40410834
+        },
+        "cpu67": {
+          "total": 1450905314,
+          "busy": 35926503
+        },
+        "cpu68": {
+          "total": 1450969788,
+          "busy": 36947459
+        }
+      },
+      "ended_utc": "2026-10-27T09:09:55.736897+00:00",
+      "energy": -916.0299700617028,
+      "cycles": 13,
+      "kernel_wall_s": 168.39858458936214,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "full-optimized",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-full-optimized-r1",
+      "started_utc": "2026-10-27T09:09:55.742308+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450899599,
+          "busy": 73411362
+        },
+        "cpu6": {
+          "total": 1450676549,
+          "busy": 76911867
+        },
+        "cpu7": {
+          "total": 1450623437,
+          "busy": 76119022
+        },
+        "cpu8": {
+          "total": 1450718337,
+          "busy": 67541085
+        },
+        "cpu9": {
+          "total": 1450425541,
+          "busy": 70922426
+        },
+        "cpu10": {
+          "total": 1450453635,
+          "busy": 66935186
+        },
+        "cpu11": {
+          "total": 1450536805,
+          "busy": 68491418
+        },
+        "cpu12": {
+          "total": 1450665980,
+          "busy": 69993793
+        },
+        "cpu61": {
+          "total": 1451110461,
+          "busy": 35428760
+        },
+        "cpu62": {
+          "total": 1451137443,
+          "busy": 34625547
+        },
+        "cpu63": {
+          "total": 1451057000,
+          "busy": 35017396
+        },
+        "cpu64": {
+          "total": 1451129567,
+          "busy": 34409826
+        },
+        "cpu65": {
+          "total": 1451059224,
+          "busy": 35806652
+        },
+        "cpu66": {
+          "total": 1450898682,
+          "busy": 40410834
+        },
+        "cpu67": {
+          "total": 1450905314,
+          "busy": 35926503
+        },
+        "cpu68": {
+          "total": 1450969789,
+          "busy": 36947459
+        }
+      },
+      "process_wall_s": 64.66755894012749,
+      "returncode": 0,
+      "process_cpu_seconds": 437.59778700000015,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450906061,
+          "busy": 73417118
+        },
+        "cpu6": {
+          "total": 1450683012,
+          "busy": 76917548
+        },
+        "cpu7": {
+          "total": 1450629897,
+          "busy": 76124733
+        },
+        "cpu8": {
+          "total": 1450724799,
+          "busy": 67546716
+        },
+        "cpu9": {
+          "total": 1450432005,
+          "busy": 70928070
+        },
+        "cpu10": {
+          "total": 1450460100,
+          "busy": 66940820
+        },
+        "cpu11": {
+          "total": 1450543271,
+          "busy": 68497130
+        },
+        "cpu12": {
+          "total": 1450672444,
+          "busy": 69999433
+        },
+        "cpu61": {
+          "total": 1451116912,
+          "busy": 35428850
+        },
+        "cpu62": {
+          "total": 1451143896,
+          "busy": 34625597
+        },
+        "cpu63": {
+          "total": 1451063462,
+          "busy": 35017486
+        },
+        "cpu64": {
+          "total": 1451136017,
+          "busy": 34409897
+        },
+        "cpu65": {
+          "total": 1451065685,
+          "busy": 35806732
+        },
+        "cpu66": {
+          "total": 1450905139,
+          "busy": 40410922
+        },
+        "cpu67": {
+          "total": 1450911774,
+          "busy": 35926552
+        },
+        "cpu68": {
+          "total": 1450976244,
+          "busy": 36947507
+        }
+      },
+      "ended_utc": "2026-10-27T09:11:00.415870+00:00",
+      "energy": -916.0299700617041,
+      "cycles": 13,
+      "kernel_wall_s": 63.922856932505965,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "legacy-original",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-legacy-original-r1",
+      "started_utc": "2026-10-27T09:11:00.422690+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450906061,
+          "busy": 73417118
+        },
+        "cpu6": {
+          "total": 1450683013,
+          "busy": 76917548
+        },
+        "cpu7": {
+          "total": 1450629898,
+          "busy": 76124733
+        },
+        "cpu8": {
+          "total": 1450724800,
+          "busy": 67546716
+        },
+        "cpu9": {
+          "total": 1450432006,
+          "busy": 70928070
+        },
+        "cpu10": {
+          "total": 1450460101,
+          "busy": 66940820
+        },
+        "cpu11": {
+          "total": 1450543271,
+          "busy": 68497130
+        },
+        "cpu12": {
+          "total": 1450672445,
+          "busy": 69999433
+        },
+        "cpu61": {
+          "total": 1451116912,
+          "busy": 35428850
+        },
+        "cpu62": {
+          "total": 1451143897,
+          "busy": 34625598
+        },
+        "cpu63": {
+          "total": 1451063463,
+          "busy": 35017486
+        },
+        "cpu64": {
+          "total": 1451136018,
+          "busy": 34409897
+        },
+        "cpu65": {
+          "total": 1451065686,
+          "busy": 35806732
+        },
+        "cpu66": {
+          "total": 1450905139,
+          "busy": 40410922
+        },
+        "cpu67": {
+          "total": 1450911775,
+          "busy": 35926552
+        },
+        "cpu68": {
+          "total": 1450976245,
+          "busy": 36947507
+        }
+      },
+      "process_wall_s": 167.75847145542502,
+      "returncode": 0,
+      "process_cpu_seconds": 667.2213239999999,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450922812,
+          "busy": 73426800
+        },
+        "cpu6": {
+          "total": 1450699755,
+          "busy": 76927106
+        },
+        "cpu7": {
+          "total": 1450646649,
+          "busy": 76134398
+        },
+        "cpu8": {
+          "total": 1450741551,
+          "busy": 67555771
+        },
+        "cpu9": {
+          "total": 1450448751,
+          "busy": 70937852
+        },
+        "cpu10": {
+          "total": 1450476853,
+          "busy": 66950570
+        },
+        "cpu11": {
+          "total": 1450560018,
+          "busy": 68506284
+        },
+        "cpu12": {
+          "total": 1450689202,
+          "busy": 70007895
+        },
+        "cpu61": {
+          "total": 1451133657,
+          "busy": 35429188
+        },
+        "cpu62": {
+          "total": 1451160639,
+          "busy": 34625843
+        },
+        "cpu63": {
+          "total": 1451080208,
+          "busy": 35017855
+        },
+        "cpu64": {
+          "total": 1451152754,
+          "busy": 34410131
+        },
+        "cpu65": {
+          "total": 1451082421,
+          "busy": 35806950
+        },
+        "cpu66": {
+          "total": 1450921885,
+          "busy": 40411116
+        },
+        "cpu67": {
+          "total": 1450928530,
+          "busy": 35926711
+        },
+        "cpu68": {
+          "total": 1450993003,
+          "busy": 36947772
+        }
+      },
+      "ended_utc": "2026-10-27T09:13:48.188564+00:00",
+      "energy": -916.0299700617048,
+      "cycles": 13,
+      "kernel_wall_s": 166.7758566401899,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "upstream",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-upstream-r1",
+      "started_utc": "2026-10-27T09:13:48.194340+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450922813,
+          "busy": 73426800
+        },
+        "cpu6": {
+          "total": 1450699756,
+          "busy": 76927106
+        },
+        "cpu7": {
+          "total": 1450646649,
+          "busy": 76134398
+        },
+        "cpu8": {
+          "total": 1450741551,
+          "busy": 67555771
+        },
+        "cpu9": {
+          "total": 1450448752,
+          "busy": 70937852
+        },
+        "cpu10": {
+          "total": 1450476853,
+          "busy": 66950570
+        },
+        "cpu11": {
+          "total": 1450560018,
+          "busy": 68506284
+        },
+        "cpu12": {
+          "total": 1450689203,
+          "busy": 70007895
+        },
+        "cpu61": {
+          "total": 1451133658,
+          "busy": 35429188
+        },
+        "cpu62": {
+          "total": 1451160639,
+          "busy": 34625843
+        },
+        "cpu63": {
+          "total": 1451080208,
+          "busy": 35017855
+        },
+        "cpu64": {
+          "total": 1451152754,
+          "busy": 34410131
+        },
+        "cpu65": {
+          "total": 1451082422,
+          "busy": 35806950
+        },
+        "cpu66": {
+          "total": 1450921886,
+          "busy": 40411116
+        },
+        "cpu67": {
+          "total": 1450928530,
+          "busy": 35926711
+        },
+        "cpu68": {
+          "total": 1450993004,
+          "busy": 36947772
+        }
+      },
+      "process_wall_s": 165.24894652329385,
+      "returncode": 0,
+      "process_cpu_seconds": 666.1354779999992,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450939309,
+          "busy": 73436633
+        },
+        "cpu6": {
+          "total": 1450716247,
+          "busy": 76936348
+        },
+        "cpu7": {
+          "total": 1450663145,
+          "busy": 76143608
+        },
+        "cpu8": {
+          "total": 1450758043,
+          "busy": 67564986
+        },
+        "cpu9": {
+          "total": 1450465242,
+          "busy": 70947292
+        },
+        "cpu10": {
+          "total": 1450493352,
+          "busy": 66960082
+        },
+        "cpu11": {
+          "total": 1450576511,
+          "busy": 68515486
+        },
+        "cpu12": {
+          "total": 1450705710,
+          "busy": 70016396
+        },
+        "cpu61": {
+          "total": 1451150163,
+          "busy": 35429635
+        },
+        "cpu62": {
+          "total": 1451177134,
+          "busy": 34626125
+        },
+        "cpu63": {
+          "total": 1451096713,
+          "busy": 35018365
+        },
+        "cpu64": {
+          "total": 1451169244,
+          "busy": 34410434
+        },
+        "cpu65": {
+          "total": 1451098919,
+          "busy": 35807243
+        },
+        "cpu66": {
+          "total": 1450938392,
+          "busy": 40411482
+        },
+        "cpu67": {
+          "total": 1450945027,
+          "busy": 35926971
+        },
+        "cpu68": {
+          "total": 1451009508,
+          "busy": 36948105
+        }
+      },
+      "ended_utc": "2026-10-27T09:16:33.449404+00:00",
+      "energy": -916.0299700617039,
+      "cycles": 13,
+      "kernel_wall_s": 164.54644639603794,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "combined",
+      "repeat": 1,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r1.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r1.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r1.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-combined-r1",
+      "started_utc": "2026-10-27T09:16:33.456652+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450939310,
+          "busy": 73436633
+        },
+        "cpu6": {
+          "total": 1450716248,
+          "busy": 76936348
+        },
+        "cpu7": {
+          "total": 1450663145,
+          "busy": 76143608
+        },
+        "cpu8": {
+          "total": 1450758043,
+          "busy": 67564986
+        },
+        "cpu9": {
+          "total": 1450465243,
+          "busy": 70947293
+        },
+        "cpu10": {
+          "total": 1450493353,
+          "busy": 66960082
+        },
+        "cpu11": {
+          "total": 1450576511,
+          "busy": 68515486
+        },
+        "cpu12": {
+          "total": 1450705711,
+          "busy": 70016396
+        },
+        "cpu61": {
+          "total": 1451150164,
+          "busy": 35429635
+        },
+        "cpu62": {
+          "total": 1451177135,
+          "busy": 34626125
+        },
+        "cpu63": {
+          "total": 1451096714,
+          "busy": 35018365
+        },
+        "cpu64": {
+          "total": 1451169244,
+          "busy": 34410434
+        },
+        "cpu65": {
+          "total": 1451098919,
+          "busy": 35807243
+        },
+        "cpu66": {
+          "total": 1450938392,
+          "busy": 40411482
+        },
+        "cpu67": {
+          "total": 1450945027,
+          "busy": 35926971
+        },
+        "cpu68": {
+          "total": 1451009509,
+          "busy": 36948105
+        }
+      },
+      "process_wall_s": 108.86895458213985,
+      "returncode": 0,
+      "process_cpu_seconds": 664.3185420000007,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450950192,
+          "busy": 73445368
+        },
+        "cpu6": {
+          "total": 1450727125,
+          "busy": 76945027
+        },
+        "cpu7": {
+          "total": 1450674017,
+          "busy": 76152361
+        },
+        "cpu8": {
+          "total": 1450768924,
+          "busy": 67573839
+        },
+        "cpu9": {
+          "total": 1450476121,
+          "busy": 70956025
+        },
+        "cpu10": {
+          "total": 1450504234,
+          "busy": 66968951
+        },
+        "cpu11": {
+          "total": 1450587390,
+          "busy": 68524270
+        },
+        "cpu12": {
+          "total": 1450716590,
+          "busy": 70024911
+        },
+        "cpu61": {
+          "total": 1451161039,
+          "busy": 35429914
+        },
+        "cpu62": {
+          "total": 1451187997,
+          "busy": 34626208
+        },
+        "cpu63": {
+          "total": 1451107588,
+          "busy": 35018605
+        },
+        "cpu64": {
+          "total": 1451180110,
+          "busy": 34410551
+        },
+        "cpu65": {
+          "total": 1451109785,
+          "busy": 35807398
+        },
+        "cpu66": {
+          "total": 1450949269,
+          "busy": 40411628
+        },
+        "cpu67": {
+          "total": 1450955897,
+          "busy": 35927080
+        },
+        "cpu68": {
+          "total": 1451020389,
+          "busy": 36948269
+        }
+      },
+      "ended_utc": "2026-10-27T09:18:22.333216+00:00",
+      "energy": -916.0299700617048,
+      "cycles": 13,
+      "kernel_wall_s": 108.08640567585826,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "legacy-original",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-legacy-original-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-legacy-original-r2",
+      "started_utc": "2026-10-27T09:18:22.340621+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450950193,
+          "busy": 73445368
+        },
+        "cpu6": {
+          "total": 1450727125,
+          "busy": 76945027
+        },
+        "cpu7": {
+          "total": 1450674018,
+          "busy": 76152361
+        },
+        "cpu8": {
+          "total": 1450768924,
+          "busy": 67573839
+        },
+        "cpu9": {
+          "total": 1450476122,
+          "busy": 70956025
+        },
+        "cpu10": {
+          "total": 1450504236,
+          "busy": 66968952
+        },
+        "cpu11": {
+          "total": 1450587391,
+          "busy": 68524270
+        },
+        "cpu12": {
+          "total": 1450716590,
+          "busy": 70024911
+        },
+        "cpu61": {
+          "total": 1451161040,
+          "busy": 35429914
+        },
+        "cpu62": {
+          "total": 1451187998,
+          "busy": 34626208
+        },
+        "cpu63": {
+          "total": 1451107589,
+          "busy": 35018605
+        },
+        "cpu64": {
+          "total": 1451180111,
+          "busy": 34410551
+        },
+        "cpu65": {
+          "total": 1451109787,
+          "busy": 35807399
+        },
+        "cpu66": {
+          "total": 1450949270,
+          "busy": 40411628
+        },
+        "cpu67": {
+          "total": 1450955898,
+          "busy": 35927080
+        },
+        "cpu68": {
+          "total": 1451020390,
+          "busy": 36948269
+        }
+      },
+      "process_wall_s": 169.45965617150068,
+      "returncode": 0,
+      "process_cpu_seconds": 684.0878769999989,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450967127,
+          "busy": 73455040
+        },
+        "cpu6": {
+          "total": 1450744057,
+          "busy": 76954626
+        },
+        "cpu7": {
+          "total": 1450690954,
+          "busy": 76161924
+        },
+        "cpu8": {
+          "total": 1450785862,
+          "busy": 67583719
+        },
+        "cpu9": {
+          "total": 1450493067,
+          "busy": 70965553
+        },
+        "cpu10": {
+          "total": 1450521174,
+          "busy": 66978627
+        },
+        "cpu11": {
+          "total": 1450604329,
+          "busy": 68533680
+        },
+        "cpu12": {
+          "total": 1450733528,
+          "busy": 70034031
+        },
+        "cpu61": {
+          "total": 1451177955,
+          "busy": 35430289
+        },
+        "cpu62": {
+          "total": 1451204914,
+          "busy": 34626595
+        },
+        "cpu63": {
+          "total": 1451124511,
+          "busy": 35018812
+        },
+        "cpu64": {
+          "total": 1451197023,
+          "busy": 34410799
+        },
+        "cpu65": {
+          "total": 1451126688,
+          "busy": 35807688
+        },
+        "cpu66": {
+          "total": 1450966184,
+          "busy": 40411840
+        },
+        "cpu67": {
+          "total": 1450972828,
+          "busy": 35927393
+        },
+        "cpu68": {
+          "total": 1451037307,
+          "busy": 36948434
+        }
+      },
+      "ended_utc": "2026-10-27T09:21:11.808194+00:00",
+      "energy": -916.0299700617039,
+      "cycles": 13,
+      "kernel_wall_s": 168.50493401102722,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "upstream",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-upstream-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-upstream-r2",
+      "started_utc": "2026-10-27T09:21:11.814307+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450967128,
+          "busy": 73455040
+        },
+        "cpu6": {
+          "total": 1450744058,
+          "busy": 76954626
+        },
+        "cpu7": {
+          "total": 1450690955,
+          "busy": 76161924
+        },
+        "cpu8": {
+          "total": 1450785863,
+          "busy": 67583719
+        },
+        "cpu9": {
+          "total": 1450493068,
+          "busy": 70965553
+        },
+        "cpu10": {
+          "total": 1450521175,
+          "busy": 66978627
+        },
+        "cpu11": {
+          "total": 1450604330,
+          "busy": 68533680
+        },
+        "cpu12": {
+          "total": 1450733529,
+          "busy": 70034031
+        },
+        "cpu61": {
+          "total": 1451177956,
+          "busy": 35430289
+        },
+        "cpu62": {
+          "total": 1451204914,
+          "busy": 34626595
+        },
+        "cpu63": {
+          "total": 1451124511,
+          "busy": 35018812
+        },
+        "cpu64": {
+          "total": 1451197024,
+          "busy": 34410799
+        },
+        "cpu65": {
+          "total": 1451126688,
+          "busy": 35807688
+        },
+        "cpu66": {
+          "total": 1450966185,
+          "busy": 40411840
+        },
+        "cpu67": {
+          "total": 1450972828,
+          "busy": 35927393
+        },
+        "cpu68": {
+          "total": 1451037308,
+          "busy": 36948434
+        }
+      },
+      "process_wall_s": 157.68727977573872,
+      "returncode": 0,
+      "process_cpu_seconds": 667.158994,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450982893,
+          "busy": 73464299
+        },
+        "cpu6": {
+          "total": 1450759820,
+          "busy": 76963663
+        },
+        "cpu7": {
+          "total": 1450706715,
+          "busy": 76170544
+        },
+        "cpu8": {
+          "total": 1450801626,
+          "busy": 67592504
+        },
+        "cpu9": {
+          "total": 1450508834,
+          "busy": 70974371
+        },
+        "cpu10": {
+          "total": 1450536937,
+          "busy": 66987019
+        },
+        "cpu11": {
+          "total": 1450620090,
+          "busy": 68541838
+        },
+        "cpu12": {
+          "total": 1450749291,
+          "busy": 70042041
+        },
+        "cpu61": {
+          "total": 1451193702,
+          "busy": 35430564
+        },
+        "cpu62": {
+          "total": 1451220646,
+          "busy": 34626854
+        },
+        "cpu63": {
+          "total": 1451140259,
+          "busy": 35019009
+        },
+        "cpu64": {
+          "total": 1451212765,
+          "busy": 34411069
+        },
+        "cpu65": {
+          "total": 1451142421,
+          "busy": 35807952
+        },
+        "cpu66": {
+          "total": 1450981939,
+          "busy": 40412099
+        },
+        "cpu67": {
+          "total": 1450988581,
+          "busy": 35927585
+        },
+        "cpu68": {
+          "total": 1451053062,
+          "busy": 36948686
+        }
+      },
+      "ended_utc": "2026-10-27T09:23:49.508362+00:00",
+      "energy": -916.0299700617046,
+      "cycles": 13,
+      "kernel_wall_s": 157.04151940904558,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "combined",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-combined-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-combined-r2",
+      "started_utc": "2026-10-27T09:23:49.514189+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450982894,
+          "busy": 73464299
+        },
+        "cpu6": {
+          "total": 1450759821,
+          "busy": 76963663
+        },
+        "cpu7": {
+          "total": 1450706715,
+          "busy": 76170544
+        },
+        "cpu8": {
+          "total": 1450801627,
+          "busy": 67592504
+        },
+        "cpu9": {
+          "total": 1450508834,
+          "busy": 70974371
+        },
+        "cpu10": {
+          "total": 1450536938,
+          "busy": 66987019
+        },
+        "cpu11": {
+          "total": 1450620090,
+          "busy": 68541838
+        },
+        "cpu12": {
+          "total": 1450749292,
+          "busy": 70042041
+        },
+        "cpu61": {
+          "total": 1451193703,
+          "busy": 35430564
+        },
+        "cpu62": {
+          "total": 1451220646,
+          "busy": 34626854
+        },
+        "cpu63": {
+          "total": 1451140259,
+          "busy": 35019009
+        },
+        "cpu64": {
+          "total": 1451212766,
+          "busy": 34411069
+        },
+        "cpu65": {
+          "total": 1451142421,
+          "busy": 35807952
+        },
+        "cpu66": {
+          "total": 1450981940,
+          "busy": 40412099
+        },
+        "cpu67": {
+          "total": 1450988581,
+          "busy": 35927585
+        },
+        "cpu68": {
+          "total": 1451053063,
+          "busy": 36948686
+        }
+      },
+      "process_wall_s": 100.89543034136295,
+      "returncode": 0,
+      "process_cpu_seconds": 616.2688000000004,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450992976,
+          "busy": 73472716
+        },
+        "cpu6": {
+          "total": 1450769903,
+          "busy": 76972033
+        },
+        "cpu7": {
+          "total": 1450716796,
+          "busy": 76178845
+        },
+        "cpu8": {
+          "total": 1450811707,
+          "busy": 67600732
+        },
+        "cpu9": {
+          "total": 1450518919,
+          "busy": 70982639
+        },
+        "cpu10": {
+          "total": 1450547013,
+          "busy": 66995193
+        },
+        "cpu11": {
+          "total": 1450630175,
+          "busy": 68550346
+        },
+        "cpu12": {
+          "total": 1450759374,
+          "busy": 70050144
+        },
+        "cpu61": {
+          "total": 1451203775,
+          "busy": 35430679
+        },
+        "cpu62": {
+          "total": 1451230720,
+          "busy": 34626936
+        },
+        "cpu63": {
+          "total": 1451150336,
+          "busy": 35019105
+        },
+        "cpu64": {
+          "total": 1451222841,
+          "busy": 34411196
+        },
+        "cpu65": {
+          "total": 1451152480,
+          "busy": 35808099
+        },
+        "cpu66": {
+          "total": 1450992006,
+          "busy": 40412195
+        },
+        "cpu67": {
+          "total": 1450998661,
+          "busy": 35927739
+        },
+        "cpu68": {
+          "total": 1451063141,
+          "busy": 36948966
+        }
+      },
+      "ended_utc": "2026-10-27T09:25:30.416853+00:00",
+      "energy": -916.0299700617044,
+      "cycles": 13,
+      "kernel_wall_s": 100.21894860267639,
+      "strict": true
+    },
+    {
+      "case": "water12",
+      "engine": "full-optimized",
+      "repeat": 2,
+      "cores": 8,
+      "affinity": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "result": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r2.json",
+      "log": "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r2.log",
+      "command": [
+        "taskset",
+        "-c",
+        "5,6,7,8,9,10,11,12",
+        "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/pyscf_case.py",
+        "--case",
+        "water12",
+        "--cores",
+        "8",
+        "--xc",
+        "MN15",
+        "--cutoff",
+        "1e-10",
+        "--output",
+        "/home/lyl/soft/pyscf-scf-matched-20261027/runs/water12-full-optimized-r2.json"
+      ],
+      "scratch": "/home/lyl/soft/pyscf-scf-matched-20261027/tmp/water12-full-optimized-r2",
+      "started_utc": "2026-10-27T09:25:30.424381+00:00",
+      "cpu_ticks_before": {
+        "cpu5": {
+          "total": 1450992977,
+          "busy": 73472716
+        },
+        "cpu6": {
+          "total": 1450769904,
+          "busy": 76972033
+        },
+        "cpu7": {
+          "total": 1450716797,
+          "busy": 76178845
+        },
+        "cpu8": {
+          "total": 1450811708,
+          "busy": 67600732
+        },
+        "cpu9": {
+          "total": 1450518919,
+          "busy": 70982639
+        },
+        "cpu10": {
+          "total": 1450547015,
+          "busy": 66995194
+        },
+        "cpu11": {
+          "total": 1450630176,
+          "busy": 68550346
+        },
+        "cpu12": {
+          "total": 1450759375,
+          "busy": 70050144
+        },
+        "cpu61": {
+          "total": 1451203776,
+          "busy": 35430679
+        },
+        "cpu62": {
+          "total": 1451230721,
+          "busy": 34626936
+        },
+        "cpu63": {
+          "total": 1451150337,
+          "busy": 35019105
+        },
+        "cpu64": {
+          "total": 1451222842,
+          "busy": 34411196
+        },
+        "cpu65": {
+          "total": 1451152481,
+          "busy": 35808099
+        },
+        "cpu66": {
+          "total": 1450992007,
+          "busy": 40412195
+        },
+        "cpu67": {
+          "total": 1450998662,
+          "busy": 35927739
+        },
+        "cpu68": {
+          "total": 1451063142,
+          "busy": 36948966
+        }
+      },
+      "process_wall_s": 68.27540210261941,
+      "returncode": 0,
+      "process_cpu_seconds": 436.9427709999994,
+      "cpu_ticks_after": {
+        "cpu5": {
+          "total": 1450999801,
+          "busy": 73478868
+        },
+        "cpu6": {
+          "total": 1450776729,
+          "busy": 76978171
+        },
+        "cpu7": {
+          "total": 1450723625,
+          "busy": 76184960
+        },
+        "cpu8": {
+          "total": 1450818534,
+          "busy": 67606863
+        },
+        "cpu9": {
+          "total": 1450525750,
+          "busy": 70988771
+        },
+        "cpu10": {
+          "total": 1450553841,
+          "busy": 67001308
+        },
+        "cpu11": {
+          "total": 1450637004,
+          "busy": 68556456
+        },
+        "cpu12": {
+          "total": 1450766205,
+          "busy": 70056094
+        },
+        "cpu61": {
+          "total": 1451210585,
+          "busy": 35430743
+        },
+        "cpu62": {
+          "total": 1451237531,
+          "busy": 34627020
+        },
+        "cpu63": {
+          "total": 1451157150,
+          "busy": 35019171
+        },
+        "cpu64": {
+          "total": 1451229643,
+          "busy": 34411289
+        },
+        "cpu65": {
+          "total": 1451159293,
+          "busy": 35808196
+        },
+        "cpu66": {
+          "total": 1450998824,
+          "busy": 40412272
+        },
+        "cpu67": {
+          "total": 1451005469,
+          "busy": 35927793
+        },
+        "cpu68": {
+          "total": 1451069963,
+          "busy": 36949088
+        }
+      },
+      "ended_utc": "2026-10-27T09:26:38.707714+00:00",
+      "energy": -916.0299700617041,
+      "cycles": 13,
+      "kernel_wall_s": 67.579575791955,
+      "strict": true
+    }
+  ],
+  "protocol": {
+    "xc": "MN15",
+    "cases": [
+      {
+        "id": "water4",
+        "atoms_bohr": [
+          [
+            "O",
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              -1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              6.42506882352121,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              -1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              0.0,
+              6.42506882352121,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              4.994546147225458,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              7.8555914998169625,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              6.42506882352121,
+              6.42506882352121,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              4.994546147225458,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              7.8555914998169625,
+              1.1092692351196913
+            ]
+          ]
+        ],
+        "basis": "cc-pvdz",
+        "spin": 0,
+        "charge": 0,
+        "expected_nao": 96
+      },
+      {
+        "id": "o2",
+        "atoms_bohr": [
+          [
+            "O",
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "O",
+            [
+              0.0,
+              0.0,
+              2.286568610723725
+            ]
+          ]
+        ],
+        "basis": "cc-pvtz",
+        "spin": 2,
+        "charge": 0,
+        "expected_nao": 60
+      },
+      {
+        "id": "water12",
+        "atoms_bohr": [
+          [
+            "O",
+            [
+              0.0,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              -1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              6.42506882352121,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              -1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              12.85013764704242,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              12.85013764704242,
+              -1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              12.85013764704242,
+              1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              19.27520647056363,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              19.27520647056363,
+              -1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              19.27520647056363,
+              1.430522676295752,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              0.0,
+              6.42506882352121,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              4.994546147225458,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              7.8555914998169625,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              6.42506882352121,
+              6.42506882352121,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              4.994546147225458,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              7.8555914998169625,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              12.85013764704242,
+              6.42506882352121,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              12.85013764704242,
+              4.994546147225458,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              12.85013764704242,
+              7.8555914998169625,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              19.27520647056363,
+              6.42506882352121,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              19.27520647056363,
+              4.994546147225458,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              19.27520647056363,
+              7.8555914998169625,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              0.0,
+              12.85013764704242,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              11.41961497074667,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              0.0,
+              14.280660323338171,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              6.42506882352121,
+              12.85013764704242,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              11.41961497074667,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              6.42506882352121,
+              14.280660323338171,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              12.85013764704242,
+              12.85013764704242,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              12.85013764704242,
+              11.41961497074667,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              12.85013764704242,
+              14.280660323338171,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "O",
+            [
+              19.27520647056363,
+              12.85013764704242,
+              0.0
+            ]
+          ],
+          [
+            "H",
+            [
+              19.27520647056363,
+              11.41961497074667,
+              1.1092692351196913
+            ]
+          ],
+          [
+            "H",
+            [
+              19.27520647056363,
+              14.280660323338171,
+              1.1092692351196913
+            ]
+          ]
+        ],
+        "basis": "cc-pvdz",
+        "spin": 0,
+        "charge": 0,
+        "expected_nao": 288
+      }
+    ],
+    "omp_threads": 8,
+    "blas_threads": 1,
+    "memory_mb": 2000,
+    "grid": {
+      "nominal_per_atom": [
+        99,
+        590
+      ],
+      "pyscf_prune": null,
+      "pyscf_small_rho_cutoff": 0,
+      "pyscf_ao_cutoff": 1e-10,
+      "pyscf_numint_cutoff": 1e-08,
+      "original_optimized_identity": "coordinates and weights digests checked for every repeat"
+    },
+    "scf": {
+      "initial_guess": "Huckel",
+      "direct_jk": true,
+      "density_fitting": false,
+      "symmetry": false,
+      "pyscf_diis_space": 12,
+      "density_rms": 1e-09,
+      "density_max": 1e-07,
+      "energy_delta": 1e-07,
+      "pyscf_gradient": 3e-05,
+      "max_cycles_per_kernel": 80,
+      "pyscf_polishing": "If strict final extra-cycle gate fails, one additional SCF is included in timing",
+      "direct_scf_tol_default": 1e-13
+    },
+    "timing": "parent subprocess start to exit; kernel diagnostic kept separate",
+    "repeats": 3,
+    "environment": {
+      "OMP_WAIT_POLICY": "PASSIVE",
+      "GOMP_SPINCOUNT": "0",
+      "NUMPY_MADVISE_HUGEPAGE": "0",
+      "PYSCF_EXT_PATH": "/dev/null"
+    },
+    "cpu_mask": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "smt_siblings_monitored": [
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68
+    ],
+    "expected": 36,
+    "order": "Serial fresh processes; version order cyclically rotates with case and replicate",
+    "acceptance": {
+      "energy_hartree": 1e-08,
+      "density_rms": 1e-09,
+      "density_max": 1e-07,
+      "spin_square": 1e-08,
+      "overlap_electrons": 1e-08,
+      "repeat_energy_range_hartree": 1e-09,
+      "grid": "Exact ordered coordinates, weights and point counts"
+    },
+    "source_worker_sha256": "63e2bc11306a43723f560eca92fa7d409c4dbf95cd16c491c752b3028ea3fea2",
+    "historical_worker_identical": true
+  },
+  "versions": [
+    {
+      "label": "legacy-original",
+      "root": "/home/lyl/soft/pyscf-delivery-20261026/runtime-original",
+      "commit": null,
+      "identity": "frozen historical filesystem snapshot",
+      "source_files": {
+        "pyscf/__init__.py": "18d7ca2dba59d89e69256917990b01606af5999a8e22d7adec5edd4565850451",
+        "pyscf/dft/numint.py": "ff7384551c7a6b80ff8a5ffcd915eb8bfbf6ca4b8f987f912aa82a1d6edda7e8",
+        "pyscf/dft/gen_grid.py": "44aa665fb25efc544a42cb80fdad737767c787c20479d4df0ae4b1649028ff14",
+        "pyscf/dft/rks.py": "fcc8d3dbd03df368f3b70f3ce5999be6a19c608a6ff0bdc1890074616f0befa8",
+        "pyscf/dft/uks.py": "3d0d4ff47bc6ffd45162e8f0f2ce2d1bf9893987f3b1a29d055edf8cf54e13c0",
+        "pyscf/dft/libxc.py": "0d3cc988782a90775c525eb348aea63f047433191ce01482c641bbfb5e80f2c7",
+        "pyscf/scf/hf.py": "34ea1a9057da3a2d5aa37fe51d4e7305580bcb8e0118a5f17ba95ba5bb36c22f",
+        "pyscf/scf/uhf.py": "b3ee3e679ab64d51ad610f04d02f4ac332c3f9238aeede7ba6bd80ad962a8fee",
+        "pyscf/lib/dft/nr_numint.c": "edf96a116e0a9aca37c4dbfec9a01abc8255d8a590162f9d85109507a4ef5bdb",
+        "pyscf/lib/dft/nr_numint_sparse.c": "b716934a2c3afa0cd62b8358bbc5cf2d4b218b93c7c097298ed35e4372ea1629",
+        "pyscf/lib/dft/libxc_itrf.c": "899f0e9c0af14fbc080b3342ebe7c01b242ca19306bdcf38291a51dc4d4cdf99",
+        "pyscf/lib/gto/deriv1.c": "1acce50467224f28e0ba7d5db40ab4139fd4b02cbe810c3ccf540440bb0ccf0f"
+      },
+      "native_files": {
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libunpack.cpython-311-x86_64-linux-gnu.so": "11634bf6424f053cbf0f047e57e8120c268a816d64c88df7d22efb33d1b1c4eb",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libcvhf.so": "baf1993c6f032a21aa88dca9b8111d5f124933aa9293d2bb6a6e1a02e82bfec1",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libmp.so": "180327173090e1823ce9fa3e277fbf8d906c6b515d85f5ec700a1cef1f6d579c",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libpbc.so": "2517e21ae30b5f78f0c2a42b5b1f10494dbb1d854295aac9240da171ae77c94d",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libsemiempirical.so": "778995fd212f2755b8e6b1a5602ddd0361a77201df3356099c1ac7f44948cfbc",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libxc_itrf2.so": "41cc3f2efa8225ff0f599079b38f451a4196e40d92987409a2c15b3e85101957",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libagf2.so": "1eabecc5b279fbbe2c040a2aee86b442bd6e14ff1210377017f69b45560635bc",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libcc.so": "466594e25bc3cd097d1ea04f7ab192c81f009014fe14c68efacaabf65cbcf34b",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libnp_helper.so": "5d686e9a82ac1ea962e9a6944ee06940603198915cdafdada531d5d653d8f009",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libpdft.so": "60f775c1e3612a2c2dece6329e2403d508124942f016adb7f290a0a40ff119dd",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libri.so": "6ebe81e6f9b7f28832f8aa1e2479b3a387cb0a5f3e7325d4557b0f59a337e13a",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libxcfun_itrf.so": "c83a5c4ce6d593d4d4376a7bcd5f2f583e89164cb0d9b9707e6d3214e26ca6c0",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libdftd4.so": "e6a36a880f9a1a08f13164025f3da30682172d44e40281f3a82ef13b837ad7a1",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libs-dftd3.so": "2ecf1dd9d42fb312d491942cde931fce7668bbdd7740ac20b215c84c2c4682b3",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libao2mo.so": "484f1e60ce301cf4d57db66f11ebeed16c7887d8a805c2e8219ace4ce99f8cb2",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libccsdt.so": "b2b8ea30cc8a9be22a0bb13f39efc9756c92d3da9554954dec19772fd2ae9b11",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libfci.so": "943d31de21ce7c390414d1f1f15aff0d44a22ad4c839db3c42c53988846f782a",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libmcscf.so": "8b589662dd3f5766d33cc4a80092aa136360a999a34d0de73ac6bd1e0aa25e50",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libopenblas-r0-f650aae0.3.3.so": "a17438921c82b033c61cd22256e7ea15fb5084f026cfe697c72e1b418a58ddc4",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libxc_itrf.so": "2ff2126ee2ae72ce80b96225d343dde6fdd05a1f4e833a1a52e3a430a2352360",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libdft.so": "0e676a6aa5a19f1399211434ed757ed20f26d18aa219ba75641078350e5d11e5",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libcgto.so": "4d9fa7b3b16e20e0c146da32d09d6b80dc70ffbb4bd3feefe96bf61216619995",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/deps/lib/libcint.so": "950bb0a297507369dce95b9013ef2c5b64b0fa36a0018c303c98e95efce7db7e",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/deps/lib/libxc.so": "d120371b37f4729dfc21f3b0575e563ef9b0254839926c41c0c02f5082143548",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/deps/lib64/libxcfun.so": "69a381159a6dc1646a963d23f3376f2770f8d2cb2148cce015c2b9184ec55c5e"
+      }
+    },
+    {
+      "label": "upstream",
+      "root": "/home/lyl/soft/pyscf-split-20261026/base",
+      "commit": "44313dfb457b93358918c391fc66285fa44153ef",
+      "identity": "git commit",
+      "source_files": {
+        "pyscf/__init__.py": "18d7ca2dba59d89e69256917990b01606af5999a8e22d7adec5edd4565850451",
+        "pyscf/dft/numint.py": "8edd57a497cd70a449cdf22b3f7b78b8e6ff2d46e65b404b6f8d21e557ddfe0f",
+        "pyscf/dft/gen_grid.py": "98e2f5549e0d81529cd5001f08e4773aceaa67049848f9cde6208625dccd4d51",
+        "pyscf/dft/rks.py": "cdab251083ed4255b2404a1d2d2a4c0b3dac43ae2083331820468566cc50c787",
+        "pyscf/dft/uks.py": "3d0d4ff47bc6ffd45162e8f0f2ce2d1bf9893987f3b1a29d055edf8cf54e13c0",
+        "pyscf/dft/libxc.py": "8fcccb199826a26ac9af3a0cb13b2d9f6a2aa1c9acd4e8eb5c91909778a77277",
+        "pyscf/scf/hf.py": "be15a565f1b9c3a75efcb7b717e31d9a671a8f1829e721bea71fa8fd1b905f9f",
+        "pyscf/scf/uhf.py": "344b9c547a2943fae10ed3ed1e47686a45930bbfa1f914470ed0816e171615e6",
+        "pyscf/lib/dft/nr_numint.c": "edf96a116e0a9aca37c4dbfec9a01abc8255d8a590162f9d85109507a4ef5bdb",
+        "pyscf/lib/dft/nr_numint_sparse.c": "b716934a2c3afa0cd62b8358bbc5cf2d4b218b93c7c097298ed35e4372ea1629",
+        "pyscf/lib/dft/libxc_itrf.c": "899f0e9c0af14fbc080b3342ebe7c01b242ca19306bdcf38291a51dc4d4cdf99",
+        "pyscf/lib/gto/deriv1.c": "1acce50467224f28e0ba7d5db40ab4139fd4b02cbe810c3ccf540440bb0ccf0f"
+      },
+      "native_files": {
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libopenblas-r0-f650aae0.3.3.so": "e0c67e59f25028996a8cba0a149d879ad09ace955d85bedd1bafd323f5b0647f",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libxcfun_itrf.so": "0dca29b8c7cd028eb6f3afea4a6a29487ed880375b879fac04094a2c5150b8d1",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libxc_itrf.so": "d188cda855b90762c194219d63977e982f662987e1010940e02f155885998015",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libnp_helper.so": "edaff8d657571dbd82276745e31f0138d10b0cf3e8382516299aa597c13bb4ed",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libmp.so": "f389ddec900c834ee80003a7d931a23c02757bf1452815d478960ed991033104",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libfci.so": "8b0d1b03a989a01a17a931e8ead54296e69e1da99372daa48ae11c364863832f",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libccsdt.so": "7d8571eb59c8e1f73f1da2f7b2e32897ad4a9256e27dcd66245be4436db3e658",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libcgto.so": "eaf0f56f27f2a8e9072b34888c492b6a11767b48df447856ce39e641ac430f5a",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libcvhf.so": "13c637fd9ccdf2b577f4946c83826bb103c7567669d5960f9636d576e6084c6d",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libagf2.so": "93a92523662cd715e48600407a6153b9d0b872b1cfbba42b0eb5e62f0bcfb2af",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libao2mo.so": "d973ef7529bc0f5812435b4e5b5951fb6def872b61f0f4830fe213b95a96a330",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libmcscf.so": "3d273b975069c8fcc15f9da6862fce42fbb833a8c1a318f2866ce5daaa3d2f8e",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libri.so": "a38b1cdfbfea0b56ea1969eab0eb3337707d0eee601547e4f1c78dc86a55ffc9",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libpbc.so": "d4317a385bd15de6b2925ae116e56d23d88a75c193f1b2b09bbb41b0b4b9fc97",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libcc.so": "adbaf11cc7ef920c250207fe3e4c34fcc6a1a0f43924f5632ad725f8b2ab39fc",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libdft.so": "4ab1c990e5e423d12134916d934d0992b5c00eab8f032f01202b903f2da9bdca",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/libpdft.so": "b46d179426c0a4b3dad74419563d01038f265a62faaea8fa559dbbf890ee814f",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib/libcint.so": "e1991bf380f3427d6d6d0c5fd9e4fba7b17477a5d6a6a3ca0abf2215c02c46e0",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib/libxc.so": "58ec23b3b6040aa695c108c96248a3d6d7535a837e534581b183da020ce6a535",
+        "/home/lyl/soft/pyscf-split-20261026/base/pyscf/lib/deps/lib64/libxcfun.so": "846ad237fd4cfe0fcbf8614ba47e67d3b6c0ac5b66ad82281a0b8831f1c2ac5c"
+      }
+    },
+    {
+      "label": "combined",
+      "root": "/home/lyl/soft/pyscf-split-20261026/combined",
+      "commit": "a8cbddc874d7846dedfdc482944fc299d76f2409",
+      "identity": "git commit",
+      "source_files": {
+        "pyscf/__init__.py": "18d7ca2dba59d89e69256917990b01606af5999a8e22d7adec5edd4565850451",
+        "pyscf/dft/numint.py": "d9e6c299b212378e184852f425f83dd9e5b6b8f4cb5b02bd891a24b39178cf26",
+        "pyscf/dft/gen_grid.py": "54cc5c834c5cddd27d493cb447fb4f0d0c2b9b7f5176a3526ec406aa5b3b75c2",
+        "pyscf/dft/rks.py": "cdab251083ed4255b2404a1d2d2a4c0b3dac43ae2083331820468566cc50c787",
+        "pyscf/dft/uks.py": "3d0d4ff47bc6ffd45162e8f0f2ce2d1bf9893987f3b1a29d055edf8cf54e13c0",
+        "pyscf/dft/libxc.py": "8fcccb199826a26ac9af3a0cb13b2d9f6a2aa1c9acd4e8eb5c91909778a77277",
+        "pyscf/scf/hf.py": "be15a565f1b9c3a75efcb7b717e31d9a671a8f1829e721bea71fa8fd1b905f9f",
+        "pyscf/scf/uhf.py": "344b9c547a2943fae10ed3ed1e47686a45930bbfa1f914470ed0816e171615e6",
+        "pyscf/lib/dft/nr_numint.c": "edf96a116e0a9aca37c4dbfec9a01abc8255d8a590162f9d85109507a4ef5bdb",
+        "pyscf/lib/dft/nr_numint_sparse.c": "3c7e7636a8f4b01846cb75311e2b4d16c3d170f74f660d57943b08307392acf4",
+        "pyscf/lib/dft/libxc_itrf.c": "899f0e9c0af14fbc080b3342ebe7c01b242ca19306bdcf38291a51dc4d4cdf99",
+        "pyscf/lib/gto/deriv1.c": "1acce50467224f28e0ba7d5db40ab4139fd4b02cbe810c3ccf540440bb0ccf0f"
+      },
+      "native_files": {
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libopenblas-r0-f650aae0.3.3.so": "e0c67e59f25028996a8cba0a149d879ad09ace955d85bedd1bafd323f5b0647f",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libxcfun_itrf.so": "0dca29b8c7cd028eb6f3afea4a6a29487ed880375b879fac04094a2c5150b8d1",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libxc_itrf.so": "d188cda855b90762c194219d63977e982f662987e1010940e02f155885998015",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libmp.so": "f389ddec900c834ee80003a7d931a23c02757bf1452815d478960ed991033104",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libfci.so": "8b0d1b03a989a01a17a931e8ead54296e69e1da99372daa48ae11c364863832f",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libccsdt.so": "7d8571eb59c8e1f73f1da2f7b2e32897ad4a9256e27dcd66245be4436db3e658",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libagf2.so": "93a92523662cd715e48600407a6153b9d0b872b1cfbba42b0eb5e62f0bcfb2af",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libao2mo.so": "d973ef7529bc0f5812435b4e5b5951fb6def872b61f0f4830fe213b95a96a330",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libmcscf.so": "3d273b975069c8fcc15f9da6862fce42fbb833a8c1a318f2866ce5daaa3d2f8e",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libri.so": "a38b1cdfbfea0b56ea1969eab0eb3337707d0eee601547e4f1c78dc86a55ffc9",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libcc.so": "adbaf11cc7ef920c250207fe3e4c34fcc6a1a0f43924f5632ad725f8b2ab39fc",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libpdft.so": "b46d179426c0a4b3dad74419563d01038f265a62faaea8fa559dbbf890ee814f",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libnp_helper.so": "edaff8d657571dbd82276745e31f0138d10b0cf3e8382516299aa597c13bb4ed",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libcgto.so": "eaf0f56f27f2a8e9072b34888c492b6a11767b48df447856ce39e641ac430f5a",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libcvhf.so": "13c637fd9ccdf2b577f4946c83826bb103c7567669d5960f9636d576e6084c6d",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libpbc.so": "d4317a385bd15de6b2925ae116e56d23d88a75c193f1b2b09bbb41b0b4b9fc97",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/libdft.so": "f13ed16aa99431cd8fb60da699e471c657d46ffa06b639f5f723e86274cb8aee",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/deps/lib/libcint.so": "e1991bf380f3427d6d6d0c5fd9e4fba7b17477a5d6a6a3ca0abf2215c02c46e0",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/deps/lib/libxc.so": "58ec23b3b6040aa695c108c96248a3d6d7535a837e534581b183da020ce6a535",
+        "/home/lyl/soft/pyscf-split-20261026/combined/pyscf/lib/deps/lib64/libxcfun.so": "846ad237fd4cfe0fcbf8614ba47e67d3b6c0ac5b66ad82281a0b8831f1c2ac5c"
+      }
+    },
+    {
+      "label": "full-optimized",
+      "root": "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered",
+      "commit": null,
+      "identity": "frozen historical filesystem snapshot",
+      "source_files": {
+        "pyscf/__init__.py": "18d7ca2dba59d89e69256917990b01606af5999a8e22d7adec5edd4565850451",
+        "pyscf/dft/numint.py": "12b85250dbcb5f04791c9c9fe950e55da7f6195881e3754bc7f2019c60dbabbc",
+        "pyscf/dft/gen_grid.py": "70addf133fecfcca5a5acd358a1cc7dc6cd668d092682e89d3face7c81da3fc7",
+        "pyscf/dft/rks.py": "fcc8d3dbd03df368f3b70f3ce5999be6a19c608a6ff0bdc1890074616f0befa8",
+        "pyscf/dft/uks.py": "3d0d4ff47bc6ffd45162e8f0f2ce2d1bf9893987f3b1a29d055edf8cf54e13c0",
+        "pyscf/dft/libxc.py": "0d3cc988782a90775c525eb348aea63f047433191ce01482c641bbfb5e80f2c7",
+        "pyscf/scf/hf.py": "34ea1a9057da3a2d5aa37fe51d4e7305580bcb8e0118a5f17ba95ba5bb36c22f",
+        "pyscf/scf/uhf.py": "b3ee3e679ab64d51ad610f04d02f4ac332c3f9238aeede7ba6bd80ad962a8fee",
+        "pyscf/lib/dft/nr_numint.c": "03d9cd328c08a0c374f6bcfca3d16fbfee74bdf7db53aee5591d8b902f8f133f",
+        "pyscf/lib/dft/nr_numint_sparse.c": "2bcced18636ab7b25bfc08b4260cbdb681baf592af9d9b479f234bcac7fb9eae",
+        "pyscf/lib/dft/mgga_vmat.c": "f392f566beb68ff085b7ce2826705bd828329042afae4b3c44cff3d78325ff15",
+        "pyscf/lib/dft/libxc_itrf.c": "f9005a03075c8f86ec2be83bccd882490974a80f4247d4f37ca8c2e407663799",
+        "pyscf/lib/gto/deriv1.c": "008fdb91593f6c7633e08cddce83fd2b5797fcf3721ad707522a753c174c936c"
+      },
+      "native_files": {
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libunpack.cpython-311-x86_64-linux-gnu.so": "0d94ad70fc8cf05c944877e6aa10df802b1b0bea67a7aa0e18aaaace6c73fff0",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcvhf.so": "66eb4d1b1d99ed70850375d961af124bdb30557cd646aacd407defce3ee59638",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libmp.so": "2e46a94dd5cbd3ffc769e6fae04fe1cee7dbeeaecce760030c697b1c468e41c4",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libpbc.so": "5679e78ce91184c4376539b1b3097d55c388786b293314a3e13495d257bbb132",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libsemiempirical.so": "f49490dc5cdc2f19eb60c0b2857c9fab2b836d299e18ab02206b08f6cc3b4b5f",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxc_itrf2.so": "b12a388af575571e4b9d2af35b0d71ad53ea8229ef9ec2b4cf6fc5dc69a41c05",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libagf2.so": "d5722880c3629620eef8643d7a7f2c9153d5704404042f64616aaebb00b24550",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcc.so": "787e6e0af3d637400e68ae2dacd35e5ffdeed59b9e0270246453ef9dc14f3250",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libnp_helper.so": "5ff56413f0080dba0d07bd258f307b92001bbbc870f4776eeff26f314af57062",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libpdft.so": "73f92c05ea28689cd5a733167b9014346a3bd961422c0d1ceb117d2f541e1e53",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libri.so": "c098ed94a1e9c182213799bba4071d8471bb41061191b9a18ec2fc06d3c31098",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxcfun_itrf.so": "78693896eb21215c43b440a77f7e97346e16cf41996d05c2f578a6cdf643cfc2",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdftd4.so": "557ff792e568baf9cd187009a9ec202b3da4ae78500a3de2009b829bc5a671bb",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libs-dftd3.so": "d2d1fdb72225c0c8f65f8ef6ed34c236f60859f967792d0073884f693211d979",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libao2mo.so": "48f5b8b35a5e6ded90e02a726d21b8206ab6d6e9f545624b4db0d556c7b4200d",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libccsdt.so": "82165e27b74bb212d340665ec5fcc86dc16472e0219a6047cd340c496e789086",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libfci.so": "fe480607ba25fb884cb52623a4df1020373c76c0ae2f74a987f14a347fe71bbe",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libmcscf.so": "63d02c945f5ebe35d40ae6580e165786a7728f15da082a0c0bcb43a19676ae59",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libopenblas-r0-f650aae0.3.3.so": "e0c67e59f25028996a8cba0a149d879ad09ace955d85bedd1bafd323f5b0647f",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcgto.so": "aa4f8aaf7005227ff84c1c65a2035604b47d5f39afec34f47deda28d880e71f5",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxc_itrf.so": "3c3bb89764a5db32b2617ad196f91da9bf2846bdd7922f2bfcaa713aaab4e7c7",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdft.so": "5ab8998a802894e29eae3b602a5f01a711cab3c3048f00cc16b2a371da8f57e3",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib/libcint.so": "e1991bf380f3427d6d6d0c5fd9e4fba7b17477a5d6a6a3ca0abf2215c02c46e0",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib/libxc.so": "58ec23b3b6040aa695c108c96248a3d6d7535a837e534581b183da020ce6a535",
+        "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib64/libxcfun.so": "846ad237fd4cfe0fcbf8614ba47e67d3b6c0ac5b66ad82281a0b8831f1c2ac5c"
+      }
+    }
+  ],
+  "python": "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+  "started_utc": "2026-10-27T08:56:32.822260+00:00"
+}

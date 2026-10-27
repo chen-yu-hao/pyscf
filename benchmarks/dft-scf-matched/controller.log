@@ -1,0 +1,72 @@
+START water4-legacy-original-r0
+DONE 1 / 36 water4-legacy-original-r0 22.466s cycles 11
+START water4-upstream-r0
+DONE 2 / 36 water4-upstream-r0 22.719s cycles 11
+START water4-combined-r0
+DONE 3 / 36 water4-combined-r0 20.365s cycles 11
+START water4-full-optimized-r0
+DONE 4 / 36 water4-full-optimized-r0 13.948s cycles 11
+START water4-upstream-r1
+DONE 5 / 36 water4-upstream-r1 22.970s cycles 11
+START water4-combined-r1
+DONE 6 / 36 water4-combined-r1 20.763s cycles 11
+START water4-full-optimized-r1
+DONE 7 / 36 water4-full-optimized-r1 13.546s cycles 11
+START water4-legacy-original-r1
+DONE 8 / 36 water4-legacy-original-r1 22.267s cycles 11
+START water4-combined-r2
+DONE 9 / 36 water4-combined-r2 21.465s cycles 11
+START water4-full-optimized-r2
+DONE 10 / 36 water4-full-optimized-r2 14.500s cycles 11
+START water4-legacy-original-r2
+DONE 11 / 36 water4-legacy-original-r2 21.467s cycles 11
+START water4-upstream-r2
+DONE 12 / 36 water4-upstream-r2 24.172s cycles 11
+START o2-upstream-r0
+DONE 13 / 36 o2-upstream-r0 5.227s cycles 10
+START o2-combined-r0
+DONE 14 / 36 o2-combined-r0 5.227s cycles 10
+START o2-full-optimized-r0
+DONE 15 / 36 o2-full-optimized-r0 4.376s cycles 10
+START o2-legacy-original-r0
+DONE 16 / 36 o2-legacy-original-r0 4.927s cycles 10
+START o2-combined-r1
+DONE 17 / 36 o2-combined-r1 4.776s cycles 10
+START o2-full-optimized-r1
+DONE 18 / 36 o2-full-optimized-r1 4.075s cycles 10
+START o2-legacy-original-r1
+DONE 19 / 36 o2-legacy-original-r1 5.277s cycles 10
+START o2-upstream-r1
+DONE 20 / 36 o2-upstream-r1 4.426s cycles 10
+START o2-full-optimized-r2
+DONE 21 / 36 o2-full-optimized-r2 3.975s cycles 10
+START o2-legacy-original-r2
+DONE 22 / 36 o2-legacy-original-r2 4.726s cycles 10
+START o2-upstream-r2
+DONE 23 / 36 o2-upstream-r2 4.426s cycles 10
+START o2-combined-r2
+DONE 24 / 36 o2-combined-r2 4.477s cycles 10
+START water12-combined-r0
+DONE 25 / 36 water12-combined-r0 104.663s cycles 13
+START water12-full-optimized-r0
+DONE 26 / 36 water12-full-optimized-r0 64.616s cycles 13
+START water12-legacy-original-r0
+DONE 27 / 36 water12-legacy-original-r0 167.708s cycles 13
+START water12-upstream-r0
+DONE 28 / 36 water12-upstream-r0 169.159s cycles 13
+START water12-full-optimized-r1
+DONE 29 / 36 water12-full-optimized-r1 64.668s cycles 13
+START water12-legacy-original-r1
+DONE 30 / 36 water12-legacy-original-r1 167.758s cycles 13
+START water12-upstream-r1
+DONE 31 / 36 water12-upstream-r1 165.249s cycles 13
+START water12-combined-r1
+DONE 32 / 36 water12-combined-r1 108.869s cycles 13
+START water12-legacy-original-r2
+DONE 33 / 36 water12-legacy-original-r2 169.460s cycles 13
+START water12-upstream-r2
+DONE 34 / 36 water12-upstream-r2 157.687s cycles 13
+START water12-combined-r2
+DONE 35 / 36 water12-combined-r2 100.895s cycles 13
+START water12-full-optimized-r2
+DONE 36 / 36 water12-full-optimized-r2 68.275s cycles 13

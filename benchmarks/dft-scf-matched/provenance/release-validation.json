@@ -1,0 +1,28 @@
+{
+  "accepted": true,
+  "accepted_utc": "2026-10-26T13:45:06.318932+00:00",
+  "environment": "/home/lyl/soft/conda-envs/pyscf-new",
+  "conda_name": "pyscf-new",
+  "installed_variant": "round3 + AO_TILE64 + exact stable grid ordering; O3/SSE3 without fast-math",
+  "benchmark_runs_accepted": 27,
+  "benchmark_expected": 27,
+  "pyscf_pairs_accepted": 9,
+  "candidate_regression_passed": 41,
+  "grid_order_checks_passed": 15,
+  "installed_regression_passed": 41,
+  "installed_rks_uks_accepted": 2,
+  "activation_and_deactivation": "passed",
+  "loader_independent": true,
+  "g16_energy_equivalence_accepted": false,
+  "g16_actual_grid_count_equality_established": false,
+  "install_manifest": "/home/lyl/soft/pyscf-delivery-20261026/deployment/ao64-install-20261026T134200656483Z/manifest.json",
+  "rollback_command": "/home/lyl/soft/conda-envs/pyscf-new/bin/python /home/lyl/soft/pyscf-delivery-20261026/deployment/install_ao64.py --rollback /home/lyl/soft/pyscf-delivery-20261026/deployment/ao64-install-20261026T134200656483Z/manifest.json",
+  "validation_reports": [
+    "benchmark-v2/acceptance.json",
+    "recovered-validation.json",
+    "installed-scf-validation.json",
+    "installed-unittest.log",
+    "activation-validation.jsonl",
+    "/home/lyl/soft/pyscf-delivery-20261026/deployment/ao64-install-20261026T134200656483Z/loader-check.json"
+  ]
+}

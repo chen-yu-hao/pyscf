@@ -1,0 +1,167 @@
+{
+  "source": "/home/lyl/soft/pyscf-dft-opt-20261023-round2/original_cgto/pyscf",
+  "destination": "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf",
+  "algorithm_changed": false,
+  "link_changes": [
+    {
+      "path": "lib/libagf2.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libao2mo.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libcc.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libccsdt.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libcgto.so",
+      "old_rpath": "$ORIGIN:/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib:/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib/deps/lib",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": [
+        "/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib/deps/lib/libcint.so"
+      ]
+    },
+    {
+      "path": "lib/libcvhf.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libdft.so",
+      "old_rpath": "/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib:/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib/deps/lib",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": [
+        "/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib/deps/lib/libcint.so"
+      ]
+    },
+    {
+      "path": "lib/libdftd4.so",
+      "old_rpath": "$ORIGIN/../../pyscf_dispersion.libs",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libfci.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libgfortran-040039e1.so.5.0.0",
+      "old_rpath": "",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libgfortran-91cc3cb1.so.3.0.0",
+      "old_rpath": "",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libgomp-a34b3233.so.1.0.0",
+      "old_rpath": "",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libmcscf.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libmp.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libnp_helper.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libopenblas-r0-f650aae0.3.3.so",
+      "old_rpath": "",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libpbc.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libpdft.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libquadmath-96973f99.so.0.0.0",
+      "old_rpath": "",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libri.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libs-dftd3.so",
+      "old_rpath": "$ORIGIN/../../pyscf_dispersion.libs",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libsemiempirical.so",
+      "old_rpath": "/home/lyl/anaconda3/envs/pyscf/lib:$ORIGIN:.",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libunpack.cpython-311-x86_64-linux-gnu.so",
+      "old_rpath": "/home/lyl/anaconda3/envs/pyscf/lib:$ORIGIN:.",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libxc_itrf.so",
+      "old_rpath": "/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib:/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib/deps/lib",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libxc_itrf2.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64:$ORIGIN/../../pyscf_forge.libs",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    },
+    {
+      "path": "lib/libxcfun_itrf.so",
+      "old_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "new_rpath": "$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "replaced_needed": []
+    }
+  ]
+}

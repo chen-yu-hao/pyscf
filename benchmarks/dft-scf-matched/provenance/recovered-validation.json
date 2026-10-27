@@ -1,0 +1,20 @@
+{
+  "runtime": "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered",
+  "build_manifest": "build_ao64_recovered.json",
+  "original_manifest": "build_ao64.json",
+  "tracked_hash_parity": {"accepted": 9, "expected": 9, "report": "recovered-validation-parity.json"},
+  "library_dependency_metadata_identical": true,
+  "native_import_report": "recovered-validation-import.json",
+  "native_import_passed": true,
+  "package_elf_libraries": 29,
+  "absolute_needed_entries": 0,
+  "package_symlinks": 0,
+  "grid_validation": {"accepted": 15, "expected": 15, "report": "recovered-validation-grid.json"},
+  "regression": {"accepted": 41, "expected": 41, "failed": 0, "skipped": 0, "runner": "unittest", "log": "recovered-validation-unittest.log"},
+  "cpu_affinity": [8, 9, 10, 11],
+  "openmp_threads": 4,
+  "blas_threads": 1,
+  "performance_tested": false,
+  "original_runtime_modified": false,
+  "conda_environment_modified": false
+}

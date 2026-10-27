@@ -1,0 +1,203 @@
+{
+  "case": "water12",
+  "basis": "cc-pvdz",
+  "xc": "MN15",
+  "spin": 0,
+  "cores": 8,
+  "python": "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+  "pyscf_path": "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/__init__.py",
+  "version": "2.14.0",
+  "affinity": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "energy": -916.0299700617039,
+  "kernel_wall_s": 168.50493401102722,
+  "cycles": 13,
+  "polish_cycles": 0,
+  "strict": true,
+  "history": [
+    {
+      "cycle": 1,
+      "density_rms": 0.012058133970011476,
+      "density_max": 0.3005695492525535,
+      "energy_delta": 1.7659211392301586,
+      "gradient": 0.7302933038636705
+    },
+    {
+      "cycle": 2,
+      "density_rms": 0.0018950718323140071,
+      "density_max": 0.04484388103529485,
+      "energy_delta": 0.0869630714341838,
+      "gradient": 0.26530353079749525
+    },
+    {
+      "cycle": 3,
+      "density_rms": 0.00048564407705204067,
+      "density_max": 0.015475055048555786,
+      "energy_delta": 0.010866280837035447,
+      "gradient": 0.046169707723355796
+    },
+    {
+      "cycle": 4,
+      "density_rms": 0.00013737672808311464,
+      "density_max": 0.007583137357956349,
+      "energy_delta": 0.0003081772199493571,
+      "gradient": 0.024426731081735847
+    },
+    {
+      "cycle": 5,
+      "density_rms": 5.601076944636624e-05,
+      "density_max": 0.003154855565465353,
+      "energy_delta": 0.00011402108157199109,
+      "gradient": 0.0008175355580365135
+    },
+    {
+      "cycle": 6,
+      "density_rms": 5.71537719372323e-06,
+      "density_max": 0.00016025966646193712,
+      "energy_delta": 3.5671337172971107e-07,
+      "gradient": 0.0004204312281162003
+    },
+    {
+      "cycle": 7,
+      "density_rms": 1.4646956275610846e-06,
+      "density_max": 7.668204420274716e-05,
+      "energy_delta": 3.433183337619994e-08,
+      "gradient": 0.00019883093727013885
+    },
+    {
+      "cycle": 8,
+      "density_rms": 4.908346247674604e-07,
+      "density_max": 2.1181044703499907e-05,
+      "energy_delta": 7.622929842909798e-09,
+      "gradient": 2.2444035661298988e-05
+    },
+    {
+      "cycle": 9,
+      "density_rms": 1.1953320406863324e-07,
+      "density_max": 3.811563100031279e-06,
+      "energy_delta": 1.6575540939811617e-10,
+      "gradient": 3.7561522944711664e-06
+    },
+    {
+      "cycle": 10,
+      "density_rms": 1.8312841411664467e-08,
+      "density_max": 5.340554718458179e-07,
+      "energy_delta": 1.8189894035458565e-12,
+      "gradient": 1.3641564161246535e-06
+    },
+    {
+      "cycle": 11,
+      "density_rms": 3.841401662149386e-09,
+      "density_max": 1.9365383907565814e-07,
+      "energy_delta": 4.547473508864641e-13,
+      "gradient": 4.91721498111188e-07
+    },
+    {
+      "cycle": 12,
+      "density_rms": 1.0281462289889406e-09,
+      "density_max": 5.5460529280182413e-08,
+      "energy_delta": 2.2737367544323206e-13,
+      "gradient": 3.4630430788076156e-08
+    },
+    {
+      "cycle": 13,
+      "density_rms": 1.4903931969016304e-10,
+      "density_max": 2.6948561160367035e-09,
+      "energy_delta": 4.092726157978177e-12,
+      "gradient": 3.3796664248978054e-09
+    },
+    {
+      "cycle": 13,
+      "density_rms": 2.3904384234241184e-11,
+      "density_max": 7.160187685817387e-10,
+      "energy_delta": 3.183231456205249e-12,
+      "gradient": 2.4521444195744876e-09
+    }
+  ],
+  "grid_nominal": [
+    99,
+    590
+  ],
+  "grid_points": 2102760,
+  "nonzero_weight_points": 2097763,
+  "cutoff": 1e-10,
+  "numint_cutoff": 1e-08,
+  "nelec_overlap": 120.00000000000007,
+  "nao": 288,
+  "cpu_seconds": 683.791112,
+  "peak_rss_kib": 1473312,
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "version": "0.3.23.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "version": "0.3.29.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "version": null,
+      "threading_layer": "disabled",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/usr/lib64/libgomp.so.1.0.0",
+      "version": null
+    }
+  ],
+  "native_maps": [
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/deps/lib/libcint.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/deps/lib/libxc.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/deps/lib64/libxcfun.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libao2mo.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libcgto.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libcvhf.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libdft.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libnp_helper.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libpbc.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libri.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libxc_itrf.so",
+    "/home/lyl/soft/pyscf-delivery-20261026/runtime-original/pyscf/lib/libxcfun_itrf.so"
+  ],
+  "grid_coords_digest": "f4b5b015113e95f4fe37e133b8705249b9cdda927c0f2cb453fcd1d9f4795714",
+  "grid_weights_digest": "825bdc743e8b5758a581245a7c58c4edbdece47414ec0b0c1b2dac440f2a408c"
+}

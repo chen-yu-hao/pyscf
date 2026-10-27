@@ -1,0 +1,841 @@
+{
+  "runtime": "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered",
+  "python": "/home/lyl/anaconda3/envs/pyscf/bin/python",
+  "base_source": "/home/lyl/soft/pyscf-dft-opt-20261024-round3/optimized/pyscf",
+  "complete_package_source": "/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf",
+  "changes_from_round3": [
+    "AO_TILE=64",
+    "exact stable mixed-radix grid grouping"
+  ],
+  "ao_block_cap": 1200,
+  "default_grid_and_cutoffs": "unchanged",
+  "fast_math": false,
+  "cpu_target": "SSE3",
+  "build_affinity": [
+    8,
+    9,
+    10,
+    11
+  ],
+  "compiler": "gcc (GCC) 11.3.1 20221121 (Red Hat 11.3.1-4)",
+  "commands": [
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib/libcint.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib/libxc.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib64/libxcfun.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libagf2.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libao2mo.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcc.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libccsdt.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--replace-needed",
+      "/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib/deps/lib/libcint.so",
+      "libcint.so",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcgto.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcgto.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcvhf.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--replace-needed",
+      "/home/lyl/anaconda3/envs/pyscf/lib/python3.11/site-packages/pyscf/lib/deps/lib/libcint.so",
+      "libcint.so",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdft.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdft.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdftd4.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libfci.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libgfortran-040039e1.so.5.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libgomp-a34b3233.so.1.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libmcscf.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libmp.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libnp_helper.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libopenblas-r0-f650aae0.3.3.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libpbc.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libpdft.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libquadmath-96973f99.so.0.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libri.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libs-dftd3.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libsemiempirical.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libunpack.cpython-311-x86_64-linux-gnu.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxc_itrf.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxc_itrf2.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxcfun_itrf.so"
+    ],
+    [
+      "gcc",
+      "-shared",
+      "-fPIC",
+      "-O3",
+      "-DNDEBUG",
+      "-msse3",
+      "-fopenmp",
+      "-std=gnu99",
+      "-Wall",
+      "-I/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib",
+      "-I/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/include",
+      "-Wl,--disable-new-dtags,-rpath,$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "-L/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib",
+      "-L/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/fill_int2c.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/fill_nr_3c.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/fill_r_3c.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/fill_int2e.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/fill_r_4c.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/ft_ao.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/ft_ao_deriv.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/ft_ao_ppnl.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/fill_grids_int2c.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/grid_ao_drv.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/deriv1.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/deriv2.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/nr_ecp.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/nr_ecp_deriv.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/autocode/auto_eval1.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/gto/auto_ftao/ft_ao_ppnl_auto.c",
+      "-lcint",
+      "-lnp_helper",
+      "-l:libopenblas-r0-f650aae0.3.3.so",
+      "-lm",
+      "-Wl,-soname,libcgto.so",
+      "-o",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcgto.so"
+    ],
+    [
+      "gcc",
+      "-shared",
+      "-fPIC",
+      "-O3",
+      "-DNDEBUG",
+      "-msse3",
+      "-fopenmp",
+      "-std=gnu99",
+      "-Wall",
+      "-I/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib",
+      "-I/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/include",
+      "-Wl,--disable-new-dtags,-rpath,$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "-L/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib",
+      "-L/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/libxc_itrf.c",
+      "-lxc",
+      "-lm",
+      "-Wl,-soname,libxc_itrf.so",
+      "-o",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxc_itrf.so"
+    ],
+    [
+      "gcc",
+      "-shared",
+      "-fPIC",
+      "-O3",
+      "-DNDEBUG",
+      "-msse3",
+      "-fopenmp",
+      "-std=gnu99",
+      "-Wall",
+      "-I/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib",
+      "-I/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/include",
+      "-Wl,--disable-new-dtags,-rpath,$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "-L/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib",
+      "-L/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/CxLebedevGrid.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/grid_basis.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/nr_numint.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/r_numint.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/numint_uniform_grid.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/xc_deriv.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/nr_numint_sparse.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/mgga_vmat.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/multigrid.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/grid_common.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/grid_collocate.c",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/dft/grid_integrate.c",
+      "-lcvhf",
+      "-lcgto",
+      "-lnp_helper",
+      "-lpbc",
+      "-l:libopenblas-r0-f650aae0.3.3.so",
+      "-lcint",
+      "-lm",
+      "-Wl,-soname,libdft.so",
+      "-o",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdft.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib/libcint.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib/libxc.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/deps/lib64/libxcfun.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libagf2.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libao2mo.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcc.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libccsdt.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcgto.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libcvhf.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdft.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libdftd4.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libfci.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libgfortran-040039e1.so.5.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libgomp-a34b3233.so.1.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libmcscf.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libmp.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libnp_helper.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libopenblas-r0-f650aae0.3.3.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libpbc.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libpdft.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libquadmath-96973f99.so.0.0.0"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libri.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libs-dftd3.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libsemiempirical.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libunpack.cpython-311-x86_64-linux-gnu.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxc_itrf.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxc_itrf2.so"
+    ],
+    [
+      "/home/lyl/anaconda3/bin/patchelf",
+      "--force-rpath",
+      "--set-rpath",
+      "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64",
+      "/home/lyl/soft/pyscf-delivery-20261026/runtime-ao64-recovered/pyscf/lib/libxcfun_itrf.so"
+    ]
+  ],
+  "libraries": {
+    "lib/deps/lib/libcint.so": {
+      "needed": [
+        "libquadmath-96973f99.so.0.0.0",
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64"
+    },
+    "lib/deps/lib/libxc.so": {
+      "needed": [
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64"
+    },
+    "lib/deps/lib64/libxcfun.so": {
+      "needed": [
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN/../..:$ORIGIN/../../deps/lib:$ORIGIN/../../deps/lib64"
+    },
+    "lib/libagf2.so": {
+      "needed": [
+        "libcvhf.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libcgto.so",
+        "libnp_helper.so",
+        "libgomp.so.1",
+        "libcint.so",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libao2mo.so": {
+      "needed": [
+        "libcvhf.so",
+        "libcint.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libcgto.so",
+        "libnp_helper.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libcc.so": {
+      "needed": [
+        "libao2mo.so",
+        "libcvhf.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libcgto.so",
+        "libnp_helper.so",
+        "libgomp.so.1",
+        "libcint.so",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libccsdt.so": {
+      "needed": [
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libcgto.so": {
+      "needed": [
+        "libcint.so",
+        "libnp_helper.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libm.so.6",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libcvhf.so": {
+      "needed": [
+        "libcgto.so",
+        "libnp_helper.so",
+        "libcint.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libdft.so": {
+      "needed": [
+        "libcvhf.so",
+        "libcgto.so",
+        "libnp_helper.so",
+        "libpbc.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libcint.so",
+        "libm.so.6",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libdftd4.so": {
+      "needed": [
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libgfortran-040039e1.so.5.0.0",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libquadmath-96973f99.so.0.0.0",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libfci.so": {
+      "needed": [
+        "libnp_helper.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libgfortran-040039e1.so.5.0.0": {
+      "needed": [
+        "libquadmath-96973f99.so.0.0.0",
+        "libz.so.1",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libgfortran-91cc3cb1.so.3.0.0": {
+      "needed": [
+        "libquadmath-96973f99.so.0.0.0",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libgomp-a34b3233.so.1.0.0": {
+      "needed": [
+        "libpthread.so.0",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libmcscf.so": {
+      "needed": [
+        "libfci.so",
+        "libao2mo.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libcvhf.so",
+        "libcgto.so",
+        "libnp_helper.so",
+        "libgomp.so.1",
+        "libcint.so",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libmp.so": {
+      "needed": [
+        "libnp_helper.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libnp_helper.so": {
+      "needed": [
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libopenblas-r0-f650aae0.3.3.so": {
+      "needed": [
+        "libm.so.6",
+        "libgfortran-91cc3cb1.so.3.0.0",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libpbc.so": {
+      "needed": [
+        "libcint.so",
+        "libcvhf.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libcgto.so",
+        "libnp_helper.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libpdft.so": {
+      "needed": [
+        "libdft.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libpbc.so",
+        "libcvhf.so",
+        "libcgto.so",
+        "libcint.so",
+        "libnp_helper.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libquadmath-96973f99.so.0.0.0": {
+      "needed": [
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libri.so": {
+      "needed": [
+        "libcint.so",
+        "libao2mo.so",
+        "libopenblas-r0-f650aae0.3.3.so",
+        "libcvhf.so",
+        "libcgto.so",
+        "libnp_helper.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libs-dftd3.so": {
+      "needed": [
+        "libgfortran-040039e1.so.5.0.0",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libquadmath-96973f99.so.0.0.0",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libsemiempirical.so": {
+      "needed": [
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libunpack.cpython-311-x86_64-linux-gnu.so": {
+      "needed": [
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libxc_itrf.so": {
+      "needed": [
+        "libxc.so",
+        "libm.so.6",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libxc_itrf2.so": {
+      "needed": [
+        "libxc.so",
+        "libgomp-a34b3233.so.1.0.0",
+        "libpthread.so.0",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    },
+    "lib/libxcfun_itrf.so": {
+      "needed": [
+        "libxcfun.so",
+        "libgomp.so.1",
+        "libc.so.6"
+      ],
+      "rpath": "$ORIGIN:$ORIGIN:$ORIGIN/deps/lib:$ORIGIN/deps/lib64"
+    }
+  },
+  "files": {
+    "dft/numint.py": "12b85250dbcb5f04791c9c9fe950e55da7f6195881e3754bc7f2019c60dbabbc",
+    "dft/gen_grid.py": "70addf133fecfcca5a5acd358a1cc7dc6cd668d092682e89d3face7c81da3fc7",
+    "dft/xc_cache.py": "89de8af669fd5c9e36ed1baaabb40ebf3e0e80a622b716f1a0ee7763dec0ec10",
+    "scf/_response_functions.py": "1f22a9f947733fa94b994e315f1535abffeb5e2f884d7e3c3b3cd1f30f958fa3",
+    "lib/dft/mgga_vmat.c": "f392f566beb68ff085b7ce2826705bd828329042afae4b3c44cff3d78325ff15",
+    "lib/gto/deriv1.c": "008fdb91593f6c7633e08cddce83fd2b5797fcf3721ad707522a753c174c936c",
+    "lib/libdft.so": "5ab8998a802894e29eae3b602a5f01a711cab3c3048f00cc16b2a371da8f57e3",
+    "lib/libcgto.so": "aa4f8aaf7005227ff84c1c65a2035604b47d5f39afec34f47deda28d880e71f5",
+    "lib/libxc_itrf.so": "3c3bb89764a5db32b2617ad196f91da9bf2846bdd7922f2bfcaa713aaab4e7c7"
+  }
+}
