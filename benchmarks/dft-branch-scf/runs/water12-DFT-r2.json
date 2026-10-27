@@ -1,0 +1,203 @@
+{
+  "case": "water12",
+  "basis": "cc-pvdz",
+  "xc": "MN15",
+  "spin": 0,
+  "cores": 8,
+  "python": "/home/lyl/soft/conda-envs/pyscf-new/bin/python",
+  "pyscf_path": "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/__init__.py",
+  "version": "2.14.0",
+  "affinity": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    12,
+    13,
+    22
+  ],
+  "energy": -916.029970061703,
+  "kernel_wall_s": 60.76047786138952,
+  "cycles": 13,
+  "polish_cycles": 0,
+  "strict": true,
+  "history": [
+    {
+      "cycle": 1,
+      "density_rms": 0.012058133970011516,
+      "density_max": 0.30056954925256485,
+      "energy_delta": 1.765921139229249,
+      "gradient": 0.730293303863671
+    },
+    {
+      "cycle": 2,
+      "density_rms": 0.001895071832313999,
+      "density_max": 0.04484388103530773,
+      "energy_delta": 0.08696307143532067,
+      "gradient": 0.2653035307975104
+    },
+    {
+      "cycle": 3,
+      "density_rms": 0.0004856440770521745,
+      "density_max": 0.015475055048571773,
+      "energy_delta": 0.0108662808365807,
+      "gradient": 0.04616970772340624
+    },
+    {
+      "cycle": 4,
+      "density_rms": 0.00013737672808319937,
+      "density_max": 0.007583137357966008,
+      "energy_delta": 0.0003081772208588518,
+      "gradient": 0.024426731081730952
+    },
+    {
+      "cycle": 5,
+      "density_rms": 5.601076944633495e-05,
+      "density_max": 0.003154855565465131,
+      "energy_delta": 0.00011402108248148579,
+      "gradient": 0.0008175355580288334
+    },
+    {
+      "cycle": 6,
+      "density_rms": 5.715377193784108e-06,
+      "density_max": 0.0001602596664543876,
+      "energy_delta": 3.5671268960868474e-07,
+      "gradient": 0.0004204312280911484
+    },
+    {
+      "cycle": 7,
+      "density_rms": 1.4646956275182565e-06,
+      "density_max": 7.668204418032065e-05,
+      "energy_delta": 3.4330923881498165e-08,
+      "gradient": 0.0001988309372710608
+    },
+    {
+      "cycle": 8,
+      "density_rms": 4.908346246810764e-07,
+      "density_max": 2.1181044623008738e-05,
+      "energy_delta": 7.623384590260684e-09,
+      "gradient": 2.2444035670056214e-05
+    },
+    {
+      "cycle": 9,
+      "density_rms": 1.1953320405521963e-07,
+      "density_max": 3.811563088373937e-06,
+      "energy_delta": 1.6484591469634324e-10,
+      "gradient": 3.7561523439402436e-06
+    },
+    {
+      "cycle": 10,
+      "density_rms": 1.8312841738359952e-08,
+      "density_max": 5.340555008226389e-07,
+      "energy_delta": 2.0463630789890885e-12,
+      "gradient": 1.3641565825501014e-06
+    },
+    {
+      "cycle": 11,
+      "density_rms": 3.841401841991852e-09,
+      "density_max": 1.936539544278304e-07,
+      "energy_delta": 4.547473508864641e-13,
+      "gradient": 4.917214833112904e-07
+    },
+    {
+      "cycle": 12,
+      "density_rms": 1.0281455885330996e-09,
+      "density_max": 5.546045922510956e-08,
+      "energy_delta": 9.094947017729282e-13,
+      "gradient": 3.463019856109298e-08
+    },
+    {
+      "cycle": 13,
+      "density_rms": 1.4903478017857322e-10,
+      "density_max": 2.694681699999535e-09,
+      "energy_delta": 2.7284841053187847e-12,
+      "gradient": 3.3795311811727615e-09
+    },
+    {
+      "cycle": 13,
+      "density_rms": 2.39059608244679e-11,
+      "density_max": 7.160691605639924e-10,
+      "energy_delta": 1.5916157281026244e-12,
+      "gradient": 2.451676547042688e-09
+    }
+  ],
+  "grid_nominal": [
+    99,
+    590
+  ],
+  "grid_points": 2102760,
+  "nonzero_weight_points": 2097763,
+  "cutoff": 1e-10,
+  "numint_cutoff": 1e-08,
+  "nelec_overlap": 120.00000000000007,
+  "nao": 288,
+  "cpu_seconds": 441.562675,
+  "peak_rss_kib": 890940,
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/numpy.libs/libopenblas64_p-r0-0cf96a72.3.23.dev.so",
+      "version": "0.3.23.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/scipy.libs/libscipy_openblas-b75cc656.so",
+      "version": "0.3.29.dev",
+      "threading_layer": "pthreads",
+      "architecture": "SkylakeX"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/python3.11/site-packages/pytblis.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libopenblas",
+      "filepath": "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+      "version": null,
+      "threading_layer": "disabled",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 8,
+      "prefix": "libgomp",
+      "filepath": "/home/lyl/soft/conda-envs/pyscf-new/lib/libgomp.so.1.0.0",
+      "version": null
+    }
+  ],
+  "native_maps": [
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/deps/lib/libcint.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/deps/lib/libxc.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/deps/lib64/libxcfun.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libao2mo.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libcgto.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libcvhf.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libdft.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libgfortran-91cc3cb1.so.3.0.0",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libnp_helper.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libopenblas-r0-f650aae0.3.3.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libpbc.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libri.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libxc_itrf.so",
+    "/home/lyl/soft/pyscf-dft-pr-20261026/pyscf/lib/libxcfun_itrf.so"
+  ],
+  "grid_coords_digest": "f4b5b015113e95f4fe37e133b8705249b9cdda927c0f2cb453fcd1d9f4795714",
+  "grid_weights_digest": "825bdc743e8b5758a581245a7c58c4edbdece47414ec0b0c1b2dac440f2a408c"
+}

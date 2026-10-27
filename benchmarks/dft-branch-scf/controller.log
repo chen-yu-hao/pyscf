@@ -1,0 +1,36 @@
+START water4-upstream-r0
+DONE 1 / 18 water4-upstream-r0 18.955s cycles 11
+START water4-DFT-r0
+DONE 2 / 18 water4-DFT-r0 13.142s cycles 11
+START water4-DFT-r1
+DONE 3 / 18 water4-DFT-r1 13.093s cycles 11
+START water4-upstream-r1
+DONE 4 / 18 water4-upstream-r1 18.707s cycles 11
+START water4-upstream-r2
+DONE 5 / 18 water4-upstream-r2 18.757s cycles 11
+START water4-DFT-r2
+DONE 6 / 18 water4-DFT-r2 13.444s cycles 11
+START o2-DFT-r0
+DONE 7 / 18 o2-DFT-r0 3.672s cycles 10
+START o2-upstream-r0
+DONE 8 / 18 o2-upstream-r0 4.275s cycles 10
+START o2-upstream-r1
+DONE 9 / 18 o2-upstream-r1 4.274s cycles 10
+START o2-DFT-r1
+DONE 10 / 18 o2-DFT-r1 3.724s cycles 10
+START o2-DFT-r2
+DONE 11 / 18 o2-DFT-r2 3.674s cycles 10
+START o2-upstream-r2
+DONE 12 / 18 o2-upstream-r2 4.274s cycles 10
+START water12-upstream-r0
+DONE 13 / 18 water12-upstream-r0 158.203s cycles 13
+START water12-DFT-r0
+DONE 14 / 18 water12-DFT-r0 61.454s cycles 13
+START water12-DFT-r1
+DONE 15 / 18 water12-DFT-r1 59.660s cycles 13
+START water12-upstream-r1
+DONE 16 / 18 water12-upstream-r1 152.864s cycles 13
+START water12-upstream-r2
+DONE 17 / 18 water12-upstream-r2 150.558s cycles 13
+START water12-DFT-r2
+DONE 18 / 18 water12-DFT-r2 61.446s cycles 13
