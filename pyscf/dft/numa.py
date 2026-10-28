@@ -1,7 +1,7 @@
-"""Automatic, measured NUMA XC selection for standard molecular RKS.
+"""Default NUMA XC partitions with optional measured selection for RKS.
 
-The native integrator is authoritative. Unsupported configurations, failed
-binding, insufficient memory, mismatched values and slow workers retain it.
+Unsupported configurations, failed binding and insufficient memory use native
+integration. Optional auto mode additionally checks speed and numerical values.
 No molecule, density or grid data is persisted beyond the SCF worker lifetime.
 """
 import hashlib
@@ -25,6 +25,7 @@ from pyscf.dft._numa_topology import discover, local_grid_partitions
 from pyscf.dft._numa_worker import PartitionedXC
 
 _states = weakref.WeakKeyDictionary()
+_plans = weakref.WeakKeyDictionary()
 _registry_lock = threading.RLock()
 libxc = numint.libxc  # also allow native XCFun-only installations to import
 
@@ -180,6 +181,7 @@ def close(ks):
     """Release this calculation's workers; normal kernel/reset do this too."""
     with _registry_lock:
         state = _states.pop(ks, None)
+        _plans.pop(ks, None)
     if state is not None:
         with state.lock:
             state.close()
@@ -198,16 +200,42 @@ def _equal(reference, candidate):
                for x, y in zip(reference, candidate))
 
 
+def _get_plan(ks):
+    # No grid hashing or worker initialization on a UMA/native-only machine.
+    # Cache topology per calculation, but invalidate allocation/quota changes.
+    resource_key = (tuple(sorted(os.sched_getaffinity(0))), lib.num_threads(),
+                    _quota(), os.getenv('SLURM_CPUS_PER_TASK'),
+                    tuple(os.getenv(k) for k in ('OMPI_COMM_WORLD_SIZE', 'PMI_SIZE', 'PMIX_SIZE')))
+    with _registry_lock:
+        saved = _plans.get(ks)
+        if saved is None or saved[0] != resource_key:
+            groups, allowed = _partitions()
+            _plans[ks] = (resource_key, groups, allowed)
+        return _plans[ks][1:]
+
+
 def nr_rks(ks, mol, dm, hermi, max_memory):
     native = lambda: ks._numint.nr_rks(mol, ks.grids, ks.xc, dm, max_memory=max_memory)
-    mode = os.getenv('PYSCF_NUMA', 'auto').lower()
-    if mode != 'auto' or os.name != 'posix' or not hasattr(os, 'sched_getaffinity'):
+    mode = os.getenv('PYSCF_NUMA', 'on').lower()
+    if mode not in ('on', 'auto') or os.name != 'posix' or not hasattr(os, 'sched_getaffinity'):
         close(ks)
         return native()
     if not _supported(ks, mol, dm, hermi):
         close(ks)
         return native()
-    key = _signature(ks, mol)
+    try:
+        groups, allowed = _get_plan(ks)
+    except (OSError, ValueError):
+        close(ks)
+        return native()
+    if not groups:
+        # Preserve the lightweight negative topology cache for later SCF calls.
+        with _registry_lock:
+            previous = _states.pop(ks, None)
+        if previous is not None:
+            previous.close()
+        return native()
+    key = (mode, tuple((tuple(cpus), node) for cpus, node in groups), _signature(ks, mol))
     with _registry_lock:
         state = _states.get(ks)
         if state is not None and state.key != key:
@@ -227,18 +255,22 @@ def nr_rks(ks, mol, dm, hermi, max_memory):
                 state.disabled = True
                 logger.warn(ks, 'NUMA XC worker failed; using native integration: %s', error)
                 return native()
-        # Run native first: its result remains valid if calibration fails.
-        stamp = time.perf_counter()
-        reference = native()
-        baseline = time.perf_counter() - stamp
+        reference = None
+        baseline = None
+        if mode == 'auto':
+            # Optional calibration; direct-on mode never duplicates this XC call.
+            stamp = time.perf_counter()
+            reference = native()
+            baseline = time.perf_counter() - stamp
+        def fallback():
+            return reference if reference is not None else native()
         state.disabled = True
-        if baseline < .5 or max_memory < 1024:
-            return reference
+        if (baseline is not None and baseline < .5) or max_memory < 1024:
+            return fallback()
         try:
-            groups, allowed = _partitions()
             executable = shutil.which('numactl')
-            if not groups or executable is None:
-                return reference
+            if executable is None:
+                return fallback()
             for cpus, node in groups:
                 subprocess.run([executable, '--all', '--physcpubind=' + ','.join(map(str, cpus)),
                                 '--membind=' + str(node), '/bin/true'], check=True,
@@ -248,7 +280,7 @@ def nr_rks(ks, mol, dm, hermi, max_memory):
             reserve = len(groups) * (192 + mol.nao ** 2 * 8 / 1e6 * 6)
             usable = min(max_memory, _memory_headroom()) - reserve
             if usable / len(groups) < 256:
-                return reference
+                return fallback()
             state.directory = tempfile.TemporaryDirectory(prefix='pyscf-numa-')
             stamp = time.perf_counter()
             state.pool = PartitionedXC(mol, ks.grids, ks.xc, groups,
@@ -259,6 +291,13 @@ def nr_rks(ks, mol, dm, hermi, max_memory):
             stamp = time.perf_counter()
             candidate = state.pool.evaluate(dm)
             elapsed = time.perf_counter() - stamp
+            if mode == 'on':
+                if not all(np.all(np.isfinite(x)) for x in candidate):
+                    raise ValueError('Non-finite NUMA XC result')
+                state.disabled = False
+                logger.info(ks, 'NUMA XC enabled: %s cores/group (no calibration)',
+                            [len(cpus) for cpus, _ in groups])
+                return candidate
             # Calibration overhead must be recoverable in six later calls;
             # reject marginal improvements and always check the full matrix.
             if (_equal(reference, candidate) and elapsed < .8 * baseline
@@ -273,4 +312,4 @@ def nr_rks(ks, mol, dm, hermi, max_memory):
                 subprocess.SubprocessError) as error:
             state.close()
             logger.info(ks, 'NUMA XC unavailable; retained native integration: %s', error)
-        return reference
+        return fallback()

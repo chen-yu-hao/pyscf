@@ -1,6 +1,6 @@
 # Optional CPU-local numerical integration
 
-Standard molecular RKS now supports automatic detection and measured activation
+Standard molecular RKS now supports automatic detection and direct activation
 without importing these examples. See [automatic NUMA integration](../../../pyscf/dft/NUMA.md).
 The tools below remain available for explicit experiments and custom orchestration.
 

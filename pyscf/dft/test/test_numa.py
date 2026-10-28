@@ -12,6 +12,9 @@ from pyscf.dft import numa
 
 class AutoNumaTests(unittest.TestCase):
     def setUp(self):
+        mode = mock.patch.dict(os.environ, {'PYSCF_NUMA': 'auto'})
+        mode.start()
+        self.addCleanup(mode.stop)
         self.mol = gto.M(atom='H 0 0 0; H 0 0 .74', basis='sto-3g', verbose=0)
         self.mf = dft.RKS(self.mol)
         self.mf.grids.level = 0
@@ -46,6 +49,48 @@ class AutoNumaTests(unittest.TestCase):
             self.invoke()
         self.assertEqual(self.native.call_count, 1)
         self.assertEqual(self.pool.evaluate.call_count, 2)
+
+    def test_default_on_never_duplicates_integration(self):
+        with self.calibration(), mock.patch.dict(os.environ):
+            os.environ.pop('PYSCF_NUMA', None)
+            self.invoke()
+            self.invoke()
+        self.native.assert_not_called()
+        self.assertEqual(self.pool.evaluate.call_count, 2)
+
+    def test_default_uma_has_no_trial_workers_or_grid_hash(self):
+        with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}), \
+                mock.patch.object(numa, '_partitions', return_value=([], [])) as plan, \
+                mock.patch.object(numa, '_signature') as signature:
+            self.invoke()
+            self.invoke()
+        self.assertEqual(self.native.call_count, 2)
+        self.pool.evaluate.assert_not_called()
+        plan.assert_called_once()
+        signature.assert_not_called()
+
+    def test_direct_on_failure_falls_back_once(self):
+        self.pool.evaluate.side_effect = EOFError('worker exited')
+        with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
+            value = self.invoke()
+        self.native.assert_called_once()
+        np.testing.assert_array_equal(value[2], self.value[2])
+        self.assertTrue(numa._states[self.mf].disabled)
+
+    def test_direct_on_rejects_nonfinite_result(self):
+        self.pool.evaluate.return_value = (2., -1., np.full((2, 2), np.nan))
+        with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
+            value = self.invoke()
+        self.native.assert_called_once()
+        np.testing.assert_array_equal(value[2], self.value[2])
+
+    def test_switch_to_auto_recalibrates(self):
+        with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
+            self.invoke()
+        with self.calibration():
+            self.invoke()
+        self.pool.close.assert_called()
+        self.native.assert_called_once()
 
     def test_slow_or_unamortized_keeps_native(self):
         for elapsed, setup in ((9, 1), (2, 100)):
