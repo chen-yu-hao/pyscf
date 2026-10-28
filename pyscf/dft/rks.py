@@ -78,7 +78,8 @@ def get_veff(ks, mol=None, dm=None, dm_last=None, vhf_last=None, hermi=1):
         n, exc, vxc = 0, 0, 0
     else:
         max_memory = ks.max_memory - lib.current_memory()[0]
-        n, exc, vxc = ni.nr_rks(mol, ks.grids, ks.xc, dm, max_memory=max_memory)
+        from pyscf.dft import numa
+        n, exc, vxc = numa.nr_rks(ks, mol, dm, hermi, max_memory)
         logger.debug(ks, 'nelec by numeric integration = %s', n)
         if ks.do_nlc():
             if ni.libxc.is_nlc(ks.xc):
@@ -498,6 +499,8 @@ class KohnShamDFT:
         return mf
 
     def reset(self, mol=None):
+        from pyscf.dft import numa
+        numa.close(self)
         hf.SCF.reset(self, mol)
         self.grids.reset(mol)
         self.nlcgrids.reset(mol)
@@ -601,6 +604,14 @@ def init_guess_by_vsap(mf, mol=None):
 
 
 class RKS(KohnShamDFT, hf.RHF):
+    def scf(self, *args, **kwargs):
+        from pyscf.dft import numa
+        try:
+            return super().scf(*args, **kwargs)
+        finally:
+            numa.close(self)
+
+    kernel = lib.alias(scf, alias_name='kernel')
     __doc__ = '''Restricted Kohn-Sham\n''' + hf.SCF.__doc__ + KohnShamDFT.__doc__
 
     def __init__(self, mol, xc='LDA,VWN'):

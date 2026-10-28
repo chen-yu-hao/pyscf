@@ -41,6 +41,7 @@ dependencies = [
   'scipy>=1.6.0',
   'h5py>=2.7',
   'setuptools',
+  'threadpoolctl>=3',
   "psutil; sys_platform == 'win32'"
 ]
 

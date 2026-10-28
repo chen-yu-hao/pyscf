@@ -1,5 +1,9 @@
 # Optional CPU-local numerical integration
 
+Standard molecular RKS now supports automatic detection and measured activation
+without importing these examples. See [automatic NUMA integration](../../../pyscf/dft/NUMA.md).
+The tools below remain available for explicit experiments and custom orchestration.
+
 These examples accompany the DFT branch's fused XC workspace and shell-run
 accumulation improvements. They are explicit opt-in tools, not a replacement
 for the default NumInt API. No CPU model, CPU number, NUMA node, installation

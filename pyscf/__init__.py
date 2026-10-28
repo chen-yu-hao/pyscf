@@ -40,6 +40,12 @@ __version__ = '2.14.0'
 import os
 import sys
 
+# Capture before loading NumPy/OpenMP, which may pin the importing thread.
+try:
+    _initial_cpu_affinity = tuple(sorted(os.sched_getaffinity(0)))
+except (AttributeError, OSError):
+    _initial_cpu_affinity = ()
+
 # Load modules which are developed as plugins of the namespace package
 PYSCF_EXT_PATH = os.getenv('PYSCF_EXT_PATH')
 if PYSCF_EXT_PATH:
