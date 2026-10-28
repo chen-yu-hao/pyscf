@@ -43,6 +43,22 @@ def tearDownModule():
 
 
 class KnownValues(unittest.TestCase):
+    def test_direct_s8_multiple_blocks(self):
+        # Cross the 64-AO blocking boundary and exercise the early symmetry
+        # exits with both symmetric and nonsymmetric batches of densities.
+        mol = gto.M(atom=[('H', (i*1.3, (i % 2)*.4, 0)) for i in range(6)],
+                    basis='cc-pvtz', verbose=0)
+        self.assertGreater(mol.nao, 64)
+        eri = mol.intor('int2e', aosym='s8')
+        rng = numpy.random.default_rng(92)
+        raw = rng.normal(size=(2, mol.nao, mol.nao))
+        for hermi in (0, 1):
+            dm = raw if hermi == 0 else raw + raw.transpose(0, 2, 1)
+            expected = scf._vhf.incore(eri, dm, hermi=hermi)
+            actual = scf.hf.get_jk(mol, dm, hermi=hermi)
+            for value, reference in zip(actual, expected):
+                numpy.testing.assert_allclose(value, reference, atol=1e-10, rtol=1e-11)
+
     def test_range_separated_Coulomb(self):
         '''test range-separated Coulomb'''
         with mol.with_range_coulomb(0.2):

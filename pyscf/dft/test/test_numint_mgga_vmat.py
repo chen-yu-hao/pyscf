@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import ctypes
+import os
 import unittest
 from unittest import mock
 import numpy
@@ -182,6 +183,30 @@ class KnownValues(unittest.TestCase):
         actual = numint._mgga_vmat(ao, noncontiguous, 20, None, pairs, loc)
         numpy.testing.assert_allclose(actual, reference, atol=3e-11, rtol=2e-12)
 
+    def test_shell_runs_across_tiles(self):
+        # A wide shell crosses an AO tile; later blocks skip it, so packed
+        # AO positions differ from the full-matrix positions.
+        loc = numpy.array([0, 70, 73, 143, 146], dtype=numpy.int32)
+        ao, wv, screen, pairs, loc, initial = self._inputs(168, loc)
+        screen[:] = 25
+        screen[1, 0] = 0
+        screen[2] = [25, 8, 2, 25]
+        pairs[:] = 1
+        pairs[0, 2] = pairs[2, 0] = 0
+        shell = numpy.repeat(numpy.arange(len(loc)-1), numpy.diff(loc))
+        reference = initial.copy()
+        for start in range(0, 168, numint.BLKSIZE):
+            stop = start + numint.BLKSIZE
+            bins = screen[start//numint.BLKSIZE].astype(int)
+            allowed = ((bins[:, None] > 0) & (bins[None, :] > 0)
+                       & (bins[:, None]+bins[None, :] >= 20) & (pairs != 0))
+            reference += (dense_formula(ao[:, start:stop], wv[:, start:stop])
+                          * allowed[shell[:, None], shell[None, :]])
+        for threads in (1, 4):
+            with self.subTest(threads=threads), lib.with_omp_threads(threads):
+                actual = numint._mgga_vmat(ao, wv, 20, screen, pairs, loc, initial.copy())
+                numpy.testing.assert_allclose(actual, reference, atol=1e-10, rtol=2e-12)
+
     def test_wide_shell(self):
         loc = numpy.array([0, 100, 103], dtype=numpy.int32)
         ao, wv, screen, pairs, loc, initial = self._inputs(120, loc)
@@ -198,13 +223,66 @@ class KnownValues(unittest.TestCase):
         pairs = numpy.ones((1, 1), dtype=numpy.uint8)
         for width, threads, sparse in ((4096, 1, True), (4096, 8, False)):
             loc = numpy.array([0, width], dtype=numpy.int32)
-            with lib.with_omp_threads(threads):
+            with lib.with_omp_threads(threads), mock.patch.dict(
+                    os.environ, {'PYSCF_DFT_VMAT_MAX_MEMORY_MB': '128'}):
                 done = numint.libdft.VXCmgga_vmat(
                     ptr, ptr, ptr, ctypes.c_int(width), ctypes.c_int(8),
                     ctypes.c_int(1), ctypes.c_int(20),
                     screen.ctypes.data_as(ctypes.c_void_p) if sparse else None,
                     pairs.ctypes.data_as(ctypes.c_void_p) if sparse else None,
                     loc.ctypes.data_as(ctypes.c_void_p), ctypes.c_ssize_t(width*8))
+            self.assertEqual(done, 0)
+            numpy.testing.assert_array_equal(sentinel, [42.])
+
+    def test_large_ao_workspace_thread_budget(self):
+        # 840 AO at 24 threads exceeded the old 128 MiB cap and fell back.
+        # Compare to an independent dense formula and require native success.
+        rng = numpy.random.default_rng(73)
+        nao, ngrids = 840, 56*24
+        ao = rng.normal(size=(4, nao, ngrids)).transpose(0, 2, 1)
+        wv = rng.normal(size=(5, ngrids))
+        loc = numpy.arange(0, nao+1, 7, dtype=numpy.int32)
+        screen = numpy.full((24, len(loc)-1), 25, dtype=numpy.uint8)
+        pairs = numpy.ones((len(loc)-1, len(loc)-1), dtype=numpy.uint8)
+        reference = ao[0].T @ (wv[0, :, None]*ao[0])
+        for c in range(1, 4):
+            cross = ao[0].T @ (wv[c, :, None]*ao[c])
+            reference += cross + cross.T
+            reference += .5*(ao[c].T @ (wv[4, :, None]*ao[c]))
+        original = numint.libdft.VXCxc_vmat
+        for limit in ('128', '256'):
+            for sparse in (True, False):
+                with self.subTest(limit=limit, sparse=sparse), \
+                        lib.with_omp_threads(24), mock.patch.dict(
+                            os.environ, {'PYSCF_DFT_VMAT_MAX_MEMORY_MB': limit}):
+                    status = []
+                    def native(*args):
+                        done = original(*args)
+                        status.append(done)
+                        return done
+                    with mock.patch.object(numint.libdft, 'VXCxc_vmat', native):
+                        out = numpy.full((nao, nao), .125)
+                        actual = numint._mgga_vmat(
+                            ao, wv, 20, screen if sparse else None, pairs, loc, out)
+                    self.assertEqual(status, [1])
+                    self.assertEqual(lib.num_threads(), 24)
+                    self.assertIs(actual, out)
+                    numpy.testing.assert_allclose(actual, reference+.125,
+                                                  atol=1e-10, rtol=2e-12)
+
+    def test_workspace_limit_validation(self):
+        sentinel = numpy.array([42.])
+        ptr = sentinel.ctypes.data_as(ctypes.c_void_p)
+        # Every invalid setting must use the finite default. A single 8192 AO
+        # workspace exceeds it, so input buffers need not be dereferenced.
+        loc = numpy.array([0, 8192], dtype=numpy.int32)
+        for limit in ('', '0', '-1', '1.5', '256MB', '18446744073709551616'):
+            with self.subTest(limit=limit), mock.patch.dict(
+                    os.environ, {'PYSCF_DFT_VMAT_MAX_MEMORY_MB': limit}):
+                done = numint.libdft.VXCmgga_vmat(
+                    ptr, ptr, ptr, ctypes.c_int(8192), ctypes.c_int(8),
+                    ctypes.c_int(1), ctypes.c_int(20), None, None,
+                    loc.ctypes.data_as(ctypes.c_void_p), ctypes.c_ssize_t(8192*8))
             self.assertEqual(done, 0)
             numpy.testing.assert_array_equal(sentinel, [42.])
 

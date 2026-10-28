@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <errno.h>
 #include "config.h"
 #include "np_helper/np_helper.h"
 #include "vhf/fblas.h"
@@ -20,6 +21,23 @@
 #define GRID_BLOCK 56
 #define GRID_TILE 224
 #define AO_TILE 64
+
+/* MiB, configurable per process; malformed/overflowing values use the default.
+ * Do not cache the setting, so callers may scope it to an individual job. */
+static size_t vmat_workspace_bytes(void)
+{
+        const size_t mib = 1024*1024;
+        const char *value = getenv("PYSCF_DFT_VMAT_MAX_MEMORY_MB");
+        if (value != NULL && value[0] >= '0' && value[0] <= '9') {
+                char *end;
+                errno = 0;
+                unsigned long long limit = strtoull(value, &end, 10);
+                if (errno == 0 && *end == '\0' && limit > 0 && limit <= SIZE_MAX/mib) {
+                        return (size_t)limit * mib;
+                }
+        }
+        return 256*mib;
+}
 
 static int grid_cut(const uint64_t *prefix, int nblock, int thread, int nthread)
 {
@@ -63,10 +81,24 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
 #ifdef _OPENMP
         nthreads = omp_get_max_threads();
 #endif
-        const int with_plan = sparse && nthreads > 1;
-        const size_t plan_bytes = with_plan ? ((size_t)nblock+1)*sizeof(uint64_t) + nblock : 0;
-        if (thread_bytes * nthreads + plan_bytes > 128*1024*1024) {
+        /* Keep the fused contraction when a large OpenMP team would exceed
+         * the workspace budget. Only this region uses the smaller team;
+         * other kernels (in particular J/K) retain their requested threads.
+         * Account for both packed matrices and per-thread AO index arrays. */
+        const size_t max_bytes = vmat_workspace_bytes();
+        if (nblock == 0) {
+                return 1;
+        }
+        nthreads = MIN(nthreads, nblock);
+        size_t plan_bytes = sparse && nthreads > 1 ?
+                ((size_t)nblock+1)*sizeof(uint64_t) + nblock : 0;
+        if (plan_bytes >= max_bytes || thread_bytes > max_bytes-plan_bytes) {
                 return 0;
+        }
+        nthreads = MIN((size_t)nthreads, (max_bytes-plan_bytes)/thread_bytes);
+        const int with_plan = sparse && nthreads > 1;
+        if (!with_plan) {
+                plan_bytes = 0;
         }
         double *scratch = malloc(thread_size * nthreads * sizeof(double) + plan_bytes);
         if (scratch == NULL) {
@@ -93,7 +125,7 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                         prefix[b+1] = prefix[b] + ng*(nactive*nactive+diagonal);
                 }
         }
-#pragma omp parallel
+#pragma omp parallel num_threads(nthreads)
 {
         const char TRANS_T = 'T';
         const char TRANS_N = 'N';
@@ -191,13 +223,35 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                                        &D1, right+(size_t)jb*k, &k,
                                        left+(size_t)ib*k, &k, &D0, product, &nj);
                                 for (i = 0; i < ni; i++) {
-                                for (j = 0; j < nj && jb+j <= ib+i; j++) {
-                                        if (!sparse ||
-                                            (pair_mask[active_shell[ib+i]*nbas+active_shell[jb+j]] &&
-                                             screen[active_shell[ib+i]] + screen[active_shell[jb+j]] >= nbins)) {
-                                                partial[(size_t)active_ao[ib+i]*nao+active_ao[jb+j]] += product[i*nj+j];
+                                        const int stop = MIN(nj, ib+i-jb+1);
+                                        double *dst = partial + (size_t)active_ao[ib+i]*nao;
+                                        const double *src = product + i*nj;
+                                        if (!sparse) {
+                                                const int ao_j = active_ao[jb];
+#pragma GCC ivdep
+                                                for (j = 0; j < stop; j++) {
+                                                        dst[ao_j+j] += src[j];
+                                                }
+                                                continue;
                                         }
-                                } }
+                                        const int ish = active_shell[ib+i];
+                                        for (j = 0; j < stop; ) {
+                                                const int jsh = active_shell[jb+j];
+                                                const int end = MIN(stop, j+ao_loc[jsh+1]-active_ao[jb+j]);
+                                                if (pair_mask[ish*nbas+jsh] &&
+                                                    screen[ish]+screen[jsh] >= nbins) {
+                                                        /* A shell contributes consecutive AO indices.
+                                                         * Its pair/bin mask is shared by the whole run. */
+                                                        const int ao_j = active_ao[jb+j]-j;
+                                                        int u;
+#pragma GCC ivdep
+                                                        for (u = j; u < end; u++) {
+                                                                dst[ao_j+u] += src[u];
+                                                        }
+                                                }
+                                                j = end;
+                                        }
+                                }
                         }
                 }
         }

@@ -185,6 +185,15 @@ void CVHFdot_nrs8(int (*intor)(), JKOperator **jkop, JKArray **vjk,
                   int *ishls, int *jshls, int *kshls, int *lshls,
                   CVHFOpt *vhfopt, IntorEnvs *envs)
 {
+        /* Reject symmetry-forbidden blocks before the density-dependent
+         * screening (which may perform several small matrix products).
+         * Blocks are disjoint shell intervals; equal blocks still contain
+         * the diagonal quartets and must follow the usual s8 path. */
+        if (ishls[1] <= jshls[0] || kshls[1] <= lshls[0] ||
+            ishls[0] < kshls[0]) {
+                return;
+        }
+
         if (vhfopt != NULL) {
                 if (vhfopt->fprescreen == &CVHFnrs8_prescreen) {
                         if (!CVHFnrs8_prescreen_block(vhfopt, ishls, jshls, kshls, lshls)) {
