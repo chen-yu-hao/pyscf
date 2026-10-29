@@ -410,6 +410,12 @@ void CVHFnr_direct_drv(int (*intor)(), void (*fdot)(), JKOperator **jkop,
         size_t nblock_l = CVHFshls_block_partition(block_lloc, shls_slice+6, ao_loc, AO_BLOCK_SIZE);
         size_t nblock_kl = nblock_k * nblock_l;
         size_t nblock_jkl = nblock_j * nblock_kl;
+        const int s8_regular = fdot == CVHFdot_nrs8 &&
+                ish0 == jsh0 && ish0 == ksh0 && ish0 == lsh0 &&
+                ish1 == jsh1 && ish1 == ksh1 && ish1 == lsh1;
+        /* Give each symmetry-allowed quartet an independent work item.
+         * Keep the original jkl task shape for general shell slices. */
+        const size_t ntasks = s8_regular ? nblock_i * nblock_jkl : nblock_jkl;
         int nblock_max = MAX(nblock_i, nblock_j);
         nblock_max = MAX(nblock_max, nblock_k);
         nblock_max = MAX(nblock_max, nblock_l);
@@ -436,12 +442,22 @@ void CVHFnr_direct_drv(int (*intor)(), void (*fdot)(), JKOperator **jkop,
         double *buf = malloc(sizeof(double) * (di*di*di*di*ncomp + di*di*2 + cache_size));
         double *cache = buf + di*di*di*di*ncomp;
 #pragma omp for nowait schedule(dynamic, 1)
-        for (blk_id = 0; blk_id < nblock_jkl; blk_id++) {
+        for (blk_id = 0; blk_id < ntasks; blk_id++) {
                 // TODO: add schwarz ineq conditioner
                 r = blk_id;
+                int i_begin = 0;
+                int i_end = nblock_i;
+                if (s8_regular) {
+                        i_begin = r / nblock_jkl;
+                        i_end = i_begin + 1;
+                        r %= nblock_jkl;
+                }
                 j = r / nblock_kl ; r = r % nblock_kl;
                 k = r / nblock_l  ; r = r % nblock_l;
                 l = r;
+                if (s8_regular && (k < l || i_begin < j || i_begin < k)) {
+                        continue;
+                }
                 int j0 = ao_loc[block_jloc[j]];
                 int k0 = ao_loc[block_kloc[k]];
                 int l0 = ao_loc[block_lloc[l]];
@@ -460,7 +476,7 @@ void CVHFnr_direct_drv(int (*intor)(), void (*fdot)(), JKOperator **jkop,
                         pv->block_quartets[2] = k;
                         pv->block_quartets[3] = l;
                 }
-                for (i = 0; i < nblock_i; i++) {
+                for (i = i_begin; i < i_end; i++) {
                         int i0 = ao_loc[block_iloc[i]];
                         int i1 = ao_loc[block_iloc[i+1]];
                         for (n = 0; n < n_dm; n++) {
