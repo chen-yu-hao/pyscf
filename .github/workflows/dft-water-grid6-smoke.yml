@@ -6,6 +6,11 @@ on:
     paths:
       - 'benchmarks/dft_water_grid6.py'
       - '.github/workflows/dft-water-grid6-smoke.yml'
+  pull_request:
+    branches: [DFT]
+    paths:
+      - 'benchmarks/dft_water_grid6.py'
+      - '.github/workflows/dft-water-grid6-smoke.yml'
   workflow_dispatch:
 
 permissions:
