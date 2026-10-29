@@ -1,57 +1,105 @@
 name: DFT water grid6 smoke benchmark
 
-on:
+'on':
   push:
     branches: [perf/dft-h2o-grid6-smoke-20261029]
-    paths:
-      - 'benchmarks/dft_water_grid6.py'
-      - '.github/workflows/dft-water-grid6-smoke.yml'
-  pull_request:
-    branches: [DFT]
-    paths:
-      - 'benchmarks/dft_water_grid6.py'
-      - '.github/workflows/dft-water-grid6-smoke.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: dft-water-grid6-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   water-grid6:
     runs-on: ubuntu-24.04
-    timeout-minutes: 80
+    timeout-minutes: 120
     env:
+      BASELINE_SHA: '3a6238ea20a467eabaf6290e0f23de2ea23460ec'
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '1'
       MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      OMP_DYNAMIC: 'FALSE'
       PYSCF_NUMA: 'off'
       CMAKE_BUILD_PARALLEL_LEVEL: '3'
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: System dependencies
+      - name: Install dependencies and record environment
         run: |
+          mkdir -p benchmark-results
           sudo apt-get update -qq
-          sudo apt-get install -y -qq build-essential gfortran cmake libblas-dev liblapack-dev libopenblas-dev numactl
-      - name: Python and native build
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Build candidate native libraries explicitly
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install "numpy<3" scipy h5py threadpoolctl wheel cmake pytest
-          python -m pip install --no-build-isolation -e .
-      - name: Focused tests of changed numerical code
+          cmake -S pyscf/lib -B build-native \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math' \
+            -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-candidate.log
+          cmake --build build-native --parallel 3 \
+            2>&1 | tee benchmark-results/build-candidate.log
+          ldd pyscf/lib/libdft.so > benchmark-results/ldd-candidate.txt
+          python -c 'import pyscf; from pyscf import lib; print(pyscf.__file__, lib.num_threads())'
+      - name: Build pinned baseline with identical native dependencies
         run: |
-          python -m pytest -q pyscf/dft/test/test_numint_rho_fused.py pyscf/dft/test/test_numint_mgga_vmat.py pyscf/dft/test/test_numint_cache_blocks.py pyscf/dft/test/test_numa.py
-      - name: DFT grid6 PBE smoke test
+          base="$RUNNER_TEMP/pyscf-dft-baseline"
+          git worktree add --detach "$base" "$BASELINE_SHA"
+          ln -s "$GITHUB_WORKSPACE/pyscf/lib/deps" "$base/pyscf/lib/deps"
+          cmake -S "$base/pyscf/lib" -B "$base/build-native" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math' \
+            -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            -DBUILD_LIBCINT=OFF -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-baseline.log
+          cmake --build "$base/build-native" --parallel 3 \
+            2>&1 | tee benchmark-results/build-baseline.log
+          ldd "$base/pyscf/lib/libdft.so" > benchmark-results/ldd-baseline.txt
+          echo "BASELINE_ROOT=$base" >> "$GITHUB_ENV"
+      - name: Native-independent payload and harness tests
         run: |
-          python benchmarks/dft_water_grid6.py --sizes 1 2 4 --xc PBE --threads 2 --output benchmark-pbe.json
-      - name: DFT grid6 MN15 smoke test
+          python pyscf/dft/test/test_numa_payload.py -v
+          python benchmarks/test_dft_water_grid6.py -v
+      - name: Numerical regression with the tile experiment off and on
         run: |
-          python benchmarks/dft_water_grid6.py --sizes 1 2 --xc MN15 --threads 2 --output benchmark-mn15.json
+          for flag in 0 1; do
+            PYSCF_DFT_VMAT_TILE_SCREEN="$flag" python -m pytest -q \
+              pyscf/dft/test/test_numint_rho_fused.py \
+              pyscf/dft/test/test_numint_mgga_vmat.py \
+              pyscf/dft/test/test_numint_cache_blocks.py \
+              pyscf/dft/test/test_numa.py \
+              pyscf/dft/test/test_numa_process.py \
+              2>&1 | tee "benchmark-results/regression-$flag.log"
+          done
+      - name: Paired cold SCF timings and separate phase profiles
+        run: |
+          python benchmarks/dft_water_grid6.py \
+            --baseline-root "$BASELINE_ROOT" --candidate-root "$GITHUB_WORKSPACE" \
+            --sizes 1 2 4 --xc PBE MN15 --threads 1 2 4 \
+            --repeat 3 --profile --numa off --output benchmark-results \
+            2>&1 | tee benchmark-results/paired-scf.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: dft-water-grid6-results
-          path: benchmark-*.json
-          if-no-files-found: ignore
+          name: dft-water-grid6-results-${{ github.run_id }}
+          path: benchmark-results/
+          if-no-files-found: warn
+          retention-days: 14
