@@ -5,6 +5,8 @@ name: DFT grid6 verified benchmark
     branches: [master]
     paths: ['.github/workflows/dft-benchmark-launch.yml']
   workflow_dispatch:
+  schedule:
+    - cron: '13 18 29 10 *'
 
 permissions:
   contents: read
@@ -18,7 +20,24 @@ defaults:
     shell: bash
 
 jobs:
+  date-guard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" != schedule || "$(date -u +%F)" == 2026-10-29 ]]; then
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          fi
   smoke-and-regression:
+    needs: date-guard
+    if: needs.date-guard.outputs.enabled == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
