@@ -54,6 +54,29 @@ static int grid_cut(const uint64_t *prefix, int nblock, int thread, int nthread)
         return lo;
 }
 
+/* Test shell runs, not individual AO pairs.  Reject a BLAS tile only when
+ * every pair would be discarded by the existing accumulation masks.  This
+ * uses the same bin threshold: no new integral/density approximation. */
+static int tile_has_pair(int ib, int ni, int jb, int nj,
+                         const int *active_ao, const int *active_shell,
+                         const uint8_t *screen, const uint8_t *pair_mask,
+                         const int *ao_loc, int nbas, int nbins)
+{
+        for (int i = ib; i < ib+ni; ) {
+                const int ish = active_shell[i];
+                for (int j = jb; j < jb+nj; ) {
+                        const int jsh = active_shell[j];
+                        if (pair_mask[(size_t)ish*nbas+jsh] &&
+                            screen[ish]+screen[jsh] >= nbins) {
+                                return 1;
+                        }
+                        j += ao_loc[jsh+1] - active_ao[j];
+                }
+                i += ao_loc[ish+1] - active_ao[i];
+        }
+        return 0;
+}
+
 /* Add a symmetric XC potential for raw (unscaled) grid weights.
  * ncomp is 1 (LDA), 2 (GGA), or 4 (MGGA).
  * Return zero before modifying out if the caller should use its old path. */
@@ -63,6 +86,11 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                  ptrdiff_t ao_stride)
 {
         const int sparse = screen_index != NULL;
+        /* Experimental until paired molecular SCF timings establish a gain.
+         * Read once per call, not once per grid/AO tile. */
+        const char *tile_screen = getenv("PYSCF_DFT_VMAT_TILE_SCREEN");
+        const int early_screen = sparse && tile_screen != NULL &&
+                tile_screen[0] == '1' && tile_screen[1] == '\0';
         if (sparse) {
                 for (int i = 0; i < nbas; i++) {
                 for (int j = 0; j < i; j++) {
@@ -219,6 +247,11 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                         ni = MIN(AO_TILE, nactive-ib);
                         for (jb = 0; jb <= ib; jb += AO_TILE) {
                                 nj = MIN(AO_TILE, nactive-jb);
+                                if (early_screen && !tile_has_pair(ib, ni, jb, nj,
+                                        active_ao, active_shell, screen, pair_mask,
+                                        ao_loc, nbas, nbins)) {
+                                        continue;
+                                }
                                 dgemm_(&TRANS_T, &TRANS_N, &nj, &ni, &k,
                                        &D1, right+(size_t)jb*k, &k,
                                        left+(size_t)ib*k, &k, &D0, product, &nj);
