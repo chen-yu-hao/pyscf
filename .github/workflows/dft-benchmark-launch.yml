@@ -5,6 +5,8 @@ name: DFT grid6 verified benchmark
     branches: [master]
     paths: ['.github/workflows/dft-benchmark-launch.yml']
   workflow_dispatch:
+  issue_comment:
+    types: [created]
   schedule:
     - cron: '13 18 29 10 *'
 
@@ -21,6 +23,11 @@ defaults:
 
 jobs:
   date-guard:
+    if: >-
+      github.event_name != 'issue_comment' ||
+      (github.event.issue.number == 1 &&
+       github.event.comment.user.login == github.repository_owner &&
+       github.event.comment.body == '/run-dft-grid6 4580f1f')
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     outputs:
