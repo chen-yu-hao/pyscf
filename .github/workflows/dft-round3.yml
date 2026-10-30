@@ -80,7 +80,10 @@ jobs:
               pyscf/dft/test/test_numa.py pyscf/dft/test/test_numa_process.py \
               2>&1 | tee "benchmark-results/regression-$flag.log"
           done
-          PYSCF_JK_BLOCK_BOUND=1 python -m pytest -q pyscf/scf/test/test_jk.py \
+          # The inherited test uses scf._vhf without importing it. Supply the
+          # original module explicitly; do not skip or alter any assertion.
+          PYSCF_JK_BLOCK_BOUND=1 python -c \
+            'from pyscf import scf; from pyscf.scf import _vhf; import pytest; scf._vhf = _vhf; raise SystemExit(pytest.main(["-q", "pyscf/scf/test/test_jk.py"]))' \
             2>&1 | tee benchmark-results/jk-regression.log
       - name: Early MN15 smoke
         run: |
