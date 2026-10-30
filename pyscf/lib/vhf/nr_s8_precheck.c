@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 #include <stdlib.h>
+#include "cint.h"
 #include "optimizer.h"
 #include "nr_s8_block_bound.h"
 
