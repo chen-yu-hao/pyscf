@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
-      CANDIDATE_SHA: 'a36f5296a971a59527cc22a5ca5d1a1629e2c3b2'
+      CANDIDATE_SHA: 'b5b4f1c711b63c1dbb4fb409e979f53852601eca'
       BASELINE_SHA: '5060bd524fa5e15ad0408fc80ddb3bc3d5cc6130'
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '1'
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 'a36f5296a971a59527cc22a5ca5d1a1629e2c3b2'
+          ref: 'b5b4f1c711b63c1dbb4fb409e979f53852601eca'
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@v5
