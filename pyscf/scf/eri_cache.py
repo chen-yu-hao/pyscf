@@ -68,7 +68,7 @@ class _Scope:
     def __init__(self, mf, max_mb, min_work):
         self.mf = mf
         available = max(0., float(mf.max_memory)-lib.current_memory()[0])
-        self.max_bytes = int(min(max_mb, .25*available)*1024*1024)
+        self.max_bytes = int(min(max_mb*1024*1024, .25*available*1e6))
         self.min_work = min_work
         self.caches = []
         self.original_init = mf.init_direct_scf
