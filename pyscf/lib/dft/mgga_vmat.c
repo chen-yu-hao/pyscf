@@ -40,6 +40,7 @@ static size_t vmat_workspace_bytes(void)
 }
 
 #include "xc_dense_blas.h"
+#include "mgga_pack_simd.h"
 
 static int grid_cut(const uint64_t *prefix, int nblock, int thread, int nthread)
 {
@@ -88,6 +89,9 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                  ptrdiff_t ao_stride)
 {
         const int sparse = screen_index != NULL;
+        const char *pack_setting = getenv("PYSCF_DFT_MGGA_PACK_SIMD");
+        const int pack_simd = ncomp == 4 && pack_setting != NULL &&
+                pack_setting[0] == '1' && pack_setting[1] == '\0';
         const char *dense_blas = getenv("PYSCF_DFT_DENSE_BLAS");
         const int dense_fast = !sparse && dense_blas != NULL &&
                 dense_blas[0] == '1' && dense_blas[1] == '\0';
@@ -215,6 +219,10 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                 }
                 /* Pack each AO once: one weighted channel for LDA, the two
                  * cross channels for GGA, or the full four-channel MGGA form. */
+                if (pack_simd) {
+                        VXCpack_mgga_simd(left, right, ao, wv, active_ao,
+                                         nactive, ng, ngrids, ig0, ao_stride);
+                } else {
                 for (i = 0; i < nactive; i++) {
                         a0 = ao + (size_t)active_ao[i]*ngrids + ig0;
                         ax = a0 + ao_stride;
@@ -252,6 +260,7 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                                 pr[2*ng+g] = wv[(size_t)2*ngrids+ig0+g]*a0[g] + tau_weight*ay[g];
                                 pr[3*ng+g] = wv[(size_t)3*ngrids+ig0+g]*a0[g] + tau_weight*az[g];
                         }
+                }
                 }
                 for (ib = 0; ib < nactive; ib += AO_TILE) {
                         ni = MIN(AO_TILE, nactive-ib);
