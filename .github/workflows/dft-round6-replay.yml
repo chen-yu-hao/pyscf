@@ -1,0 +1,144 @@
+name: DFT round6 saved-density MGGA scatter replay
+
+'on':
+  push:
+    branches: [perf/dft-round6-scatter-replay-20261030]
+    paths: ['.github/workflows/dft-round6-replay.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: dft-round6-replay
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CANDIDATE_SHA: d898db03c003bc9b4b03fb879853149cb5f3554c
+      BASELINE_SHA: 819a7013451536b60e3c968f71987288f7910047
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_DENSE_BLAS: '1'
+      PYSCF_DFT_MGGA_PACK_SIMD: '1'
+      PYSCF_DFT_VMAT_TILE_SCREEN: '0'
+      PYSCF_DFT_MGGA_COALESCE: '0'
+      PYSCF_DFT_MGGA_COALESCE_STATS: '0'
+      PYSCF_DFT_MGGA_SCATTER_RUNS: '0'
+      PYSCF_JK_BLOCK_BOUND: '0'
+      PYSCF_JK_BLOCK_BOUND_STATS: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: d898db03c003bc9b4b03fb879853149cb5f3554c
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Record environment and install dependencies
+        run: |
+          mkdir -p benchmark-results
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git rev-parse HEAD > benchmark-results/candidate-sha.txt
+          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Build matched portable libraries without another SCF
+        run: |
+          cmake -S pyscf/lib -B build-native -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-candidate.log
+          cmake --build build-native --parallel 3 2>&1 | tee benchmark-results/build-candidate.log
+          base="$RUNNER_TEMP/pyscf-round5-baseline"
+          git worktree add --detach "$base" "$BASELINE_SHA"
+          ln -s "$GITHUB_WORKSPACE/pyscf/lib/deps" "$base/pyscf/lib/deps"
+          cmake -S "$base/pyscf/lib" -B "$base/build-native" -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            -DBUILD_LIBCINT=OFF -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-baseline.log
+          cmake --build "$base/build-native" --parallel 3 2>&1 | tee benchmark-results/build-baseline.log
+          git -C "$base" rev-parse HEAD > benchmark-results/baseline-sha.txt
+          cp build-native/CMakeCache.txt benchmark-results/cmake-candidate.txt
+          cp "$base/build-native/CMakeCache.txt" benchmark-results/cmake-baseline.txt
+          cp build-native/deps/src/libcint-build/CMakeCache.txt benchmark-results/cmake-libcint.txt
+          cp build-native/deps/src/libxc-build/CMakeCache.txt benchmark-results/cmake-libxc.txt
+          { git -C build-native/deps/src/libcint rev-parse HEAD; git -C build-native/deps/src/libcint remote -v; } > benchmark-results/integral-source.txt
+          ldd pyscf/lib/libdft.so > benchmark-results/ldd-candidate.txt
+          ldd "$base/pyscf/lib/libdft.so" > benchmark-results/ldd-baseline.txt
+          echo "BASELINE_ROOT=$base" >> "$GITHUB_ENV"
+      - name: Native scatter boundaries and unchanged regression assertions
+        run: |
+          python -m pytest -q pyscf/dft/test/test_mgga_scatter_runs.py \
+            2>&1 | tee benchmark-results/scatter-native.log
+          for flag in 0 1; do
+            PYSCF_DFT_MGGA_SCATTER_RUNS="$flag" python -m pytest -q \
+              pyscf/dft/test/test_numint_mgga_vmat.py pyscf/dft/test/test_numint_dense_blas.py \
+              pyscf/dft/test/test_numint_rho_fused.py pyscf/dft/test/test_numint_cache_blocks.py \
+              pyscf/dft/test/test_numa.py pyscf/dft/test/test_numa_process.py \
+              2>&1 | tee "benchmark-results/regression-$flag.log"
+          done
+          python - <<'PY' 2>&1 | tee benchmark-results/jk-regression.log
+          from pyscf import scf
+          from pyscf.scf import _vhf
+          import pytest
+          scf._vhf = _vhf
+          raise SystemExit(pytest.main(['-q', 'pyscf/scf/test/test_jk.py']))
+          PY
+      - name: Reuse accepted round-five densities rather than rerun SCFs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="$RUNNER_TEMP/round5-accepted.zip"
+          curl --fail --location --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            'https://api.github.com/repos/chen-yu-hao/pyscf/actions/artifacts/12992745465/zip' \
+            -o "$archive"
+          echo "16e60b7cda1a97aff3b30a926512c912c5cf98de37bcc7c9c3d05d25244fe596  $archive" | sha256sum -c -
+          export REFERENCE_ARCHIVE="$archive"
+          python - <<'PY'
+          import os, zipfile
+          from pathlib import Path
+          out = Path('benchmark-results/reference')
+          with zipfile.ZipFile(os.environ['REFERENCE_ARCHIVE']) as z:
+              for n in (4, 8):
+                  for suffix in ('json', 'npz'):
+                      name = f'full/MN15-n{n}-t2-0-baseline.{suffix}'
+                      target = out/name
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      target.write_bytes(z.read(name))
+          Path('benchmark-results/reference-artifact.txt').write_text(
+              'run=41075953719\nartifact=12992745465\nsha256=16e60b7cda1a97aff3b30a926512c912c5cf98de37bcc7c9c3d05d25244fe596\n')
+          PY
+      - name: Three-way saved-density XC replay and matrix validation
+        run: |
+          python benchmarks/dft_round6_replay.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --candidate-sha "$CANDIDATE_SHA" \
+            --reference-dir benchmark-results/reference --output benchmark-results/replay \
+            2>&1 | tee benchmark-results/replay.log
+      - name: Preserve all replay results and precise failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-round6-replay-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+          if-no-files-found: warn
