@@ -1,0 +1,144 @@
+name: DFT saturated ERI cache membership-filter replay
+
+'on':
+  push:
+    branches: [perf/dft-eri-saturation-filter-20261031]
+    paths: ['.github/workflows/dft-eri-filter.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: dft-eri-saturation-filter
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CANDIDATE_SHA: ac42c7bc809378284aa5b7853c9def634c8b83f1
+      BASELINE_SHA: c10ab2ce464f60a37e74924e770f4110913369f6
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_DENSE_BLAS: '1'
+      PYSCF_DFT_MGGA_PACK_SIMD: '1'
+      PYSCF_DFT_VMAT_TILE_SCREEN: '0'
+      PYSCF_DFT_MGGA_COALESCE: '0'
+      PYSCF_DFT_MGGA_COALESCE_STATS: '0'
+      PYSCF_JK_BLOCK_BOUND: '0'
+      PYSCF_JK_BLOCK_BOUND_STATS: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ac42c7bc809378284aa5b7853c9def634c8b83f1
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Record environment and pinned source
+        run: |
+          mkdir -p benchmark-results
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git rev-parse HEAD > benchmark-results/candidate-sha.txt
+          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Build matched portable libcint and Libxc libraries
+        run: |
+          cmake -S pyscf/lib -B build-native -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-candidate.log
+          cmake --build build-native --parallel 3 2>&1 | tee benchmark-results/build-candidate.log
+          base="$RUNNER_TEMP/pyscf-eri-lookup-baseline"
+          git worktree add --detach "$base" "$BASELINE_SHA"
+          ln -s "$GITHUB_WORKSPACE/pyscf/lib/deps" "$base/pyscf/lib/deps"
+          cmake -S "$base/pyscf/lib" -B "$base/build-native" -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            -DBUILD_LIBCINT=OFF -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-baseline.log
+          cmake --build "$base/build-native" --parallel 3 2>&1 | tee benchmark-results/build-baseline.log
+          git -C "$base" rev-parse HEAD > benchmark-results/baseline-sha.txt
+          cp build-native/CMakeCache.txt benchmark-results/cmake-candidate.txt
+          cp "$base/build-native/CMakeCache.txt" benchmark-results/cmake-baseline.txt
+          cp build-native/deps/src/libcint-build/CMakeCache.txt benchmark-results/cmake-libcint.txt
+          cp build-native/deps/src/libxc-build/CMakeCache.txt benchmark-results/cmake-libxc.txt
+          { git -C build-native/deps/src/libcint rev-parse HEAD; git -C build-native/deps/src/libcint remote -v; } > benchmark-results/integral-source.txt
+          ldd pyscf/lib/libcvhf.so > benchmark-results/ldd-candidate.txt
+          ldd "$base/pyscf/lib/libcvhf.so" > benchmark-results/ldd-baseline.txt
+          echo "BASELINE_ROOT=$base" >> "$GITHUB_ENV"
+      - name: Native lookup regressions and unchanged DFT and J-K checks
+        run: |
+          python -m pytest -q pyscf/scf/test/test_eri_cache.py pyscf/scf/test/test_eri_cache_lookup.py pyscf/scf/test/test_eri_cache_filter.py \
+            2>&1 | tee benchmark-results/filter-native.log
+          python -m pytest -q pyscf/dft/test/test_numint_mgga_vmat.py \
+            pyscf/dft/test/test_numint_dense_blas.py pyscf/dft/test/test_numint_rho_fused.py \
+            pyscf/dft/test/test_numint_cache_blocks.py pyscf/dft/test/test_numa.py \
+            pyscf/dft/test/test_numa_process.py 2>&1 | tee benchmark-results/dft-regression.log
+          python - <<'PY' 2>&1 | tee benchmark-results/jk-regression.log
+          from pyscf import scf
+          from pyscf.scf import _vhf
+          import pytest
+          scf._vhf = _vhf
+          raise SystemExit(pytest.main(['-q','pyscf/scf/test/test_jk.py']))
+          PY
+      - name: Reuse accepted densities without restarting any SCF matrix
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="$RUNNER_TEMP/round5-accepted.zip"
+          curl --fail --location --retry 2 -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            'https://api.github.com/repos/chen-yu-hao/pyscf/actions/artifacts/12992745465/zip' -o "$archive"
+          echo "16e60b7cda1a97aff3b30a926512c912c5cf98de37bcc7c9c3d05d25244fe596  $archive" | sha256sum -c -
+          export REFERENCE_ARCHIVE="$archive"
+          python - <<'PY'
+          import json,os,zipfile
+          from pathlib import Path
+          out=Path('benchmark-results/reference');out.mkdir(parents=True,exist_ok=True)
+          with zipfile.ZipFile(os.environ['REFERENCE_ARCHIVE']) as z:
+              for n in (4,8):
+                  stem=f'MN15-n{n}-t2-0-baseline'
+                  meta=json.loads(z.read('full/'+stem+'.json'))
+                  assert meta['source_sha']=='b5b4f1c711b63c1dbb4fb409e979f53852601eca'
+                  assert meta['converged'] and meta['grid_level']==6 and meta['nao']==59*n
+                  assert meta['basis']=='def2-TZVPP' and meta['xc']=='MN15'
+                  for ext in ('.json','.npz'):
+                      (out/(stem+ext)).write_bytes(z.read('full/'+stem+ext))
+          Path('benchmark-results/reference-artifact.txt').write_text(
+              'run=41075953719\nartifact=12992745465\nsha256=16e60b7cda1a97aff3b30a926512c912c5cf98de37bcc7c9c3d05d25244fe596\n')
+          PY
+      - name: Publish build and regression evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-eri-filter-native-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+      - name: Three-way cold-start density sequence and independent array audit
+        run: |
+          python benchmarks/eri_cache_filter_replay.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --candidate-sha "$CANDIDATE_SHA" \
+            --reference-dir benchmark-results/reference --output benchmark-results/replay \
+            2>&1 | tee benchmark-results/replay.log
+      - name: Preserve results and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-eri-filter-results-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
