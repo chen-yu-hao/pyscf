@@ -16,8 +16,16 @@ add_library(cvhf SHARED
   fill_nr_s8.c nr_incore.c nr_direct.c optimizer.c nr_direct_dot.c
   time_rev.c r_direct_o1.c rkb_screen.c
   r_direct_dot.c rah_direct_dot.c rha_direct_dot.c
-  hessian_screen.c nr_sgx_direct.c nr_sr_vhf.c)
+  hessian_screen.c nr_sgx_direct.c nr_sr_vhf.c nr_s8_precheck.c)
 add_dependencies(cvhf cgto np_helper)
+
+# Surgical aliases in this translation unit only. optimizer.c retains the
+# original block predicates and leaf screens. The wrappers forward unchanged
+# unless PYSCF_JK_BLOCK_BOUND=1 proves every original leaf would be rejected.
+set_property(SOURCE nr_direct.c APPEND PROPERTY COMPILE_DEFINITIONS
+  CVHFnrs8_prescreen_block=CVHFnrs8_precheck_block
+  CVHFnrs8_vj_prescreen_block=CVHFnrs8_vj_precheck_block
+  CVHFnrs8_vk_prescreen_block=CVHFnrs8_vk_precheck_block)
 
 set_target_properties(cvhf PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
