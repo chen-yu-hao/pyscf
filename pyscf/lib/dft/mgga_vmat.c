@@ -41,6 +41,19 @@ static size_t vmat_workspace_bytes(void)
 
 #include "xc_dense_blas.h"
 #include "mgga_pack_simd.h"
+#include "mgga_coalesce.h"
+
+/* Optional diagnostics. Read/reset only when no kernels are in flight.
+ * Ordinary SCF and timed profiles leave this diagnostic OFF. */
+static unsigned long long coalesce_counts[4];
+void VXCmgga_coalesce_stats(unsigned long long *out, int reset)
+{
+        for (int i = 0; i < 4; i++) {
+                out[i] = coalesce_counts[i];
+                if (reset) coalesce_counts[i] = 0;
+        }
+}
+
 
 static int grid_cut(const uint64_t *prefix, int nblock, int thread, int nthread)
 {
@@ -113,10 +126,25 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                         }
                 } }
         }
+        const char *merge_setting = getenv("PYSCF_DFT_MGGA_COALESCE");
+        int merge_limit = sparse && ncomp == 4 && merge_setting != NULL &&
+                merge_setting[0] == '1' && merge_setting[1] == '\0' ? 4 : 1;
+        const char *stats_setting = getenv("PYSCF_DFT_MGGA_COALESCE_STATS");
+        const int merge_stats = sparse && ncomp == 4 && stats_setting != NULL &&
+                stats_setting[0] == '1' && stats_setting[1] == '\0';
         const int grid_tile = sparse ? GRID_BLOCK : GRID_TILE;
         const int nblock = (ngrids + grid_tile - 1) / grid_tile;
-        const size_t pack_size = (size_t)ncomp * grid_tile * nao;
+        const size_t max_bytes = vmat_workspace_bytes();
         const size_t matrix_size = (size_t)nao * nao;
+        size_t pack_size = (size_t)ncomp * grid_tile * nao * merge_limit;
+        /* If expanded packing cannot fit even one thread, retain the original
+         * region shape rather than forcing an unrelated Python fallback. */
+        if (merge_limit > 1 &&
+            (2*pack_size+matrix_size+AO_TILE*AO_TILE)*sizeof(double) +
+             (size_t)2*nao*sizeof(int) > max_bytes) {
+                merge_limit = 1;
+                pack_size = (size_t)ncomp * grid_tile * nao;
+        }
         const size_t thread_size = 2 * pack_size + matrix_size + AO_TILE*AO_TILE;
         const size_t thread_bytes = thread_size*sizeof(double) + (size_t)2*nao*sizeof(int);
         int nthreads = 1;
@@ -127,7 +155,6 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
          * the workspace budget. Only this region uses the smaller team;
          * other kernels (in particular J/K) retain their requested threads.
          * Account for both packed matrices and per-thread AO index arrays. */
-        const size_t max_bytes = vmat_workspace_bytes();
         if (nblock == 0) {
                 return 1;
         }
@@ -181,6 +208,7 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
         double *product = right + pack_size;
         int active_ao[nao], active_shell[nao];
         int block, ig0, ng, k, nactive, max_bin, ib, jb, ni, nj, i, j, s, g, t;
+        unsigned long long raw_blocks = 0, batches = 0, joined = 0, widest = 0;
         int begin = (size_t)nblock*thread_id/team_size;
         int end = (size_t)nblock*(thread_id+1)/team_size;
         if (with_plan && prefix[nblock] != 0) {
@@ -196,12 +224,26 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
         }
         for (block = begin; block < end; block++) {
                 ig0 = block * grid_tile;
-                ng = MIN(grid_tile, ngrids - ig0);
+                int width = 1;
+                if (merge_limit > 1) {
+                        width = VXCmgga_merge_width(screen_index, pair_mask,
+                                  nbas, nbins, block, end, merge_limit);
+                }
+                ng = MIN(grid_tile*width, ngrids - ig0);
+                if (merge_stats) {
+                        raw_blocks += width;
+                        batches++;
+                        joined += width-1;
+                        widest = MAX(widest, (unsigned long long)width);
+                }
+                /* Stay inside this thread's original contiguous range. The
+                 * representative row has identical accepted pairs to all rows. */
+                block += width-1;
                 k = ncomp * ng;
                 screen = sparse ? screen_index + (ig0/GRID_BLOCK)*nbas : NULL;
                 max_bin = 0;
                 if (sparse) {
-                        if (with_plan) max_bin = max_bins[block];
+                        if (with_plan) max_bin = max_bins[ig0/GRID_BLOCK];
                         else {
                                 for (s = 0; s < nbas; s++) max_bin = MAX(max_bin, screen[s]);
                         }
@@ -314,6 +356,15 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                                         }
                                 }
                         }
+                }
+        }
+        if (merge_stats) {
+#pragma omp critical(pyscf_mgga_coalesce_stats)
+                {
+                        coalesce_counts[0] += raw_blocks;
+                        coalesce_counts[1] += batches;
+                        coalesce_counts[2] += joined;
+                        coalesce_counts[3] = MAX(coalesce_counts[3], widest);
                 }
         }
 #pragma omp barrier
