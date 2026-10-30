@@ -1,0 +1,130 @@
+name: DFT round2 dense BLAS verified benchmark
+
+'on':
+  push:
+    branches: [perf/dft-round2-dense-blas-20261030]
+    paths: ['.github/workflows/dft-round2.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dft-round2-dense-blas
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  molecular-benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      CANDIDATE_SHA: '5060bd524fa5e15ad0408fc80ddb3bc3d5cc6130'
+      BASELINE_SHA: '3a6238ea20a467eabaf6290e0f23de2ea23460ec'
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_VMAT_TILE_SCREEN: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '5060bd524fa5e15ad0408fc80ddb3bc3d5cc6130'
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Record environment and install dependencies
+        run: |
+          mkdir -p benchmark-results
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          git rev-parse HEAD > benchmark-results/candidate-sha.txt
+          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Build pinned candidate and baseline with matched dependencies
+        run: |
+          cmake -S pyscf/lib -B build-native -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math' \
+            -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF 2>&1 | tee benchmark-results/configure-candidate.log
+          cmake --build build-native --parallel 3 2>&1 | tee benchmark-results/build-candidate.log
+          base="$RUNNER_TEMP/pyscf-round2-baseline"
+          git worktree add --detach "$base" "$BASELINE_SHA"
+          ln -s "$GITHUB_WORKSPACE/pyscf/lib/deps" "$base/pyscf/lib/deps"
+          cmake -S "$base/pyscf/lib" -B "$base/build-native" -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math' \
+            -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF -DBUILD_LIBCINT=OFF -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-baseline.log
+          cmake --build "$base/build-native" --parallel 3 2>&1 | tee benchmark-results/build-baseline.log
+          echo "BASELINE_ROOT=$base" >> "$GITHUB_ENV"
+          ldd pyscf/lib/libdft.so > benchmark-results/ldd-candidate.txt
+          ldd "$base/pyscf/lib/libdft.so" > benchmark-results/ldd-baseline.txt
+      - name: Native dense boundary and numerical regression
+        run: |
+          python -m pytest -q pyscf/dft/test/test_numint_dense_blas.py \
+            2>&1 | tee benchmark-results/dense-regression.log
+          for flag in 0 1; do
+            PYSCF_DFT_DENSE_BLAS="$flag" python -m pytest -q \
+              pyscf/dft/test/test_numint_rho_fused.py pyscf/dft/test/test_numint_mgga_vmat.py \
+              pyscf/dft/test/test_numint_cache_blocks.py pyscf/dft/test/test_numa.py \
+              pyscf/dft/test/test_numa_process.py \
+              2>&1 | tee "benchmark-results/regression-$flag.log"
+          done
+      - name: Paired molecular smoke with independent profiles
+        run: |
+          python benchmarks/dft_round2.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 1 2 --xc PBE MN15 --threads 2 \
+            --repeat 1 --profile --numa off --output benchmark-results/smoke \
+            2>&1 | tee benchmark-results/smoke.log
+      - name: Publish early verified smoke and regression evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-round2-smoke-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+      - name: Full paired grid6 matrix
+        run: |
+          python benchmarks/dft_round2.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 1 2 4 --xc PBE MN15 --threads 1 2 4 \
+            --repeat 3 --profile --numa off --output benchmark-results/full \
+            2>&1 | tee benchmark-results/full.log
+      - name: Check complete record counts and fixed source versions
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p = Path('benchmark-results/full/summary.json')
+          d = json.loads(p.read_text())
+          assert not d['errors'] and len(d['cases']) == 18
+          count = 0
+          for c in d['cases']:
+              assert len(c['trials']) == 8
+              for r in c['trials']:
+                  expected = os.environ['CANDIDATE_SHA' if r['variant'] == 'candidate' else 'BASELINE_SHA']
+                  assert r['source_sha'] == expected
+                  assert r['converged'] and 'verification' in r
+                  assert r['numa'] == 'off' and r['tile_screen'] == '0'
+                  assert r['dense_blas'] == ('1' if r['variant'] == 'candidate' else '0')
+                  count += 1
+          assert count == 144
+          print('18 cases, 144 converged and verified records, pinned sources, isolated dense switch')
+          PY
+      - name: Upload all results even after failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-round2-results-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+          if-no-files-found: warn
