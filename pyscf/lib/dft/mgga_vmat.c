@@ -39,6 +39,8 @@ static size_t vmat_workspace_bytes(void)
         return 256*mib;
 }
 
+#include "xc_dense_blas.h"
+
 static int grid_cut(const uint64_t *prefix, int nblock, int thread, int nthread)
 {
         if (thread == 0) return 0;
@@ -86,6 +88,14 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                  ptrdiff_t ao_stride)
 {
         const int sparse = screen_index != NULL;
+        const char *dense_blas = getenv("PYSCF_DFT_DENSE_BLAS");
+        const int dense_fast = !sparse && dense_blas != NULL &&
+                dense_blas[0] == '1' && dense_blas[1] == '\0';
+        if (dense_fast && ncomp != 4 &&
+            VXCdense_blas(out, ao, wv, nao, ngrids, ncomp,
+                          ao_stride, vmat_workspace_bytes())) {
+                return 1;
+        }
         /* Experimental until paired molecular SCF timings establish a gain.
          * Read once per call, not once per grid/AO tile. */
         const char *tile_screen = getenv("PYSCF_DFT_VMAT_TILE_SCREEN");
@@ -250,6 +260,15 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                                 if (early_screen && !tile_has_pair(ib, ni, jb, nj,
                                         active_ao, active_shell, screen, pair_mask,
                                         ao_loc, nbas, nbins)) {
+                                        continue;
+                                }
+                                if (dense_fast) {
+                                        /* Directly accumulate the dense tile. The diagonal
+                                         * tile's unused half is ignored by final mirroring. */
+                                        dgemm_(&TRANS_T, &TRANS_N, &nj, &ni, &k,
+                                               &D1, right+(size_t)jb*k, &k,
+                                               left+(size_t)ib*k, &k, &D1,
+                                               partial+(size_t)ib*nao+jb, &nao);
                                         continue;
                                 }
                                 dgemm_(&TRANS_T, &TRANS_N, &nj, &ni, &k,
