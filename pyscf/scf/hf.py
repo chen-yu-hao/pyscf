@@ -1612,6 +1612,46 @@ def as_scanner(mf):
     name = mf.__class__.__name__ + SCF_Scanner.__name_mixin__
     return lib.set_class(SCF_Scanner(mf), (SCF_Scanner, mf.__class__), name)
 
+def _guess_from_last_geometry(mf, mol):
+    '''Initial density for a new geometry from the previous orbitals.
+
+    The previous density is not idempotent in the overlap metric of the new
+    geometry and does not hold the right number of electrons. Loewdin-
+    orthonormalizing the occupied orbitals in the new metric fixes both, at
+    negligible cost, and usually saves SCF cycles in geometry optimizations
+    and scans. The converged solution does not depend on it. Periodic
+    systems and unrecognized orbital layouts keep the previous density.
+    '''
+    mo_coeff, mo_occ = mf.mo_coeff, mf.mo_occ
+    if not isinstance(mol, gto.Mole) or mo_occ is None:
+        return mf.make_rdm1()
+    mo_coeff = numpy.asarray(mo_coeff)
+    mo_occ = numpy.asarray(mo_occ)
+    if mo_coeff.ndim == 2 and mo_occ.ndim == 1:      # RHF, ROHF, GHF
+        channels = ((mo_coeff, mo_occ),)
+    elif mo_coeff.ndim == 3 and mo_occ.ndim == 2:    # UHF
+        channels = tuple(zip(mo_coeff, mo_occ))
+    else:
+        return mf.make_rdm1()
+    s = mf.get_ovlp(mol)
+    projected = []
+    for c, occ in channels:
+        idx = occ > 0
+        if s.shape[0] != c.shape[0]:
+            return mf.make_rdm1()
+        c = c.copy()
+        if numpy.any(idx):
+            co = c[:,idx]
+            w, v = scipy.linalg.eigh(co.conj().T.dot(s).dot(co))
+            if w[0] < 1e-8:
+                return mf.make_rdm1()
+            c[:,idx] = co.dot((v * w**-.5).dot(v.conj().T))
+        projected.append(c)
+    if mo_coeff.ndim == 2:
+        return mf.make_rdm1(projected[0], mo_occ)
+    return mf.make_rdm1(numpy.asarray(projected), mo_occ)
+
+
 class SCF_Scanner(lib.SinglePointScanner):
     def __init__(self, mf_obj):
         self.__dict__.update(mf_obj.__dict__)
@@ -1640,7 +1680,7 @@ class SCF_Scanner(lib.SinglePointScanner):
             # various attributes between current `mol` and the `mol` in
             # last calculation.
             if numpy.array_equal(self._last_mol_fp, mol.ao_loc):
-                dm0 = self.make_rdm1()
+                dm0 = _guess_from_last_geometry(self, mol)
             elif self.chkfile and h5py.is_hdf5(self.chkfile):
                 dm0 = self.from_chk(self.chkfile)
         self.mo_coeff = None  # To avoid last mo_coeff being used by SOSCF
