@@ -1,0 +1,18 @@
+n=4 xc=PBE basis=def2-tzvpp level=6 threads=4 nao=236 ngrids=529520 nocc=20
+  max|diff| = 5.834e-15   max|grad_xc| = 4.395e-01
+  reference get_vxc+contract: 9.71s, 9.03s
+  fused     prototype      : 2.50s, 2.47s   speedup 3.66x
+n=4 xc=MN15 basis=def2-tzvpp level=6 threads=4 nao=236 ngrids=529520 nocc=20
+  max|diff| = 1.544e-14   max|grad_xc| = 2.155e-01
+  reference get_vxc+contract: 13.95s, 13.46s
+  fused     prototype      : 3.40s, 3.72s   speedup 3.96x
+n=4 xc=PBE basis=def2-tzvpp level=6 threads=1 nao=236 ngrids=529520 nocc=20
+  max|diff| = 1.575e-14   max|grad_xc| = 4.395e-01
+  reference get_vxc+contract: 33.51s, 21.15s
+  fused     prototype      : 6.91s, 7.74s   speedup 3.06x
+n=4 xc=MN15 basis=def2-tzvpp level=6 threads=1 nao=236 ngrids=529520 nocc=20
+  max|diff| = 1.198e-14   max|grad_xc| = 2.155e-01
+  reference get_vxc+contract: 53.18s, 43.77s
+  fused     prototype      : 12.56s, 11.27s   speedup 3.89x
+
+[exited with code 0]
