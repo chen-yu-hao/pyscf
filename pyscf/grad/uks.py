@@ -23,6 +23,7 @@ import numpy
 from pyscf import lib
 from pyscf.lib import logger
 from pyscf.grad import rks as rks_grad
+from pyscf.grad import rhf as rhf_grad
 from pyscf.grad import uhf as uhf_grad
 from pyscf.dft import numint, gen_grid
 from pyscf import __config__
@@ -42,6 +43,8 @@ def get_veff(ks_grad, mol=None, dm=None):
     mf = ks_grad.base
     ni = mf._numint
     grids, nlcgrids = rks_grad._initialize_grids(ks_grad)
+    # Set only while grad_elec runs (see Gradients.grad_elec)
+    force_terms = getattr(ks_grad, '_force_terms', None)
 
     ni = mf._numint
     mem_now = lib.current_memory()[0]
@@ -62,14 +65,14 @@ def get_veff(ks_grad, mol=None, dm=None):
             vxc += vnlc
         logger.debug1(ks_grad, 'sum(grids response) %s', exc.sum(axis=0))
     else:
-        xc_force = getattr(ks_grad, '_xc_force', None)
-        if xc_force is not None and rks_grad._xc_force_supported(ni, dm, 2):
+        if (force_terms is not None and rks_grad.XC_FORCE
+                and rks_grad._xc_force_supported(ni, dm, 2)):
             # Called from grad_elec: the XC term is returned to grad_elec
             # through extra_force as per-atom forces.
             exc = None
-            xc_force['de'] = get_xc_force(ni, mol, grids, mf.xc, dm,
-                                          max_memory=max_memory,
-                                          verbose=ks_grad.verbose)
+            force_terms['xc'] = get_xc_force(ni, mol, grids, mf.xc, dm,
+                                             max_memory=max_memory,
+                                             verbose=ks_grad.verbose)
             vxc = numpy.zeros((2, 3) + dm.shape[-2:])
         else:
             exc, vxc = get_vxc(ni, mol, grids, mf.xc, dm,
@@ -85,7 +88,21 @@ def get_veff(ks_grad, mol=None, dm=None):
             vxc += vnlc
     t0 = logger.timer(ks_grad, 'vxc', *t0)
 
-    if not ni.libxc.is_hybrid_xc(mf.xc):
+    if (force_terms is not None and rks_grad.JK_FORCE
+            and rks_grad._jk_force_supported(ks_grad, dm, 2)):
+        # Same J/K terms as below, returned to grad_elec as per-atom forces
+        dm_tot = dm[0] + dm[1]
+        if not ni.libxc.is_hybrid_xc(mf.xc):
+            de = rhf_grad.get_jk_force(mol, dm_tot, 1., 0.)
+        else:
+            omega, alpha, hyb = ni.rsh_and_hybrid_coeff(mf.xc, spin=mol.spin)
+            de = rhf_grad.get_jk_force(mol, dm_tot, 1., hyb, dm_k=dm)
+            if omega != 0:
+                with mol.with_range_coulomb(omega):
+                    de += rhf_grad.get_jk_force(mol, dm_tot, 0., alpha - hyb, dm_k=dm)
+        force_terms['jk'] = de
+        logger.timer(ks_grad, 'vj and vk forces', *t0)
+    elif not ni.libxc.is_hybrid_xc(mf.xc):
         vj = ks_grad.get_j(mol, dm)
         vxc += vj[0] + vj[1]
     else:
@@ -292,10 +309,10 @@ class Gradients(uhf_grad.Gradients):
     get_veff = get_veff
 
     # See rks.Gradients: set only while grad_elec runs.
-    _xc_force = None
+    _force_terms = None
 
     def grad_elec(self, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
-        with lib.temporary_env(self, _xc_force={} if rks_grad.XC_FORCE else None):
+        with lib.temporary_env(self, _force_terms={}):
             return uhf_grad.grad_elec(self, mo_energy, mo_coeff, mo_occ, atmlst)
 
     def extra_force(self, atom_id, envs):
@@ -312,8 +329,9 @@ class Gradients(uhf_grad.Gradients):
             log.debug('grids response for atom %d %s',
                       atom_id, vhf.exc1_grid[atom_id])
             de = vhf.exc1_grid[atom_id]
-        if self._xc_force and 'de' in self._xc_force:
-            de = de + self._xc_force['de'][atom_id]
+        if self._force_terms:
+            for force in self._force_terms.values():
+                de = de + force[atom_id]
         return de
 
 Grad = Gradients

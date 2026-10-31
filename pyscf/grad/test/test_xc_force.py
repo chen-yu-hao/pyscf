@@ -58,8 +58,9 @@ def _reference_force(mf, dm):
     return numpy.array([2 * numpy.einsum('xij,ij->x', vxc[:,p0:p1], dm[p0:p1])
                         for p0, p1 in mol.aoslice_by_atom()[:,2:]])
 
-def _grad(mf, enabled):
-    with lib.temporary_env(rks_grad, XC_FORCE=enabled):
+def _grad(mf, enabled, jk=None):
+    jk = enabled if jk is None else jk
+    with lib.temporary_env(rks_grad, XC_FORCE=enabled, JK_FORCE=jk):
         return mf.nuc_grad_method().kernel()
 
 
@@ -121,7 +122,7 @@ class KnownValues(unittest.TestCase):
         vxc = rks_grad.get_vxc(mf._numint, mol, mf.grids, mf.xc, dm)[1]
         vj = g.get_j(mol, dm)
         self.assertAlmostEqual(abs(vhf - (vxc + vj)).max(), 0, delta=1e-12)
-        self.assertIsNone(g._xc_force)
+        self.assertIsNone(g._force_terms)
 
     def test_grid_response_and_nlc_keep_matrix_path(self):
         mf = _scf(mol, 'PBE')

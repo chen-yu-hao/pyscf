@@ -30,9 +30,12 @@ from pyscf.dft.gen_grid import BLKSIZE
 from pyscf import __config__
 import ctypes
 
-# Contract the XC term with the density on the grid inside grad_elec instead
-# of building the 3 x nao x nao matrix of get_vxc (see get_xc_force).
+# Inside grad_elec, contract the XC term with the density on the grid instead
+# of building the 3 x nao x nao matrix of get_vxc (see get_xc_force), and the
+# Coulomb/exchange term per unique shell quartet instead of building the
+# derivative J/K matrices (see grad.rhf.get_jk_force).
 XC_FORCE = getattr(__config__, 'grad_rks_xc_force', True)
+JK_FORCE = getattr(__config__, 'grad_rks_jk_force', True)
 
 
 def get_veff(ks_grad, mol=None, dm=None):
@@ -49,6 +52,8 @@ def get_veff(ks_grad, mol=None, dm=None):
     mf = ks_grad.base
     ni = mf._numint
     grids, nlcgrids = _initialize_grids(ks_grad)
+    # Set only while grad_elec runs (see Gradients.grad_elec)
+    force_terms = getattr(ks_grad, '_force_terms', None)
 
     mem_now = lib.current_memory()[0]
     max_memory = max(2000, ks_grad.max_memory*.9-mem_now)
@@ -68,14 +73,13 @@ def get_veff(ks_grad, mol=None, dm=None):
             vxc += vnlc
         logger.debug1(ks_grad, 'sum(grids response) %s', exc.sum(axis=0))
     else:
-        xc_force = getattr(ks_grad, '_xc_force', None)
-        if xc_force is not None and _xc_force_supported(ni, dm):
+        if force_terms is not None and XC_FORCE and _xc_force_supported(ni, dm):
             # Called from grad_elec: the XC term is returned to grad_elec
             # through extra_force as per-atom forces.
             exc = None
-            xc_force['de'] = get_xc_force(ni, mol, grids, mf.xc, dm,
-                                          max_memory=max_memory,
-                                          verbose=ks_grad.verbose)
+            force_terms['xc'] = get_xc_force(ni, mol, grids, mf.xc, dm,
+                                             max_memory=max_memory,
+                                             verbose=ks_grad.verbose)
             vxc = numpy.zeros((3,) + dm.shape[-2:])
         else:
             exc, vxc = get_vxc(ni, mol, grids, mf.xc, dm,
@@ -91,7 +95,19 @@ def get_veff(ks_grad, mol=None, dm=None):
             vxc += vnlc
     t0 = logger.timer(ks_grad, 'vxc', *t0)
 
-    if not ni.libxc.is_hybrid_xc(mf.xc):
+    if force_terms is not None and JK_FORCE and _jk_force_supported(ks_grad, dm):
+        # Same J/K terms as below, returned to grad_elec as per-atom forces
+        if not ni.libxc.is_hybrid_xc(mf.xc):
+            de = rhf_grad.get_jk_force(mol, dm, 1., 0.)
+        else:
+            omega, alpha, hyb = ni.rsh_and_hybrid_coeff(mf.xc, spin=mol.spin)
+            de = rhf_grad.get_jk_force(mol, dm, 1., hyb * .5)
+            if omega != 0:
+                with mol.with_range_coulomb(omega):
+                    de += rhf_grad.get_jk_force(mol, dm, 0., (alpha - hyb) * .5)
+        force_terms['jk'] = de
+        logger.timer(ks_grad, 'vj and vk forces', *t0)
+    elif not ni.libxc.is_hybrid_xc(mf.xc):
         vj = ks_grad.get_j(mol, dm)
         vxc += vj
     else:
@@ -210,6 +226,22 @@ def _xc_force_supported(ni, dm, nspin=1):
     else:
         ok = len(shape) == 2
     return ok and dm.dtype == numpy.double and shape[-1] == shape[-2]
+
+def _jk_force_supported(ks_grad, dm, nspin=1):
+    '''Whether grad.rhf.get_jk_force reproduces ks_grad.get_j/get_jk/get_k:
+    true for the standard 4-center integrals, false for subclasses that
+    replace them (e.g. density fitting).'''
+    cls = type(ks_grad)
+    for name in ('get_j', 'get_k', 'get_jk'):
+        if (name in ks_grad.__dict__ or
+                getattr(cls, name) is not getattr(rhf_grad.GradientsBase, name)):
+            return False
+    shape = dm.shape if isinstance(dm, numpy.ndarray) else ()
+    if nspin == 2:
+        ok = len(shape) == 3 and shape[0] == 2
+    else:
+        ok = len(shape) == 2
+    return ok and dm.dtype == numpy.double
 
 def _xc_force_density(dm, nao):
     '''Density factors for P = ao.dot(D):  D = c.dot(cn.T) through occupied
@@ -947,13 +979,13 @@ class Gradients(rhf_grad.Gradients):
 
     get_veff = get_veff
 
-    # Set only while grad_elec runs. get_veff then stores the XC forces here
-    # (key 'de') instead of adding the XC matrix, and extra_force adds them.
-    # Direct calls to get_veff keep returning the complete matrix.
-    _xc_force = None
+    # Set only while grad_elec runs. get_veff then stores XC and J/K terms
+    # here as per-atom forces instead of adding their matrices, and
+    # extra_force adds them. Direct calls to get_veff return the full matrix.
+    _force_terms = None
 
     def grad_elec(self, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
-        with lib.temporary_env(self, _xc_force={} if XC_FORCE else None):
+        with lib.temporary_env(self, _force_terms={}):
             return rhf_grad.grad_elec(self, mo_energy, mo_coeff, mo_occ, atmlst)
 
     def extra_force(self, atom_id, envs):
@@ -970,8 +1002,9 @@ class Gradients(rhf_grad.Gradients):
             log.debug('grids response for atom %d %s',
                       atom_id, vhf.exc1_grid[atom_id])
             de = vhf.exc1_grid[atom_id]
-        if self._xc_force and 'de' in self._xc_force:
-            de = de + self._xc_force['de'][atom_id]
+        if self._force_terms:
+            for force in self._force_terms.values():
+                de = de + force[atom_id]
         return de
 
 Grad = Gradients
