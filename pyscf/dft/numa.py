@@ -124,12 +124,20 @@ def _memory_headroom():
     return .75 * available / 1e6
 
 
+def _standard_rks(ks):
+    '''RKS itself or the PES scanner built directly on RKS, which geometry
+    optimizations and gradient scanners use. Other subclasses are declined.'''
+    from pyscf.dft.rks import RKS
+    from pyscf.scf.hf import SCF_Scanner
+    cls = type(ks)
+    return cls is RKS or cls.__bases__ == (SCF_Scanner, RKS)
+
+
 def _supported(ks, mol, dm, hermi):
     # Standard real closed-shell RKS only. Do not change callbacks, XCFun,
     # custom Libxc parameters, response/periodic integration or range overrides.
-    from pyscf.dft.rks import RKS
     ni = ks._numint
-    return (type(ks) is RKS and type(ni) is numint.NumInt and mol is ks.mol
+    return (_standard_rks(ks) and type(ni) is numint.NumInt and mol is ks.mol
             and mol.spin == 0 and hermi == 1 and not mol.cart
             and isinstance(dm, np.ndarray) and dm.ndim == 2 and dm.dtype == np.float64
             and getattr(dm, 'mo_coeff', None) is not None
@@ -178,7 +186,11 @@ class _State:
 
 
 def close(ks):
-    """Release this calculation's workers; normal kernel/reset do this too."""
+    """Release this calculation's workers; normal kernel/reset do this too.
+
+    PES scanners (geometry optimization) keep their workers between steps;
+    they are released here, when the scanner is garbage collected, or at exit.
+    """
     with _registry_lock:
         state = _states.pop(ks, None)
         _plans.pop(ks, None)
@@ -214,6 +226,20 @@ def _get_plan(ks):
         return _plans[ks][1:]
 
 
+def _is_scanner(ks):
+    return isinstance(ks, lib.SinglePointScanner)
+
+
+def _usable_memory(mol, groups, max_memory):
+    # Reserve room for worker interpreters, final matrices and native
+    # thread workspaces. max_memory is a hint, never an OS hard limit.
+    reserve = len(groups) * (192 + mol.nao ** 2 * 8 / 1e6 * 6)
+    usable = min(max_memory, _memory_headroom()) - reserve
+    if usable / len(groups) < 256:
+        return None
+    return usable
+
+
 def nr_rks(ks, mol, dm, hermi, max_memory):
     native = lambda: ks._numint.nr_rks(mol, ks.grids, ks.xc, dm, max_memory=max_memory)
     mode = os.getenv('PYSCF_NUMA', 'on').lower()
@@ -236,15 +262,39 @@ def nr_rks(ks, mol, dm, hermi, max_memory):
             previous.close()
         return native()
     key = (mode, tuple((tuple(cpus), node) for cpus, node in groups), _signature(ks, mol))
+    reload = False
     with _registry_lock:
         state = _states.get(ks)
         if state is not None and state.key != key:
-            state.close()
-            state = None
+            # A scanner moving to the next geometry keeps its bound workers
+            # and only sends them the new molecule and grid.
+            reload = (mode == 'on' and state.key[:2] == key[:2]
+                      and state.pool is not None and hasattr(state.pool, 'reload')
+                      and _is_scanner(ks))
+            if not reload:
+                state.close()
+                state = None
         if state is None:
             state = _State(key)
             _states[ks] = state
     with state.lock:
+        if reload:
+            state.key = key
+            state.disabled = False
+            try:
+                usable = _usable_memory(mol, groups, max_memory)
+                if usable is None:
+                    raise MemoryError('insufficient memory for NUMA XC workers')
+                seconds = state.pool.reload(mol, ks.grids, ks.xc, memory_mb=usable,
+                                            ni_cutoff=ks._numint.cutoff)
+                candidate = state.pool.evaluate(dm)
+                if not all(np.all(np.isfinite(x)) for x in candidate):
+                    raise ValueError('Non-finite NUMA XC result')
+                logger.info(ks, 'NUMA XC workers reloaded for new geometry in %.3fs', seconds)
+                return candidate
+            except (OSError, EOFError, RuntimeError, ValueError, MemoryError) as error:
+                state.close()
+                logger.info(ks, 'NUMA XC reload failed; starting new workers: %s', error)
         if state.disabled:
             return native()
         if state.pool is not None:
@@ -275,11 +325,8 @@ def nr_rks(ks, mol, dm, hermi, max_memory):
                 subprocess.run([executable, '--all', '--physcpubind=' + ','.join(map(str, cpus)),
                                 '--membind=' + str(node), '/bin/true'], check=True,
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
-            # Reserve room for worker interpreters, final matrices and native
-            # thread workspaces. max_memory is a hint, never an OS hard limit.
-            reserve = len(groups) * (192 + mol.nao ** 2 * 8 / 1e6 * 6)
-            usable = min(max_memory, _memory_headroom()) - reserve
-            if usable / len(groups) < 256:
+            usable = _usable_memory(mol, groups, max_memory)
+            if usable is None:
                 return fallback()
             state.directory = tempfile.TemporaryDirectory(prefix='pyscf-numa-')
             stamp = time.perf_counter()

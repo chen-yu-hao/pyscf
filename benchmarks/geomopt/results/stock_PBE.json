@@ -1,0 +1,82 @@
+{
+ "n": 4,
+ "xc": "PBE",
+ "basis": "def2-tzvpp",
+ "level": 6,
+ "threads": 4,
+ "results": [
+  {
+   "step": 0,
+   "wall": 35.47032576099991,
+   "e": -305.51380096660705,
+   "cycles": 10,
+   "ngrids": 529520,
+   "nao": 236,
+   "timers": {
+    "grids.build": 0.2679117929999393,
+    "scf.xc (numa.nr_rks)": 15.032705813000007,
+    "grad.xc (get_vxc)": 9.756258953999918,
+    "grad.get_j": 4.798506158999999
+   },
+   "counts": {
+    "grids.build": 1,
+    "scf.xc (numa.nr_rks)": 12,
+    "grad.xc (get_vxc)": 1,
+    "grad.get_j": 1
+   }
+  },
+  {
+   "step": 1,
+   "wall": 31.27812953,
+   "e": -305.5058050930509,
+   "cycles": 8,
+   "ngrids": 529520,
+   "nao": 236,
+   "timers": {
+    "grids.build": 0.19877213900008428,
+    "scf.xc (numa.nr_rks)": 11.904685553000036,
+    "grad.xc (get_vxc)": 11.700630572000023,
+    "grad.get_j": 4.916142686999933
+   },
+   "counts": {
+    "grids.build": 1,
+    "scf.xc (numa.nr_rks)": 10,
+    "grad.xc (get_vxc)": 1,
+    "grad.get_j": 1
+   }
+  }
+ ],
+ "numa_decisions": [
+  {
+   "result": false,
+   "type_is_RKS": false,
+   "type": "RKS_Scanner",
+   "converged": false
+  },
+  {
+   "result": false,
+   "type_is_RKS": false,
+   "type": "RKS_Scanner",
+   "converged": false
+  },
+  {
+   "result": false,
+   "type_is_RKS": false,
+   "type": "RKS_Scanner",
+   "converged": false
+  },
+  {
+   "result": false,
+   "type_is_RKS": false,
+   "type": "RKS_Scanner",
+   "converged": true
+  },
+  {
+   "result": false,
+   "type_is_RKS": false,
+   "type": "RKS_Scanner",
+   "converged": true
+  }
+ ],
+ "n_numa_calls": 22
+}
