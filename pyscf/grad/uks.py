@@ -62,8 +62,18 @@ def get_veff(ks_grad, mol=None, dm=None):
             vxc += vnlc
         logger.debug1(ks_grad, 'sum(grids response) %s', exc.sum(axis=0))
     else:
-        exc, vxc = get_vxc(ni, mol, grids, mf.xc, dm,
-                           max_memory=max_memory, verbose=ks_grad.verbose)
+        xc_force = getattr(ks_grad, '_xc_force', None)
+        if xc_force is not None and rks_grad._xc_force_supported(ni, dm, 2):
+            # Called from grad_elec: the XC term is returned to grad_elec
+            # through extra_force as per-atom forces.
+            exc = None
+            xc_force['de'] = get_xc_force(ni, mol, grids, mf.xc, dm,
+                                          max_memory=max_memory,
+                                          verbose=ks_grad.verbose)
+            vxc = numpy.zeros((2, 3) + dm.shape[-2:])
+        else:
+            exc, vxc = get_vxc(ni, mol, grids, mf.xc, dm,
+                               max_memory=max_memory, verbose=ks_grad.verbose)
         if mf.do_nlc():
             if ni.libxc.is_nlc(mf.xc):
                 xc = mf.xc
@@ -87,6 +97,29 @@ def get_veff(ks_grad, mol=None, dm=None):
         vxc += vj[0] + vj[1] - vk
 
     return lib.tag_array(vxc, exc1_grid=exc)
+
+
+def get_xc_force(ni, mol, grids, xc_code, dms, max_memory=2000, verbose=None):
+    '''XC contribution to unrestricted Kohn-Sham nuclear gradients.
+
+    Equivalent to ``2 * einsum('sxij,sij->x', get_vxc(...)[1][:,:,p0:p1],
+    dms[:,p0:p1])`` for each atom; see rks.get_xc_force.
+
+    Returns:
+        (natm, 3) array.
+    '''
+    if ni._xc_type(xc_code) == 'NLC':
+        raise NotImplementedError('NLC')
+    mo_coeff = getattr(dms, 'mo_coeff', None)
+    mo_occ = getattr(dms, 'mo_occ', None)
+    if mo_coeff is not None and mo_occ is not None:
+        dms = [lib.tag_array(dms[s], mo_coeff=mo_coeff[s], mo_occ=mo_occ[s])
+               for s in range(2)]
+    else:
+        dms = [dms[0], dms[1]]
+    f = rks_grad._xc_force(ni, mol, grids, xc_code, dms, 1, max_memory, verbose)
+    aoslices = mol.aoslice_by_atom()
+    return numpy.array([-2 * f[:,p0:p1].sum(axis=1) for p0, p1 in aoslices[:,2:]])
 
 
 def get_vxc(ni, mol, grids, xc_code, dms, relativity=0, hermi=1,
@@ -258,6 +291,13 @@ class Gradients(uhf_grad.Gradients):
 
     get_veff = get_veff
 
+    # See rks.Gradients: set only while grad_elec runs.
+    _xc_force = None
+
+    def grad_elec(self, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
+        with lib.temporary_env(self, _xc_force={} if rks_grad.XC_FORCE else None):
+            return uhf_grad.grad_elec(self, mo_energy, mo_coeff, mo_occ, atmlst)
+
     def extra_force(self, atom_id, envs):
         '''Hook for extra contributions in analytical gradients.
 
@@ -265,14 +305,16 @@ class Gradients(uhf_grad.Gradients):
         method, the grid response in DFT numerical integration can be put in
         this function.
         '''
+        de = 0
         if self.grid_response:
             vhf = envs['vhf']
             log = envs['log']
             log.debug('grids response for atom %d %s',
                       atom_id, vhf.exc1_grid[atom_id])
-            return vhf.exc1_grid[atom_id]
-        else:
-            return 0
+            de = vhf.exc1_grid[atom_id]
+        if self._xc_force and 'de' in self._xc_force:
+            de = de + self._xc_force['de'][atom_id]
+        return de
 
 Grad = Gradients
 
