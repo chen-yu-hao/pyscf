@@ -49,6 +49,37 @@ class PartitionTests(unittest.TestCase):
                         np.testing.assert_allclose(x, y, atol=1e-10, rtol=1e-11)
                 self.assertEqual(pool.cuts[1], (len(self.grids.weights) // 3) // 56 * 56)
 
+    def test_reload_new_geometry_and_basis(self):
+        with PartitionedXC(
+                self.mol, self.grids, 'PBE',
+                [(ALLOCATION[:1], None), (ALLOCATION[1:3], None)],
+                allowed_cpus=ALLOCATION, ni_cutoff=self.ni.cutoff,
+                log_prefix=str(Path(self.directory.name) / 'reload')) as pool:
+            pids = [p.pid for p in pool.processes]
+            pool.evaluate(self.dm)
+            # Next geometry step, then a different basis (new nao)
+            for basis in ('cc-pvdz', '6-31g'):
+                mol = self.mol.set_geom_(self.mol.atom_coords() * 1.02, unit='Bohr',
+                                         inplace=False)
+                mol.basis = basis
+                mol.build()
+                grids = dft.gen_grid.Grids(mol)
+                grids.level = 1
+                grids.build(with_non0tab=True)
+                mf = dft.RKS(mol)
+                _, coeff = mf.eig(mf.get_hcore(), mf.get_ovlp())
+                occ = np.zeros(coeff.shape[1])
+                occ[:mol.nelectron // 2] = 2
+                dm = lib.tag_array((coeff * occ) @ coeff.T, mo_coeff=coeff, mo_occ=occ)
+                pool.reload(mol, grids, 'PBE', memory_mb=2000, ni_cutoff=self.ni.cutoff)
+                self.assertEqual(pool.nao, mol.nao)
+                expected = self.ni.nr_rks(mol, grids, 'PBE', dm, hermi=1)
+                actual = pool.evaluate(dm)
+                for x, y in zip(actual, expected):
+                    np.testing.assert_allclose(x, y, atol=1e-10, rtol=1e-11)
+            self.assertEqual([p.pid for p in pool.processes], pids)
+            self.assertTrue(all(p.poll() is None for p in pool.processes))
+
     def test_no_numactl_and_allocation_guard(self):
         with mock.patch('pyscf.dft._numa_worker.shutil.which', return_value=None), PartitionedXC(
                 self.mol, self.grids, 'MN15', [(ALLOCATION[:2], None)],

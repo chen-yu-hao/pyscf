@@ -46,31 +46,6 @@ def worker(fd):
         import resource
         from threadpoolctl import threadpool_info
         conn.send({'imported': True})
-        cfg = conn.recv()
-        if str(Path(pyscf.__file__).resolve()) != cfg['pyscf_file']:
-            raise RuntimeError('Worker resolved a different PySCF environment')
-        lib.num_threads(len(cfg['cpus']))
-        mol = gto.loads(cfg['mol'])
-        mol.verbose = 0
-        mol.max_memory = cfg['memory_mb']
-        grids = dft.gen_grid.Grids(mol)
-        grids.cutoff = cfg['grid_cutoff']
-        # These allocations are first-touched after numactl memory binding.
-        grids.coords = np.array(cfg.pop('coords'), order='C', copy=True)
-        grids.weights = np.array(cfg.pop('weights'), order='C', copy=True)
-        grids.non0tab = np.array(cfg.pop('mask'), order='C', copy=True)
-        ni = dft.numint.NumInt()
-        ni.cutoff = cfg['ni_cutoff']
-        if cfg['block_size'] is not None:
-            original_loop = ni.block_loop
-
-            def block_loop(*args, **kwargs):
-                kwargs['blksize'] = cfg['block_size']
-                return original_loop(*args, **kwargs)
-
-            ni.block_loop = block_loop
-        # Initialize XC caches before repeated timing, equally for all layouts.
-        ni._xc_type(cfg['xc'])
         phases = {}
 
         def instrument(obj, name):
@@ -85,9 +60,39 @@ def worker(fd):
 
             setattr(obj, name, timed)
 
-        for name in ('eval_ao', 'eval_rho1', 'eval_rho2', 'eval_xc_eff'):
-            instrument(ni, name)
+        def configure(cfg):
+            if str(Path(pyscf.__file__).resolve()) != cfg['pyscf_file']:
+                raise RuntimeError('Worker resolved a different PySCF environment')
+            lib.num_threads(len(cfg['cpus']))
+            mol = gto.loads(cfg['mol'])
+            mol.verbose = 0
+            mol.max_memory = cfg['memory_mb']
+            grids = dft.gen_grid.Grids(mol)
+            grids.cutoff = cfg['grid_cutoff']
+            # These allocations are first-touched after numactl memory binding.
+            grids.coords = np.array(cfg.pop('coords'), order='C', copy=True)
+            grids.weights = np.array(cfg.pop('weights'), order='C', copy=True)
+            grids.non0tab = np.array(cfg.pop('mask'), order='C', copy=True)
+            ni = dft.numint.NumInt()
+            ni.cutoff = cfg['ni_cutoff']
+            if cfg['block_size'] is not None:
+                original_loop = ni.block_loop
+
+                def block_loop(*args, **kwargs):
+                    kwargs['blksize'] = cfg['block_size']
+                    return original_loop(*args, **kwargs)
+
+                ni.block_loop = block_loop
+            # Initialize XC caches before repeated timing, equally for all layouts.
+            ni._xc_type(cfg['xc'])
+            for name in ('eval_ao', 'eval_rho1', 'eval_rho2', 'eval_xc_eff'):
+                instrument(ni, name)
+            return mol, grids, ni
+
+        # Module-level function: wrap once per process, not per configuration.
         instrument(dft.numint.libdft, 'VXCxc_vmat')
+        cfg = conn.recv()
+        mol, grids, ni = configure(cfg)
         affinity = sorted(os.sched_getaffinity(0))
         assert affinity == [cfg['cpus'][0]], (affinity, cfg['cpus'])
         conn.send({'ready': True, 'pid': os.getpid(), 'affinity': affinity,
@@ -98,6 +103,17 @@ def worker(fd):
             request = conn.recv()
             if request is None:
                 break
+            if 'reload' in request:
+                # New molecule/grid (e.g. the next geometry step) for this
+                # running worker: no interpreter start, import or CPU binding.
+                stamp = time.perf_counter()
+                mol = grids = ni = None
+                cfg = request['reload']
+                mol, grids, ni = configure(cfg)
+                conn.send({'ready': True, 'pid': os.getpid(),
+                           'reload_seconds': time.perf_counter() - stamp,
+                           'grid_points': len(grids.weights)})
+                continue
             dm = request['density']
             if request.get('mo_coeff') is not None:
                 dm = lib.tag_array(dm, mo_coeff=request['mo_coeff'],
@@ -129,7 +145,7 @@ class PartitionedXC:
 
     partitions is a list of (physical CPU ids, optional memory node). Total workspace is
     divided between workers. Grid boundaries preserve the 56-point screen bins
-    and 8-point sparse-kernel alignment. Geometry/grid changes require a new pool.
+    and 8-point sparse-kernel alignment. Geometry/grid changes use reload().
     """
 
     def __init__(self, mol, grids, xc, partitions, *, memory_mb=4000,
@@ -140,19 +156,11 @@ class PartitionedXC:
             import threadpoolctl
         except ImportError as error:
             raise ImportError('PartitionedXC requires threadpoolctl in the active environment') from error
-        import numpy as np
-        import pyscf
-        from pyscf.dft.gen_grid import BLKSIZE, ALIGNMENT_UNIT
+        from pyscf.dft.gen_grid import BLKSIZE
         if not partitions or memory_mb <= 0:
             raise ValueError('A positive memory budget and nonempty partitions are required')
         if allowed_cpus is None:
             raise ValueError('Pass the CPU allocation captured before OpenMP narrowed affinity')
-        if mol.spin != 0:
-            raise NotImplementedError('Prototype supports closed-shell RKS only')
-        if grids.coords is None or grids.non0tab is None:
-            raise ValueError('Build the complete grid and masks before partitioning')
-        if len(grids.weights) % ALIGNMENT_UNIT:
-            raise ValueError('This experiment requires sparse-kernel grid alignment')
         if block_size is not None and (block_size < BLKSIZE or block_size % BLKSIZE):
             raise ValueError('block_size must be a positive multiple of 56')
         cpus = [c for group, _ in partitions for c in group]
@@ -162,20 +170,14 @@ class PartitionedXC:
             raise ValueError('Worker CPU groups must not overlap')
         if not set(cpus) <= set(allowed_cpus):
             raise ValueError('Worker CPUs exceed the caller\'s allocation')
-        self.nao = mol.nao
         self.partitions = partitions
+        self.block_size = block_size
         self.processes = []
         self.connections = []
         self.logs = []
         self.ready = []
         self.metrics = []
-        ngrids = len(grids.weights)
-        shares = np.cumsum([len(group) for group, _ in partitions])
-        cuts = [0] + [(ngrids * int(share) // int(shares[-1])) // BLKSIZE * BLKSIZE
-                      for share in shares[:-1]] + [ngrids]
-        if any(b <= a for a, b in zip(cuts, cuts[1:])):
-            raise ValueError('Too few grid points for partitions')
-        self.cuts = cuts
+        configs = self._configs(mol, grids, xc, memory_mb, ni_cutoff)
         start = time.perf_counter()
         try:
             for i, (group, node) in enumerate(partitions):
@@ -212,21 +214,65 @@ class PartitionedXC:
                 if not conn.poll(60):
                     raise RuntimeError('NUMA worker did not initialize within 60 seconds')
                 self._receive(conn)
-            for i, (conn, (group, node)) in enumerate(zip(self.connections, partitions)):
-                lo, hi = cuts[i:i + 2]
-                conn.send({'mol': mol.dumps(), 'pyscf_file': str(Path(pyscf.__file__).resolve()),
-                           'coords': grids.coords[lo:hi],
-                           'weights': grids.weights[lo:hi],
-                           'mask': grids.non0tab[lo // BLKSIZE:(hi + BLKSIZE - 1) // BLKSIZE],
-                           'grid_cutoff': grids.cutoff, 'ni_cutoff': ni_cutoff,
-                           'xc': xc, 'cpus': group, 'memory_node': node,
-                           'memory_mb': memory_mb / len(partitions), 'block_size': block_size})
+            for conn, cfg in zip(self.connections, configs):
+                conn.send(cfg)
             for conn in self.connections:
                 self.ready.append(self._receive(conn))
         except BaseException:
             self.close()
             raise
         self.startup_seconds = time.perf_counter() - start
+
+    def _configs(self, mol, grids, xc, memory_mb, ni_cutoff):
+        """Per-worker molecule and grid slices; sets nao and cuts."""
+        import numpy as np
+        import pyscf
+        from pyscf.dft.gen_grid import BLKSIZE, ALIGNMENT_UNIT
+        if mol.spin != 0:
+            raise NotImplementedError('Prototype supports closed-shell RKS only')
+        if grids.coords is None or grids.non0tab is None:
+            raise ValueError('Build the complete grid and masks before partitioning')
+        if len(grids.weights) % ALIGNMENT_UNIT:
+            raise ValueError('This experiment requires sparse-kernel grid alignment')
+        if memory_mb <= 0:
+            raise ValueError('A positive memory budget is required')
+        partitions = self.partitions
+        ngrids = len(grids.weights)
+        shares = np.cumsum([len(group) for group, _ in partitions])
+        cuts = [0] + [(ngrids * int(share) // int(shares[-1])) // BLKSIZE * BLKSIZE
+                      for share in shares[:-1]] + [ngrids]
+        if any(b <= a for a, b in zip(cuts, cuts[1:])):
+            raise ValueError('Too few grid points for partitions')
+        configs = []
+        for i, (group, node) in enumerate(partitions):
+            lo, hi = cuts[i:i + 2]
+            configs.append({'mol': mol.dumps(), 'pyscf_file': str(Path(pyscf.__file__).resolve()),
+                            'coords': grids.coords[lo:hi],
+                            'weights': grids.weights[lo:hi],
+                            'mask': grids.non0tab[lo // BLKSIZE:(hi + BLKSIZE - 1) // BLKSIZE],
+                            'grid_cutoff': grids.cutoff, 'ni_cutoff': ni_cutoff,
+                            'xc': xc, 'cpus': group, 'memory_node': node,
+                            'memory_mb': memory_mb / len(partitions),
+                            'block_size': self.block_size})
+        self.nao = mol.nao
+        self.cuts = cuts
+        return configs
+
+    def reload(self, mol, grids, xc, *, memory_mb, ni_cutoff=1e-13):
+        """Give the running workers a new molecule/grid, keeping processes,
+        CPU and memory binding. Used between geometry-optimization steps."""
+        if not self.connections:
+            raise RuntimeError('Worker pool is closed')
+        start = time.perf_counter()
+        configs = self._configs(mol, grids, xc, memory_mb, ni_cutoff)
+        for conn, cfg in zip(self.connections, configs):
+            conn.send({'reload': cfg})
+        for conn in self.connections:
+            if not conn.poll(120):
+                raise RuntimeError('NUMA worker did not reload within 120 seconds')
+            self._receive(conn)
+        self.reload_seconds = time.perf_counter() - start
+        return self.reload_seconds
 
     @staticmethod
     def _receive(conn):
