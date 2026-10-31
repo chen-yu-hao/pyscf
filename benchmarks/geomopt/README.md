@@ -1,5 +1,61 @@
 # Geometry-optimization profile of the DFT performance stack
 
+## Integrated on this branch (on top of `DFT`)
+
+| Change | Where | Default |
+|---|---|---|
+| XC gradient contracted with D on the grid (`get_xc_force`, RKS/UKS, LDA/GGA/meta-GGA) | `pyscf/grad/rks.py`, `pyscf/grad/uks.py`, `pyscf/lib/dft/xc_grad.c` | on (`grad.rks.XC_FORCE`) |
+| J/K gradient contracted per unique shell quartet (`get_jk_force`, pure/hybrid/range-separated) | `pyscf/grad/rhf.py`, `pyscf/lib/vhf/grad_jk_force.c` | on (`grad.rks.JK_FORCE`) |
+| NUMA XC workers accepted for the RKS scanner; pool kept and reloaded across geometry steps | `pyscf/dft/numa.py`, `pyscf/dft/_numa_worker.py`, `pyscf/dft/rks.py` | follows `PYSCF_NUMA` |
+| Scanner guess: previous occupied orbitals Loewdin-orthonormalized in the new overlap | `pyscf/scf/hf.py` | on |
+
+Both force paths enter only through `grad_elec` (`extra_force`); direct calls
+to `get_veff`/`get_vxc`/`get_jk` still return full matrices. Grid response,
+custom density evaluators, ROKS and gradient classes that override
+`get_j`/`get_k`/`get_jk` (e.g. density fitting) keep the matrix paths.
+Tests: `pyscf/grad/test/test_xc_force.py`, `test_jk_force.py`,
+`pyscf/scf/test/test_scanner_guess.py`, additions to `pyscf/dft/test/test_numa*.py`.
+
+Measured in one build with `prof_geomopt.py` (`XC_FORCE=0 JK_FORCE=0` for the
+matrix paths), (H2O)4/def2-TZVPP/grid 6, 4 threads, warm scanner step
+(`results/integrated_*.json`):
+
+| Warm step | Matrix paths | + XC force | + XC and J/K force | Speedup |
+|-----------|--------------|------------|--------------------|---------|
+| PBE       | 32.4 s       | 23.2 s     | 22.2 s             | 1.46x   |
+| MN15      | 47.8 s       | 36.8 s     | 31.8 s             | 1.50x   |
+
+Same SCF cycles; gradient XC 10.9 -> 4.5 s (PBE) and 18.5 -> 5.8 s (MN15),
+gradient J/K 5.1 -> 1.8 s and 5.9 -> 2.1 s. Step-0 gradients agree to the
+1e-10 logging precision; in PBE step 1 the matrix run's own SCF converged to a
+density differing by 2.9e-7 in the gradient (4.9e-12 Eh), which is SCF
+convergence noise; on a common density the paths agree to ~1e-14 (XC) and
+~1e-12 (J/K).
+
+Fixed density (`bench_xc_force.py`, `bench_jk_force.py`,
+`results/integrated_scaling.txt`), speedup grows with size:
+
+| Case | Reference | Force path | Speedup |
+|---|---|---|---|
+| XC, (H2O)4 PBE grid 6, 1 thread | 20.04 s | 6.58 s | 3.05x |
+| XC, (H2O)4 MN15 grid 6 | 17.27 s | 2.74 s | 6.30x |
+| XC, (H2O)8 PBE grid 5, nao 472 | 27.27 s | 5.15 s | 5.29x |
+| XC, (H2O)8 MN15 grid 5 | 54.11 s | 6.66 s | 8.13x |
+| XC, (H2O)14 PBE grid 3, nao 826 (screened products) | 42.42 s | 5.69 s | 7.45x |
+| J, (H2O)4, 1 thread | 17.11 s | 7.72 s | 2.22x |
+| J+K, (H2O)4, 1 thread | 21.29 s | 8.11 s | 2.62x |
+| J, (H2O)8 | 31.83 s | 12.12 s | 2.63x |
+| J+K, (H2O)8 | 39.47 s | 13.11 s | 3.01x |
+
+NUMA worker engagement and pool reuse are functionally tested with real worker
+processes (reload across geometry and basis changes, same PIDs, results equal
+to native to 1e-10), but this single-socket VM cannot measure the multi-node
+speedup itself.
+
+The sections below are the original analysis that motivated these changes.
+
+## Original analysis
+
 Date: 2026-10-31. Source under test: `perf/dft-eri-saturation-filter-20261031`
 (`d5913330e`), i.e. `DFT` plus rounds 1-3 and the ERI-cache series, with every
 opt-in experiment left at its default (off). Nothing in `pyscf/` is changed by
@@ -138,5 +194,13 @@ python bench_pool_startup.py <root> 4 def2-tzvpp 6            # needs _numa_work
 ```
 
 `xc_grad_contracted.py` compiles `grad_xc_kernel.c` with `gcc -O3 -fopenmp`
-on first use. `prof_geomopt.py` and `bench_pool_startup.py` need the DFT stack
-(`pyscf.dft.numa`); the other scripts also run on upstream master.
+on first use (the original prototype, superseded by `grad.rks.get_xc_force`).
+`prof_geomopt.py` and `bench_pool_startup.py` need the DFT stack
+(`pyscf.dft.numa`). For the integrated code:
+
+```sh
+XC_FORCE=0 JK_FORCE=0 python prof_geomopt.py <root> 4 MN15 def2-tzvpp 6 4  # matrix paths
+python prof_geomopt.py <root> 4 MN15 def2-tzvpp 6 4                         # force paths
+python bench_xc_force.py <root> 8 MN15 def2-tzvpp 5 4
+python bench_jk_force.py <root> 8 def2-tzvpp 4
+```

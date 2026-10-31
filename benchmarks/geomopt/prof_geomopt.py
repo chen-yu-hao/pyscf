@@ -65,6 +65,15 @@ if FUSED:
         return _orig_extra(self, atom_id, envs) + _xc_forces['de'][atom_id]
     rks_grad.Gradients.extra_force = extra_force
 
+if os.environ.get('XC_FORCE') == '0':
+    rks_grad.XC_FORCE = False  # matrix path (get_vxc), for A/B in one build
+if os.environ.get('JK_FORCE') == '0':
+    rks_grad.JK_FORCE = False  # matrix path (get_jk), for A/B in one build
+if hasattr(rhf_grad, 'get_jk_force'):
+    wrap(rhf_grad, 'get_jk_force', 'grad.jk (get_jk_force)')
+if hasattr(rks_grad, 'get_xc_force'):
+    wrap(rks_grad, 'get_xc_force', 'grad.xc (get_xc_force)')
+
 wrap(gen_grid.Grids, 'build', 'grids.build')
 wrap(numa, 'nr_rks', 'scf.xc (numa.nr_rks)')
 wrap(hf.SCF, 'get_jk', 'scf.get_jk')
