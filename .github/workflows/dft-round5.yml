@@ -1,0 +1,145 @@
+name: DFT round5 exact-screen MGGA coalescing
+
+'on':
+  push:
+    branches: [perf/dft-round5-mgga-coalesce-20261030]
+    paths: ['.github/workflows/dft-round5.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: dft-round5-verified
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  molecular-benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      CANDIDATE_SHA: '819a7013451536b60e3c968f71987288f7910047'
+      BASELINE_SHA: 'b5b4f1c711b63c1dbb4fb409e979f53852601eca'
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_DENSE_BLAS: '1'
+      PYSCF_DFT_MGGA_PACK_SIMD: '1'
+      PYSCF_DFT_VMAT_TILE_SCREEN: '0'
+      PYSCF_JK_BLOCK_BOUND: '0'
+      PYSCF_JK_BLOCK_BOUND_STATS: '0'
+      PYSCF_DFT_MGGA_COALESCE_STATS: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '819a7013451536b60e3c968f71987288f7910047'
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Environment and pinned source provenance
+        run: |
+          mkdir -p benchmark-results
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          git rev-parse HEAD > benchmark-results/candidate-sha.txt
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Matched portable native builds
+        run: |
+          cmake -S pyscf/lib -B build-native -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-candidate.log
+          cmake --build build-native --parallel 3 2>&1 | tee benchmark-results/build-candidate.log
+          base="$RUNNER_TEMP/pyscf-round3-baseline"
+          git worktree add --detach "$base" "$BASELINE_SHA"
+          ln -s "$GITHUB_WORKSPACE/pyscf/lib/deps" "$base/pyscf/lib/deps"
+          cmake -S "$base/pyscf/lib" -B "$base/build-native" -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            -DBUILD_LIBCINT=OFF -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-baseline.log
+          cmake --build "$base/build-native" --parallel 3 2>&1 | tee benchmark-results/build-baseline.log
+          echo "BASELINE_ROOT=$base" >> "$GITHUB_ENV"
+          git -C "$base" rev-parse HEAD > benchmark-results/baseline-sha.txt
+          test "$(git -C "$base" rev-parse HEAD)" = "$BASELINE_SHA"
+          cp build-native/CMakeCache.txt benchmark-results/cmake-candidate.txt
+          cp "$base/build-native/CMakeCache.txt" benchmark-results/cmake-baseline.txt
+          cp build-native/deps/src/libcint-build/CMakeCache.txt benchmark-results/cmake-libcint.txt
+          cp build-native/deps/src/libxc-build/CMakeCache.txt benchmark-results/cmake-libxc.txt
+          git -C build-native/deps/src/libcint rev-parse HEAD > benchmark-results/integral-source.txt
+          git -C build-native/deps/src/libcint remote -v >> benchmark-results/integral-source.txt
+          ldd pyscf/lib/libdft.so > benchmark-results/ldd-candidate.txt
+          ldd "$base/pyscf/lib/libdft.so" > benchmark-results/ldd-baseline.txt
+      - name: Native boundaries and unchanged numerical regressions
+        run: |
+          python -m pytest -q pyscf/dft/test/test_mgga_coalesce.py pyscf/dft/test/test_round3.py \
+            2>&1 | tee benchmark-results/coalesce-native.log
+          for flag in 0 1; do
+            PYSCF_DFT_MGGA_COALESCE="$flag" python -m pytest -q \
+              pyscf/dft/test/test_numint_mgga_vmat.py pyscf/dft/test/test_numint_dense_blas.py \
+              pyscf/dft/test/test_numint_rho_fused.py pyscf/dft/test/test_numint_cache_blocks.py \
+              pyscf/dft/test/test_numa.py pyscf/dft/test/test_numa_process.py \
+              2>&1 | tee "benchmark-results/regression-$flag.log"
+          done
+          python - <<'PY' 2>&1 | tee benchmark-results/jk-regression.log
+          import importlib, pytest
+          from pyscf import scf
+          scf._vhf = importlib.import_module('pyscf.scf._vhf')
+          raise SystemExit(pytest.main(['-q', 'pyscf/scf/test/test_jk.py']))
+          PY
+      - name: First paired four-water MN15 smoke
+        run: |
+          python benchmarks/dft_round5.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 4 --xc MN15 --threads 2 \
+            --repeat 1 --profile --numa off --output benchmark-results/smoke \
+            2>&1 | tee benchmark-results/smoke.log
+          python benchmarks/accept_round5.py benchmark-results --candidate "$CANDIDATE_SHA" --smoke \
+            2>&1 | tee benchmark-results/smoke-acceptance.log
+      - name: Publish early smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-round5-smoke-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+      - name: Six paired MN15 large-system and thread cases
+        run: |
+          python benchmarks/dft_round5.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 4 8 --xc MN15 --threads 1 2 4 \
+            --repeat 3 --profile --numa off --timeout 3600 --output benchmark-results/full \
+            2>&1 | tee benchmark-results/full.log
+      - name: Unaffected dense-MGGA and GGA controls
+        run: |
+          python benchmarks/dft_round5.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 2 --xc MN15 --threads 2 \
+            --repeat 3 --profile --numa off --output benchmark-results/dense-control \
+            2>&1 | tee benchmark-results/dense-control.log
+          python benchmarks/dft_round5.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 4 --xc PBE --threads 2 \
+            --repeat 3 --profile --numa off --output benchmark-results/gga-control \
+            2>&1 | tee benchmark-results/gga-control.log
+      - name: Reopen all 64 formal records and fixed-density arrays
+        run: |
+          python benchmarks/accept_round5.py benchmark-results --candidate "$CANDIDATE_SHA" \
+            2>&1 | tee benchmark-results/acceptance.log
+      - name: Preserve results or exact failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-round5-results-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+          if-no-files-found: warn

@@ -1653,6 +1653,8 @@ def _guess_from_last_geometry(mf, mol):
 
 
 class SCF_Scanner(lib.SinglePointScanner):
+    _projected_scanner_guess = True
+
     def __init__(self, mf_obj):
         self.__dict__.update(mf_obj.__dict__)
         self._last_mol_fp = mf_obj.mol.ao_loc
@@ -1680,7 +1682,10 @@ class SCF_Scanner(lib.SinglePointScanner):
             # various attributes between current `mol` and the `mol` in
             # last calculation.
             if numpy.array_equal(self._last_mol_fp, mol.ao_loc):
-                dm0 = _guess_from_last_geometry(self, mol)
+                if self._projected_scanner_guess:
+                    dm0 = _guess_from_last_geometry(self, mol)
+                else:
+                    dm0 = self.make_rdm1()
             elif self.chkfile and h5py.is_hdf5(self.chkfile):
                 dm0 = self.from_chk(self.chkfile)
         self.mo_coeff = None  # To avoid last mo_coeff being used by SOSCF
