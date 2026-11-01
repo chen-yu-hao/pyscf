@@ -120,7 +120,9 @@ class _Scope:
             if not isinstance(opt, _vhf._VHFOpt) or opt._intor != 'int2e_sph':
                 return opt
             if mol._env[gto.PTR_RANGE_OMEGA] == 0:
-                self.caches.append(_IntegralCache(opt, mol, self.max_bytes, self.min_work, self.fast_lookup, self.saturation_filter))
+                self.caches.append(_IntegralCache(
+                    opt, mol, self.max_bytes, self.min_work,
+                    self.fast_lookup, self.saturation_filter))
             return opt
 
     def init(self, mol=None):
@@ -203,3 +205,4 @@ def cached_eri(mf, max_mb=256., min_primitive_work=64, fast_lookup=False,
             mf.__dict__.pop('init_direct_scf', None)
         mf.__dict__.pop('_eri_cache_scope', None)
         scope.close()
+
