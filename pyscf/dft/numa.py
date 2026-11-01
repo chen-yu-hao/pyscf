@@ -85,7 +85,7 @@ def _partitions():
         return [], []
     # Balanced round-robin allocation avoids filling one socket first.
     chosen = [[] for _ in groups]
-    for index in range(max(map(lambda g: len(g[0]), groups))):
+    for index in range(max(len(g[0]) for g in groups)):
         for i, (cpus, _) in enumerate(groups):
             if index < len(cpus) and sum(map(len, chosen)) < budget:
                 chosen[i].append(cpus[index])

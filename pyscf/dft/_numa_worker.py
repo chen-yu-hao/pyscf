@@ -145,7 +145,8 @@ class PartitionedXC:
 
     partitions is a list of (physical CPU ids, optional memory node). Total workspace is
     divided between workers. Grid boundaries preserve the 56-point screen bins
-    and 8-point sparse-kernel alignment. Geometry/grid changes use reload().
+    and 8-point kernel alignment. Geometry/grid changes use reload(); density
+    updates use the exact compact MO payload shared by all workers.
     """
 
     def __init__(self, mol, grids, xc, partitions, *, memory_mb=4000,
@@ -197,8 +198,8 @@ class PartitionedXC:
                                ','.join(map(str, group))]
                     else:
                         cmd = [numa, '--all', '--physcpubind=' + ','.join(map(str, group)),
-                           *(['--membind=' + str(node)] if node is not None else []),
-                           sys.executable, str(Path(__file__).resolve()),
+                               *(['--membind=' + str(node)] if node is not None else []),
+                               sys.executable, str(Path(__file__).resolve()),
                                str(child.fileno())]
                     process = subprocess.Popen(cmd, env=environment(group),
                                                pass_fds=(child.fileno(),), stdout=log,
@@ -283,15 +284,12 @@ class PartitionedXC:
 
     def evaluate(self, dm):
         import numpy as np
+        from pyscf.dft._numa_payload import send_payload
         density = np.asarray(dm)
         if density.dtype != np.float64 or density.shape != (self.nao, self.nao):
             raise ValueError('Expected a real float64 single RKS density matrix')
         start = time.perf_counter()
-        payload = {'density': density,
-                   'mo_coeff': getattr(dm, 'mo_coeff', None),
-                   'mo_occ': getattr(dm, 'mo_occ', None)}
-        for conn in self.connections:
-            conn.send(payload)
+        send_payload(self.connections, dm)
         results = [self._receive(conn) for conn in self.connections]
         nelec = sum(r['nelec'] for r in results)
         exc = sum(r['exc'] for r in results)

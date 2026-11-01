@@ -10,6 +10,11 @@ from pyscf import dft, gto, lib, scf
 from pyscf.dft import numa
 
 
+requires_affinity = unittest.skipUnless(
+    os.name == 'posix' and hasattr(os, 'sched_getaffinity'),
+    'Requires POSIX CPU-affinity support for NUMA workers')
+
+
 class AutoNumaTests(unittest.TestCase):
     def setUp(self):
         mode = mock.patch.dict(os.environ, {'PYSCF_NUMA': 'auto'})
@@ -42,6 +47,7 @@ class AutoNumaTests(unittest.TestCase):
         stack.enter_context(mock.patch.object(numa.time, 'perf_counter', side_effect=[0, 10, 10, 10+setup, 10+setup, 10+setup+candidate_seconds]))
         return stack
 
+    @requires_affinity
     def test_success_reuses_workers(self):
         with self.calibration():
             self.invoke()
@@ -50,6 +56,7 @@ class AutoNumaTests(unittest.TestCase):
         self.assertEqual(self.native.call_count, 1)
         self.assertEqual(self.pool.evaluate.call_count, 2)
 
+    @requires_affinity
     def test_default_on_never_duplicates_integration(self):
         with self.calibration(), mock.patch.dict(os.environ):
             os.environ.pop('PYSCF_NUMA', None)
@@ -58,6 +65,7 @@ class AutoNumaTests(unittest.TestCase):
         self.native.assert_not_called()
         self.assertEqual(self.pool.evaluate.call_count, 2)
 
+    @requires_affinity
     def test_default_uma_has_no_trial_workers_or_grid_hash(self):
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}), \
                 mock.patch.object(numa, '_partitions', return_value=([], [])) as plan, \
@@ -69,6 +77,7 @@ class AutoNumaTests(unittest.TestCase):
         plan.assert_called_once()
         signature.assert_not_called()
 
+    @requires_affinity
     def test_direct_on_failure_falls_back_once(self):
         self.pool.evaluate.side_effect = EOFError('worker exited')
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
@@ -77,6 +86,7 @@ class AutoNumaTests(unittest.TestCase):
         np.testing.assert_array_equal(value[2], self.value[2])
         self.assertTrue(numa._states[self.mf].disabled)
 
+    @requires_affinity
     def test_direct_on_rejects_nonfinite_result(self):
         self.pool.evaluate.return_value = (2., -1., np.full((2, 2), np.nan))
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
@@ -84,6 +94,7 @@ class AutoNumaTests(unittest.TestCase):
         self.native.assert_called_once()
         np.testing.assert_array_equal(value[2], self.value[2])
 
+    @requires_affinity
     def test_switch_to_auto_recalibrates(self):
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
             self.invoke()
@@ -92,6 +103,7 @@ class AutoNumaTests(unittest.TestCase):
         self.pool.close.assert_called()
         self.native.assert_called_once()
 
+    @requires_affinity
     def test_slow_or_unamortized_keeps_native(self):
         for elapsed, setup in ((9, 1), (2, 100)):
             with self.subTest(elapsed=elapsed, setup=setup):
@@ -101,6 +113,7 @@ class AutoNumaTests(unittest.TestCase):
                 self.assertTrue(numa._states[self.mf].disabled)
                 self.assertIsNone(numa._states[self.mf].pool)
 
+    @requires_affinity
     def test_wrong_matrix_and_nan_rejected(self):
         for value in (np.eye(2) * 2, np.full((2, 2), np.nan)):
             numa.close(self.mf)
@@ -110,6 +123,7 @@ class AutoNumaTests(unittest.TestCase):
             np.testing.assert_array_equal(result[2], self.value[2])
             self.assertTrue(numa._states[self.mf].disabled)
 
+    @requires_affinity
     def test_dead_worker_uses_native(self):
         with self.calibration():
             self.invoke()
@@ -120,17 +134,20 @@ class AutoNumaTests(unittest.TestCase):
         self.assertTrue(numa._states[self.mf].disabled)
         self.pool.close.assert_called()
 
+    @requires_affinity
     def test_failed_binding_uses_native(self):
         with self.calibration(), mock.patch.object(numa.subprocess, 'run', side_effect=OSError('binding denied')):
             result = self.invoke()
         np.testing.assert_array_equal(result[2], self.value[2])
         self.pool.evaluate.assert_not_called()
 
+    @requires_affinity
     def test_low_memory_does_not_start_workers(self):
         with self.calibration(), mock.patch.object(numa, '_memory_headroom', return_value=100):
             self.invoke()
         self.pool.evaluate.assert_not_called()
 
+    @requires_affinity
     def test_switch_off_closes_active_pool(self):
         with self.calibration():
             self.invoke()
@@ -139,6 +156,7 @@ class AutoNumaTests(unittest.TestCase):
         self.assertNotIn(self.mf, numa._states)
         self.pool.close.assert_called()
 
+    @requires_affinity
     def test_reset_and_exception_cleanup(self):
         with self.calibration():
             self.invoke()
@@ -152,6 +170,7 @@ class AutoNumaTests(unittest.TestCase):
                 self.mf.kernel()
         self.assertNotIn(self.mf, numa._states)
 
+    @requires_affinity
     def test_grid_and_environment_mutation_invalidate(self):
         before = numa._signature(self.mf, self.mol)
         self.mf.grids.weights[0] += .1
@@ -239,6 +258,7 @@ class ScannerTests(unittest.TestCase):
         symm = dft.rks_symm.RKS(molecule).as_scanner()
         self.assertFalse(numa._standard_rks(symm))
 
+    @requires_affinity
     def test_scanner_reloads_workers_for_new_geometry(self):
         mf = self.make(scanner=True)
         with self.workers():
@@ -255,6 +275,7 @@ class ScannerTests(unittest.TestCase):
         numa.close(mf)
         self.pool.close.assert_called()
 
+    @requires_affinity
     def test_plain_rks_restarts_and_failed_reload_restarts(self):
         mf = self.make(scanner=False)
         with self.workers():
@@ -272,6 +293,7 @@ class ScannerTests(unittest.TestCase):
         self.assertEqual(self.start.call_count, 2)
         self.assertIs(result, self.value)
 
+    @requires_affinity
     def test_scanner_keeps_pool_after_kernel_closes_on_error(self):
         scanner = self.make(scanner=True)
         with self.workers():
