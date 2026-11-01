@@ -1,0 +1,139 @@
+name: DFT bounded semi-direct ERI cache
+
+'on':
+  push:
+    branches: [perf/dft-semidirect-eri-cache-20261030]
+    paths: ['.github/workflows/dft-semidirect.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dft-semidirect-verified
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+jobs:
+  molecular-benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      CANDIDATE_SHA: bb8e98d04fbfa790e943f9c5b0c2e0702b44c872
+      BASELINE_SHA: b5b4f1c711b63c1dbb4fb409e979f53852601eca
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_DENSE_BLAS: '1'
+      PYSCF_DFT_MGGA_PACK_SIMD: '1'
+      PYSCF_DFT_VMAT_TILE_SCREEN: '0'
+      PYSCF_DFT_MGGA_COALESCE: '0'
+      PYSCF_DFT_MGGA_COALESCE_STATS: '0'
+      PYSCF_JK_BLOCK_BOUND: '0'
+      PYSCF_JK_BLOCK_BOUND_STATS: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: bb8e98d04fbfa790e943f9c5b0c2e0702b44c872
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Environment and fixed-source provenance
+        run: |
+          mkdir -p benchmark-results
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git rev-parse HEAD > benchmark-results/candidate-sha.txt
+          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Matched portable builds with one shared integral backend
+        run: |
+          cmake -S pyscf/lib -B build-native -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-candidate.log
+          cmake --build build-native --parallel 3 2>&1 | tee benchmark-results/build-candidate.log
+          base="$RUNNER_TEMP/pyscf-semidirect-baseline"
+          git worktree add --detach "$base" "$BASELINE_SHA"
+          ln -s "$GITHUB_WORKSPACE/pyscf/lib/deps" "$base/pyscf/lib/deps"
+          cmake -S "$base/pyscf/lib" -B "$base/build-native" -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            -DBUILD_LIBCINT=OFF -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-baseline.log
+          cmake --build "$base/build-native" --parallel 3 2>&1 | tee benchmark-results/build-baseline.log
+          git -C "$base" rev-parse HEAD > benchmark-results/baseline-sha.txt
+          cp build-native/CMakeCache.txt benchmark-results/cmake-candidate.txt
+          cp "$base/build-native/CMakeCache.txt" benchmark-results/cmake-baseline.txt
+          cp build-native/deps/src/libcint-build/CMakeCache.txt benchmark-results/cmake-libcint.txt
+          cp build-native/deps/src/libxc-build/CMakeCache.txt benchmark-results/cmake-libxc.txt
+          { git -C build-native/deps/src/libcint rev-parse HEAD; git -C build-native/deps/src/libcint remote -v; } > benchmark-results/integral-source.txt
+          ldd pyscf/lib/libcvhf.so > benchmark-results/ldd-candidate.txt
+          ldd "$base/pyscf/lib/libcvhf.so" > benchmark-results/ldd-baseline.txt
+          echo "BASELINE_ROOT=$base" >> "$GITHUB_ENV"
+      - name: Native cache concurrency and unchanged DFT and J/K regressions
+        run: |
+          python -m pytest -q pyscf/scf/test/test_eri_cache.py 2>&1 | tee benchmark-results/cache-native.log
+          python -m pytest -q pyscf/dft/test/test_numint_mgga_vmat.py \
+            pyscf/dft/test/test_numint_dense_blas.py pyscf/dft/test/test_numint_rho_fused.py \
+            pyscf/dft/test/test_numint_cache_blocks.py pyscf/dft/test/test_numa.py \
+            pyscf/dft/test/test_numa_process.py 2>&1 | tee benchmark-results/dft-regression.log
+          python - <<'PY' 2>&1 | tee benchmark-results/jk-regression.log
+          from pyscf import scf
+          from pyscf.scf import _vhf
+          import pytest
+          scf._vhf = _vhf
+          raise SystemExit(pytest.main(['-q', 'pyscf/scf/test/test_jk.py']))
+          PY
+      - name: Cold-cache four-water MN15 smoke and independent matrix checks
+        run: |
+          python benchmarks/dft_semidirect.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 4 --xc MN15 --threads 2 \
+            --repeat 1 --profile --numa off --timeout 3600 --output benchmark-results/smoke \
+            2>&1 | tee benchmark-results/smoke.log
+          python benchmarks/accept_semidirect.py benchmark-results --candidate "$CANDIDATE_SHA" --smoke \
+            2>&1 | tee benchmark-results/smoke-acceptance.log
+      - name: Publish early evidence, not full acceptance
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-semidirect-smoke-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+      - name: Three-repeat cold-cache large-system and thread comparisons
+        run: |
+          python benchmarks/dft_semidirect.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 4 8 --xc MN15 --threads 1 2 4 \
+            --repeat 3 --profile --numa off --timeout 3600 --output benchmark-results/full \
+            2>&1 | tee benchmark-results/full.log
+      - name: In-core control and Coulomb-only SCF
+        run: |
+          python benchmarks/dft_semidirect.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 2 --xc MN15 --threads 2 \
+            --repeat 3 --profile --numa off --timeout 3600 --output benchmark-results/dense-control \
+            2>&1 | tee benchmark-results/dense-control.log
+          python benchmarks/dft_semidirect.py --baseline-root "$BASELINE_ROOT" \
+            --candidate-root "$GITHUB_WORKSPACE" --sizes 4 --xc PBE --threads 2 \
+            --repeat 3 --profile --numa off --timeout 3600 --output benchmark-results/gga-control \
+            2>&1 | tee benchmark-results/gga-control.log
+      - name: Reopen all eight cases and 64 formal records
+        run: |
+          python benchmarks/accept_semidirect.py benchmark-results --candidate "$CANDIDATE_SHA" \
+            2>&1 | tee benchmark-results/acceptance.log
+      - name: Preserve results and exact failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-semidirect-results-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+          if-no-files-found: warn
