@@ -1000,6 +1000,32 @@ void LIBXC_eval_xc(const int nfn, xc_func_type *fn_obj, const double *fac, const
 }
 }
 
+/* Single-threaded LIBXC_eval_xc for one small batch of points, to be called
+ * from inside a caller's OpenMP region. output[outlen,np] must be zeroed by
+ * the caller (contributions are accumulated as in LIBXC_eval_xc); work needs
+ * np*(7+outlen) doubles. The functional objects are only read. */
+void LIBXC_eval_xc_serial(const int nfn, xc_func_type *fn_obj, const double *fac,
+                          const int spin, const int deriv, const int nvar,
+                          const int np, const int outlen,
+                          double *restrict rho_u, double *restrict output,
+                          double *restrict work)
+{
+        assert(deriv <= 4);
+        if (np <= 0) {
+                return;
+        }
+        double *rho_priv = work;
+        double *ebuf = work + (size_t)np * 7;
+        _eval_rho(rho_priv, rho_u, spin, nvar, np, np);
+        int i;
+        for (i = 0; i < nfn; i++) {
+                xc_func_type *func = fn_obj + i;
+                _eval_xc(func, spin, deriv, np, rho_priv, ebuf, 0, np);
+                merge_xc(output, ebuf, fac[i], spin, deriv, nvar, np, np,
+                         func->info->family);
+        }
+}
+
 int LIBXC_max_deriv_order(const int nfunc, const xc_func_type *func)
 {
         int ord = 4;

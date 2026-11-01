@@ -1225,6 +1225,148 @@ def nr_sap_vxc(ni, mol, grids, max_memory=2000, verbose=None):
 
     return vmat
 
+# Fused spin-restricted XC integration (pyscf/lib/dft/nr_numint_fused.c).
+# Disable with PYSCF_DFT_FUSED=0 or __config__.dft_numint_fused_xc = False.
+FUSED_XC = getattr(__config__, 'dft_numint_fused_xc', True)
+# Number of BLKSIZE grid blocks evaluated together, PYSCF_DFT_FUSED_TILE.
+FUSED_TILE_BLOCKS = getattr(__config__, 'dft_numint_fused_tile_blocks', 4)
+
+def _fused_settings():
+    import os
+    enabled = FUSED_XC
+    flag = os.environ.get('PYSCF_DFT_FUSED')
+    if flag is not None:
+        enabled = flag.strip().lower() not in ('0', 'off', 'false', 'no')
+    tile = FUSED_TILE_BLOCKS
+    value = os.environ.get('PYSCF_DFT_FUSED_TILE')
+    if value is not None:
+        try:
+            tile = int(value)
+        except ValueError:
+            pass
+    return enabled, max(1, min(int(tile), 64))
+
+def _uses_standard_xc_path(ni):
+    '''True if ni evaluates AOs, densities and functionals with the stock
+    molecular NumInt and LibXC routines, so the fused kernel is equivalent.'''
+    if type(ni) is not NumInt or MGGA_DENSITY_LAPL:
+        return False
+    if not (ni.libxc is libxc and getattr(libxc, '__name__', '') == 'pyscf.dft.libxc'):
+        return False
+    if not (ni.eval_ao is eval_ao and ni.eval_rho is eval_rho
+            and ni.eval_rho2 is eval_rho2):
+        return False
+    methods = {'eval_xc1': LibXCMixin.eval_xc1,
+               'eval_xc_eff': LibXCMixin.eval_xc_eff,
+               '_xc_type': LibXCMixin._xc_type,
+               '_gen_rho_evaluator': NumInt._gen_rho_evaluator,
+               'block_loop': NumInt.block_loop,
+               'eval_rho1': NumInt.eval_rho1}
+    return all(getattr(getattr(ni, name), '__func__', None) is fn
+               for name, fn in methods.items())
+
+def _nr_rks_fused(ni, mol, grids, xc_code, dms, hermi, max_memory):
+    '''Fused tile-by-tile RKS XC integration. Returns (nelec, excsum, vmat)
+    like nr_rks, or None when the inputs are outside its scope.'''
+    enabled, tile_blocks = _fused_settings()
+    if not enabled or hermi not in (0, 1) or not _uses_standard_xc_path(ni):
+        return None
+    if getattr(mol, 'pbc_intor', None) is not None:  # pbc Cell
+        return None
+    xctype = ni._xc_type(xc_code)
+    if xctype not in ('LDA', 'GGA', 'MGGA'):
+        return None
+    try:
+        fxc = ctypes.cast(libxc._itrf.LIBXC_eval_xc_serial, ctypes.c_void_p)
+        fused = libdft.VXCnr_rks_fused
+    except AttributeError:  # native libraries built without the fused kernel
+        return None
+    xc = libxc._get_xc(xc_code, 0, ni.omega)
+    if xc.nfunc == 0 or xc.needs_laplacian or xc.xc_type != xctype:
+        return None
+
+    dm_arr = numpy.asarray(dms)
+    if dm_arr.dtype != numpy.double:
+        return None
+    nao = mol.nao_nr()
+    if dm_arr.shape[-2:] != (nao, nao):
+        return None
+    single = dm_arr.ndim == 2
+    dm_arr = dm_arr.reshape(-1, nao, nao)
+    nset = dm_arr.shape[0]
+    if hermi != 1:
+        dm_arr = lib.hermi_sum(numpy.asarray(dm_arr, order='C'), axes=(0,2,1)) * .5
+    dm_arr = numpy.ascontiguousarray(dm_arr)
+
+    coeff = sign = None
+    nocc = 0
+    mo_coeff = getattr(dms, 'mo_coeff', None)
+    mo_occ = getattr(dms, 'mo_occ', None)
+    if single and mo_coeff is not None and mo_occ is not None:
+        mo_coeff = numpy.asarray(mo_coeff)
+        mo_occ = numpy.asarray(mo_occ)
+        if (mo_coeff.dtype == mo_occ.dtype == numpy.double and mo_coeff.ndim == 2
+                and mo_occ.ndim == 1 and mo_coeff.shape == (nao, mo_occ.size)):
+            idx = abs(mo_occ) > OCCDROP
+            coeff = numpy.ascontiguousarray(mo_coeff[:,idx] * numpy.sqrt(abs(mo_occ[idx])))
+            sign = numpy.ascontiguousarray(numpy.sign(mo_occ[idx]))
+            nocc = coeff.shape[1]
+            if nocc == 0:
+                coeff = sign = None
+
+    if grids.coords is None:
+        grids.build(with_non0tab=True)
+    coords = numpy.ascontiguousarray(grids.coords, dtype=numpy.double)
+    weights = numpy.ascontiguousarray(grids.weights, dtype=numpy.double)
+    ngrids = weights.size
+    if coords.shape != (ngrids, 3):
+        return None
+    nblk = (ngrids + BLKSIZE - 1) // BLKSIZE
+    non0tab = grids.non0tab if mol is grids.mol else None
+    if non0tab is None:
+        non0tab = numpy.full((nblk, mol.nbas), NBINS + 1, dtype=numpy.uint8)
+    non0tab = numpy.asarray(non0tab, dtype=numpy.uint8, order='C')
+    if non0tab.shape != (nblk, mol.nbas):
+        return None
+
+    atm = numpy.asarray(mol._atm, dtype=numpy.int32, order='C')
+    bas = numpy.asarray(mol._bas, dtype=numpy.int32, order='C')
+    env = numpy.asarray(mol._env, dtype=numpy.double, order='C')
+    ao_loc = numpy.asarray(mol.ao_loc_nr(), dtype=numpy.int32)
+    if ao_loc[-1] != nao:
+        return None
+    facs = numpy.asarray(xc.facs, dtype=numpy.double)
+    vmat = numpy.zeros((nset, nao, nao))
+    nelec_exc = numpy.zeros((nset, 2))
+    code = {'LDA': 0, 'GGA': 1, 'MGGA': 2}[xctype]
+    ok = fused(
+        vmat.ctypes.data_as(ctypes.c_void_p),
+        nelec_exc.ctypes.data_as(ctypes.c_void_p),
+        ctypes.c_int(code), ctypes.c_int(nset),
+        dm_arr.ctypes.data_as(ctypes.c_void_p),
+        coeff.ctypes.data_as(ctypes.c_void_p) if coeff is not None else None,
+        sign.ctypes.data_as(ctypes.c_void_p) if sign is not None else None,
+        ctypes.c_int(nocc),
+        coords.ctypes.data_as(ctypes.c_void_p),
+        weights.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(ngrids),
+        non0tab.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(tile_blocks),
+        ctypes.c_double(max(float(max_memory), 100.)),
+        fxc, ctypes.c_int(xc.nfunc), ctypes.c_void_p(xc.xc_arr),
+        facs.ctypes.data_as(ctypes.c_void_p),
+        ctypes.c_int(int(mol.cart)), ao_loc.ctypes.data_as(ctypes.c_void_p),
+        atm.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(mol.natm),
+        bas.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(mol.nbas),
+        env.ctypes.data_as(ctypes.c_void_p))
+    if not ok:
+        return None
+    nelec = nelec_exc[:,0]
+    excsum = nelec_exc[:,1]
+    if nset == 1:
+        nelec = nelec[0]
+        excsum = excsum[0]
+        vmat = vmat[0]
+    return nelec, excsum, vmat
+
 def nr_rks(ni, mol, grids, xc_code, dms, relativity=0, hermi=1,
            max_memory=2000, verbose=None):
     '''Calculate RKS XC functional and potential matrix on given meshgrids
@@ -1268,6 +1410,10 @@ def nr_rks(ni, mol, grids, xc_code, dms, relativity=0, hermi=1,
     >>> ni = dft.numint.NumInt()
     >>> nelec, exc, vxc = ni.nr_rks(mol, grids, 'lda,vwn', dm)
     '''
+    fused = _nr_rks_fused(ni, mol, grids, xc_code, dms, hermi, max_memory)
+    if fused is not None:
+        return fused
+
     xctype = ni._xc_type(xc_code)
     make_rho, nset, nao = ni._gen_rho_evaluator(mol, dms, hermi, False, grids)
     ao_loc = mol.ao_loc_nr()
