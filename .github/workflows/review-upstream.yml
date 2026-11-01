@@ -1,0 +1,220 @@
+name: Reviewed PySCF versus pinned upstream
+
+'on':
+  push:
+    branches: [review/pyscf-merge-and-benchmark-20261101]
+    paths:
+      - '.github/workflows/review-upstream.yml'
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact 40-character reviewed computational commit
+        required: false
+        type: string
+
+permissions:
+  contents: read
+concurrency:
+  group: pyscf-reviewed-upstream
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify-and-benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      CANDIDATE_SHA: 8d480e000a90040af0070830ae9cfdd1f8587de2
+      UPSTREAM_SHA: 1c6d4a88393557da61a639d078d1aed2813912dd
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_DENSE_BLAS: '0'
+      PYSCF_DFT_MGGA_PACK_SIMD: '0'
+      PYSCF_DFT_VMAT_TILE_SCREEN: '0'
+      PYSCF_DFT_MGGA_COALESCE: '0'
+      PYSCF_DFT_MGGA_COALESCE_STATS: '0'
+      PYSCF_DFT_MGGA_SCATTER_RUNS: '0'
+      PYSCF_JK_BLOCK_BOUND: '0'
+      PYSCF_JK_BLOCK_BOUND_STATS: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Resolve pinned candidate and create separate worktree
+        env:
+          INPUT_CANDIDATE_SHA: ${{ github.event.inputs.candidate_sha }}
+        run: |
+          candidate_sha="${INPUT_CANDIDATE_SHA:-$CANDIDATE_SHA}"
+          [[ "$candidate_sha" =~ ^[0-9a-f]{40}$ ]]
+          root="$RUNNER_TEMP/pyscf-reviewed-candidate"
+          git worktree add --detach "$root" "$candidate_sha"
+          test "$(git -C "$root" rev-parse HEAD)" = "$candidate_sha"
+          echo "CANDIDATE_SHA=$candidate_sha" >> "$GITHUB_ENV"
+          echo "CANDIDATE_ROOT=$root" >> "$GITHUB_ENV"
+          mkdir -p benchmark-results/status
+          git rev-parse HEAD > benchmark-results/workflow-source.txt
+          git -C "$root" rev-parse HEAD > benchmark-results/candidate-source.txt
+      - uses: actions/checkout@v4
+        with:
+          repository: pyscf/pyscf
+          ref: 1c6d4a88393557da61a639d078d1aed2813912dd
+          path: upstream
+          persist-credentials: false
+      - name: Install one matched Python and native build environment
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest pytest-subtests setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          git -C upstream rev-parse HEAD > benchmark-results/upstream-source.txt
+          test "$(git -C upstream rev-parse HEAD)" = "$UPSTREAM_SHA"
+          echo "UPSTREAM_ROOT=$GITHUB_WORKSPACE/upstream" >> "$GITHUB_ENV"
+      - name: Build candidate and shared portable libcint and Libxc
+        id: candidate-build
+        run: |
+          cmake -S "$CANDIDATE_ROOT/pyscf/lib" -B "$CANDIDATE_ROOT/build-review" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-candidate.log
+          cmake --build "$CANDIDATE_ROOT/build-review" --parallel 3 \
+            2>&1 | tee benchmark-results/build-candidate.log
+          cp "$CANDIDATE_ROOT/build-review/CMakeCache.txt" benchmark-results/cmake-candidate.txt
+          cp "$CANDIDATE_ROOT/build-review/deps/src/libcint-build/CMakeCache.txt" benchmark-results/cmake-libcint.txt
+          cp "$CANDIDATE_ROOT/build-review/deps/src/libxc-build/CMakeCache.txt" benchmark-results/cmake-libxc.txt
+          git -C "$CANDIDATE_ROOT/build-review/deps/src/libcint" rev-parse HEAD > benchmark-results/libcint-source.txt
+          ldd "$CANDIDATE_ROOT/pyscf/lib/libcvhf.so" > benchmark-results/ldd-candidate.txt
+      - name: Build upstream against the exact same dependencies and flags
+        id: upstream-build
+        run: |
+          ln -s "$CANDIDATE_ROOT/pyscf/lib/deps" "$UPSTREAM_ROOT/pyscf/lib/deps"
+          cmake -S "$UPSTREAM_ROOT/pyscf/lib" -B "$UPSTREAM_ROOT/build-review" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+            -DBUILD_MARCH_NATIVE=OFF -DUSE_QCINT=OFF -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+            -DBUILD_LIBCINT=OFF -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF \
+            2>&1 | tee benchmark-results/configure-upstream.log
+          cmake --build "$UPSTREAM_ROOT/build-review" --parallel 3 \
+            2>&1 | tee benchmark-results/build-upstream.log
+          cp "$UPSTREAM_ROOT/build-review/CMakeCache.txt" benchmark-results/cmake-upstream.txt
+          ldd "$UPSTREAM_ROOT/pyscf/lib/libcvhf.so" > benchmark-results/ldd-upstream.txt
+      - name: Original scanner and gradient assertions on upstream, one thread
+        id: upstream-contract
+        continue-on-error: true
+        run: |
+          python benchmarks/review_contract_tests.py --root "$UPSTREAM_ROOT" \
+            --expected-sha "$UPSTREAM_SHA" --status-file benchmark-results/status/upstream-contract.json \
+            2>&1 | tee benchmark-results/upstream-contract.log
+      - name: Original scanner and gradient assertions on candidate, one thread
+        id: candidate-contract
+        continue-on-error: true
+        run: |
+          python benchmarks/review_contract_tests.py --root "$CANDIDATE_ROOT" \
+            --expected-sha "$CANDIDATE_SHA" --status-file benchmark-results/status/candidate-contract.json \
+            2>&1 | tee benchmark-results/candidate-contract.log
+      - name: Isolate projected scanner guess if original candidate assertions failed
+        if: ${{ always() && steps.candidate-contract.outcome == 'failure' }}
+        continue-on-error: true
+        run: |
+          python benchmarks/review_contract_tests.py --root "$CANDIDATE_ROOT" \
+            --expected-sha "$CANDIDATE_SHA" --old-guess-diagnostic \
+            --status-file benchmark-results/status/candidate-old-guess-diagnostic.json \
+            2>&1 | tee benchmark-results/candidate-old-guess-diagnostic.log
+      - name: New force, scanner, NUMA and opt-in native regressions
+        id: native-tests
+        continue-on-error: true
+        env:
+          PYSCF_DFT_DENSE_BLAS: '1'
+          PYSCF_DFT_MGGA_PACK_SIMD: '1'
+        run: |
+          cd "$CANDIDATE_ROOT"
+          set +e
+          PYTHONPATH="$CANDIDATE_ROOT" python - <<'PY' 2>&1 | tee "$GITHUB_WORKSPACE/benchmark-results/native-tests.log"
+          from pyscf import lib, scf
+          from pyscf.scf import _vhf
+          import pytest
+          scf._vhf = _vhf
+          lib.num_threads(2)
+          paths = [
+              'pyscf/grad/test/test_jk_force.py', 'pyscf/grad/test/test_xc_force.py',
+              'pyscf/scf/test/test_scanner_guess.py', 'pyscf/scf/test/test_jk.py',
+              'pyscf/scf/test/test_eri_cache.py', 'pyscf/scf/test/test_eri_cache_lookup.py',
+              'pyscf/scf/test/test_eri_cache_filter.py',
+              'pyscf/dft/test/test_numint_mgga_vmat.py', 'pyscf/dft/test/test_numint_dense_blas.py',
+              'pyscf/dft/test/test_numint_rho_fused.py', 'pyscf/dft/test/test_numint_cache_blocks.py',
+              'pyscf/dft/test/test_numa.py', 'pyscf/dft/test/test_numa_process.py',
+              'pyscf/dft/test/test_ao_cache_native.py', 'pyscf/dft/test/test_mgga_coalesce.py',
+              'pyscf/dft/test/test_mgga_scatter_runs.py', 'pyscf/dft/test/test_round3.py',
+              'pyscf/dft/test/test_numa_payload.py',
+          ]
+          raise SystemExit(pytest.main(['-q', *paths]))
+          PY
+          result=${PIPESTATUS[0]}
+          set -e
+          printf '{"exit_code": %s}\n' "$result" > "$GITHUB_WORKSPACE/benchmark-results/status/native-tests.json"
+          exit "$result"
+      - name: Whole-SCF ERI policy correctness including a saturated filter
+        id: eri-gates
+        if: ${{ steps.upstream-contract.outcome == 'success' && steps.candidate-contract.outcome == 'success' && steps.native-tests.outcome == 'success' }}
+        continue-on-error: true
+        run: |
+          python benchmarks/review_upstream.py --suite eri-gate --saturation-gate \
+            --candidate-root "$CANDIDATE_ROOT" --candidate-sha "$CANDIDATE_SHA" \
+            --threads 2 --output benchmark-results/eri-gates \
+            2>&1 | tee benchmark-results/eri-gates.log
+      - name: Three-way fresh-process SCFs against official upstream
+        id: performance
+        if: ${{ steps.upstream-contract.outcome == 'success' && steps.candidate-contract.outcome == 'success' && steps.native-tests.outcome == 'success' && steps.eri-gates.outcome == 'success' }}
+        continue-on-error: true
+        run: |
+          python benchmarks/review_upstream.py --suite performance \
+            --upstream-root "$UPSTREAM_ROOT" --upstream-sha "$UPSTREAM_SHA" \
+            --candidate-root "$CANDIDATE_ROOT" --candidate-sha "$CANDIDATE_SHA" \
+            --threads 2 --repeats 3 --output benchmark-results/performance \
+            2>&1 | tee benchmark-results/performance.log
+      - name: Require all unmodified-source gates and complete performance matrix
+        if: always()
+        env:
+          UPSTREAM_CONTRACT_OUTCOME: ${{ steps.upstream-contract.outcome }}
+          CANDIDATE_CONTRACT_OUTCOME: ${{ steps.candidate-contract.outcome }}
+          NATIVE_OUTCOME: ${{ steps.native-tests.outcome }}
+          ERI_OUTCOME: ${{ steps.eri-gates.outcome }}
+          PERFORMANCE_OUTCOME: ${{ steps.performance.outcome }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          keys = ('UPSTREAM_CONTRACT_OUTCOME', 'CANDIDATE_CONTRACT_OUTCOME',
+                  'NATIVE_OUTCOME', 'ERI_OUTCOME', 'PERFORMANCE_OUTCOME')
+          result = {key: os.environ.get(key) for key in keys}
+          result['passed'] = all(result[key] == 'success' for key in keys)
+          result['diagnostic_old_guess_does_not_count_as_passing'] = True
+          out = Path('benchmark-results'); out.mkdir(exist_ok=True)
+          (out/'final-gates.json').write_text(json.dumps(result, indent=2))
+          print(json.dumps(result, indent=2))
+          if not result['passed']:
+              raise SystemExit('A required original-source gate failed or did not run; no acceptance')
+          PY
+      - name: Preserve all results, raw arrays, build provenance and failure logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyscf-reviewed-upstream-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+          if-no-files-found: warn
