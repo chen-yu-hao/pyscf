@@ -203,6 +203,56 @@ def get_jk(mol, dm):
                                mol._atm, mol._bas, mol._env, vhfopt=vhfopt)
     return -vj, -vk
 
+def get_jk_force(mol, dm, j_factor=1., k_factor=0., dm_k=None,
+                 direct_scf_tol=1e-14):
+    '''Coulomb/exchange contribution to nuclear gradients, per atom.
+
+    Equivalent to ``2 * einsum('xij,ij->x', v[:,p0:p1], dm[p0:p1])`` for every
+    atom with ``v = j_factor * vj - k_factor * vk`` and ``vj, vk = get_jk(mol, dm)``,
+    as used by grad_elec, but contracted with the density for every unique
+    (8-fold symmetric) shell quartet: no 3 x nao x nao matrices are built and
+    screening uses density products.
+
+    Args:
+        dm : (nao, nao) density for the Coulomb term (and exchange if dm_k is None)
+
+    Kwargs:
+        dm_k : (nset, nao, nao) spin densities for exchange, e.g. (dma, dmb) for
+            UHF where v_s = vj[a]+vj[b] - k_factor*vk[s] is contracted with dm_s.
+
+    Returns:
+        (natm, 3) array
+    '''
+    dm = numpy.asarray(dm, dtype=numpy.double, order='C')
+    if dm_k is None:
+        dm_k = dm[None]
+    dm_k = numpy.asarray(dm_k, dtype=numpy.double, order='C').reshape(-1, *dm.shape)
+    nbas = mol.nbas
+    ao_loc = mol.ao_loc_nr()
+    vhfopt = _vhf._VHFOpt(mol, 'int2e_ip1', 'CVHFgrad_jk_prescreen',
+                          direct_scf_tol=direct_scf_tol)
+    q_cond = numpy.asarray(_calc_q_cond(mol, vhfopt), order='C')
+    dm_cond = numpy.empty((2, nbas, nbas))
+    dm_cond[0] = mol.condense_to_shell(dm, 'absmax')
+    dm_cond[1] = numpy.max([mol.condense_to_shell(d, 'absmax') for d in dm_k], axis=0)
+    de = numpy.zeros((mol.natm, 3))
+    intor = mol._add_suffix('int2e_ip1')
+    _vhf.libcvhf.CVHFgrad_jk_force(
+        de.ctypes.data_as(ctypes.c_void_p),
+        dm.ctypes.data_as(ctypes.c_void_p),
+        dm_k.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(len(dm_k)),
+        # E = 1/2 sum (ij|kl) [jf D_ij D_kl - kf/2 (D_ik D_jl + D_il D_jk)]
+        ctypes.c_double(j_factor), ctypes.c_double(k_factor * .5),
+        getattr(_vhf.libcvhf, intor), vhfopt._cintopt,
+        q_cond.ctypes.data_as(ctypes.c_void_p),
+        dm_cond.ctypes.data_as(ctypes.c_void_p),
+        ctypes.c_double(direct_scf_tol),
+        ao_loc.ctypes.data_as(ctypes.c_void_p),
+        mol._atm.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(mol.natm),
+        mol._bas.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(nbas),
+        mol._env.ctypes.data_as(ctypes.c_void_p))
+    return de
+
 def get_j(mol, dm):
     '''
     J = ((-nabla i) j| kl) D_lk

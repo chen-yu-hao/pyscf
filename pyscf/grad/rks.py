@@ -26,8 +26,16 @@ from pyscf.lib import logger
 from pyscf.grad import rhf as rhf_grad
 from pyscf.dft import numint, radi, gen_grid, xc_deriv
 from pyscf.dft.numint import libdft
+from pyscf.dft.gen_grid import BLKSIZE
 from pyscf import __config__
 import ctypes
+
+# Inside grad_elec, contract the XC term with the density on the grid instead
+# of building the 3 x nao x nao matrix of get_vxc (see get_xc_force), and the
+# Coulomb/exchange term per unique shell quartet instead of building the
+# derivative J/K matrices (see grad.rhf.get_jk_force).
+XC_FORCE = getattr(__config__, 'grad_rks_xc_force', True)
+JK_FORCE = getattr(__config__, 'grad_rks_jk_force', True)
 
 
 def get_veff(ks_grad, mol=None, dm=None):
@@ -44,6 +52,8 @@ def get_veff(ks_grad, mol=None, dm=None):
     mf = ks_grad.base
     ni = mf._numint
     grids, nlcgrids = _initialize_grids(ks_grad)
+    # Set only while grad_elec runs (see Gradients.grad_elec)
+    force_terms = getattr(ks_grad, '_force_terms', None)
 
     mem_now = lib.current_memory()[0]
     max_memory = max(2000, ks_grad.max_memory*.9-mem_now)
@@ -63,8 +73,17 @@ def get_veff(ks_grad, mol=None, dm=None):
             vxc += vnlc
         logger.debug1(ks_grad, 'sum(grids response) %s', exc.sum(axis=0))
     else:
-        exc, vxc = get_vxc(ni, mol, grids, mf.xc, dm,
-                           max_memory=max_memory, verbose=ks_grad.verbose)
+        if force_terms is not None and XC_FORCE and _xc_force_supported(ni, dm):
+            # Called from grad_elec: the XC term is returned to grad_elec
+            # through extra_force as per-atom forces.
+            exc = None
+            force_terms['xc'] = get_xc_force(ni, mol, grids, mf.xc, dm,
+                                             max_memory=max_memory,
+                                             verbose=ks_grad.verbose)
+            vxc = numpy.zeros((3,) + dm.shape[-2:])
+        else:
+            exc, vxc = get_vxc(ni, mol, grids, mf.xc, dm,
+                               max_memory=max_memory, verbose=ks_grad.verbose)
         if mf.do_nlc():
             if ni.libxc.is_nlc(mf.xc):
                 xc = mf.xc
@@ -76,7 +95,19 @@ def get_veff(ks_grad, mol=None, dm=None):
             vxc += vnlc
     t0 = logger.timer(ks_grad, 'vxc', *t0)
 
-    if not ni.libxc.is_hybrid_xc(mf.xc):
+    if force_terms is not None and JK_FORCE and _jk_force_supported(ks_grad, dm):
+        # Same J/K terms as below, returned to grad_elec as per-atom forces
+        if not ni.libxc.is_hybrid_xc(mf.xc):
+            de = rhf_grad.get_jk_force(mol, dm, 1., 0.)
+        else:
+            omega, alpha, hyb = ni.rsh_and_hybrid_coeff(mf.xc, spin=mol.spin)
+            de = rhf_grad.get_jk_force(mol, dm, 1., hyb * .5)
+            if omega != 0:
+                with mol.with_range_coulomb(omega):
+                    de += rhf_grad.get_jk_force(mol, dm, 0., (alpha - hyb) * .5)
+        force_terms['jk'] = de
+        logger.timer(ks_grad, 'vj and vk forces', *t0)
+    elif not ni.libxc.is_hybrid_xc(mf.xc):
         vj = ks_grad.get_j(mol, dm)
         vxc += vj
     else:
@@ -175,6 +206,187 @@ def get_vxc(ni, mol, grids, xc_code, dms, relativity=0, hermi=1,
         vmat = vmat[0]
     # - sign because nabla_X = -nabla_x
     return exc, -vmat
+
+def _xc_force_supported(ni, dm, nspin=1):
+    '''Whether get_xc_force reproduces get_vxc for this integrator and density.
+
+    The force path evaluates the density itself, so integrators that change
+    how densities are evaluated keep the matrix path. Custom AO evaluators,
+    block loops and XC functionals are used through ni and remain supported.
+    '''
+    if not isinstance(ni, numint.NumInt) or numint.MGGA_DENSITY_LAPL:
+        return False
+    cls = type(ni)
+    for name in ('_gen_rho_evaluator', 'eval_rho', 'eval_rho1', 'eval_rho2'):
+        if name in ni.__dict__ or getattr(cls, name) is not getattr(numint.NumInt, name):
+            return False
+    shape = dm.shape if isinstance(dm, numpy.ndarray) else ()
+    if nspin == 2:
+        ok = len(shape) == 3 and shape[0] == 2
+    else:
+        ok = len(shape) == 2
+    return ok and dm.dtype == numpy.double and shape[-1] == shape[-2]
+
+def _jk_force_supported(ks_grad, dm, nspin=1):
+    '''Whether grad.rhf.get_jk_force reproduces ks_grad.get_j/get_jk/get_k:
+    true for the standard 4-center integrals, false for subclasses that
+    replace them (e.g. density fitting).'''
+    cls = type(ks_grad)
+    for name in ('get_j', 'get_k', 'get_jk'):
+        if (name in ks_grad.__dict__ or
+                getattr(cls, name) is not getattr(rhf_grad.GradientsBase, name)):
+            return False
+    shape = dm.shape if isinstance(dm, numpy.ndarray) else ()
+    if nspin == 2:
+        ok = len(shape) == 3 and shape[0] == 2
+    else:
+        ok = len(shape) == 2
+    return ok and dm.dtype == numpy.double
+
+def _xc_force_density(dm, nao):
+    '''Density factors for P = ao.dot(D):  D = c.dot(cn.T) through occupied
+    orbitals when they are cheaper than the AO density matrix.'''
+    mo_coeff = getattr(dm, 'mo_coeff', None)
+    mo_occ = getattr(dm, 'mo_occ', None)
+    if mo_coeff is not None and mo_occ is not None:
+        mo_occ = numpy.asarray(mo_occ)
+        occ = mo_occ != 0
+        nocc = numpy.count_nonzero(occ)
+        if 0 < nocc and 2 * nocc <= nao and numpy.asarray(mo_coeff).dtype == numpy.double:
+            c = numpy.asarray(mo_coeff[:,occ], order='C')
+            return c, numpy.asarray(c * mo_occ[occ], order='C')
+    return None, numpy.asarray(dm, order='C')
+
+def _xc_force(ni, mol, grids, xc_code, dms, spin, max_memory=2000, verbose=None):
+    '''Per-AO XC force f[x,i] = sum_j V^x_ij D_ij summed over spins, where
+    V^x is the matrix returned by get_vxc (before the sign flip).'''
+    xctype = ni._xc_type(xc_code)
+    nao = mol.nao
+    f = numpy.zeros((3, nao))
+    if xctype not in ('LDA', 'GGA', 'MGGA'):
+        return f
+    log = logger.new_logger(mol, verbose)
+    t0 = (logger.process_clock(), logger.perf_counter())
+    lda = xctype == 'LDA'
+    mgga = xctype == 'MGGA'
+    nvar = 1 if lda else (5 if mgga else 4)
+    ao_deriv = 1 if lda else 2
+    comp = 4 if lda else 10
+    factors = [_xc_force_density(dm, nao) for dm in dms]
+    nspin = len(factors)
+
+    # Working arrays per block: AO (comp), aow, and per spin P, F, Q_xyz.
+    nextra = (0 if lda else 1) + nspin * (1 if lda else (5 if mgga else 2))
+    ngrids = grids.weights.size
+    blksize = int(max_memory*1e6/((comp+1+nextra)*nao*8*BLKSIZE))
+    blksize = max(4, min(blksize, ngrids//BLKSIZE+1, 1200)) * BLKSIZE
+    nmo = max([nao] + [c.shape[1] for c, _ in factors if c is not None])
+    xbuf = numpy.empty(nmo * blksize)
+    pbuf = numpy.empty((nspin, nao * blksize))
+    fbuf = numpy.empty((nspin, nao * blksize)) if not lda else None
+    qbuf = numpy.empty((nspin, 3, nao * blksize)) if mgga else None
+    aowbuf = numpy.empty(nao * blksize) if not lda else None
+
+    ao_loc = mol.ao_loc_nr()
+    shls_slice = (0, mol.nbas)
+    ao_shell = numpy.asarray(numpy.repeat(numpy.arange(mol.nbas), numpy.diff(ao_loc)),
+                             dtype=numpy.int32)
+    xctype_id = 0 if lda else (2 if mgga else 1)
+
+    def apply_dm(a, mask, c, d, out):
+        '''(a.dot(D)).T as a C-ordered (nao, ngrids) array, D = c.dot(d.T)'''
+        ng = a.shape[0]
+        if c is None:
+            return _ao_dot_dm_t(mol, a, d, mask, shls_slice, ao_loc, out)
+        x = _ao_dot_dm_t(mol, a, c, mask, shls_slice, ao_loc, xbuf)
+        return lib.dot(d, x, c=numpy.ndarray((nao, ng), buffer=out))
+
+    for ao, mask, weight, coords \
+            in ni.block_loop(mol, grids, nao, ao_deriv, max_memory, blksize=blksize):
+        ng = weight.size
+        if not all(ao[i].flags.f_contiguous for i in range(comp)):
+            ao = numpy.array(ao.transpose(0,2,1), order='C').transpose(0,2,1)
+        if mask is not None:
+            mask = numpy.asarray(mask, dtype=numpy.uint8, order='C')
+        P = []
+        Q = []
+        rho = numpy.empty((nspin, nvar, ng))
+        for s, (c, d) in enumerate(factors):
+            p = apply_dm(ao[0], mask, c, d, pbuf[s])
+            rho[s,0] = numint._contract_rho(p.T, ao[0])
+            if not lda:
+                for j in range(1, 4):
+                    rho[s,j] = numint._contract_rho(p.T, ao[j]) * 2
+            if mgga:
+                q = numpy.ndarray((3, nao, ng), buffer=qbuf[s])
+                rho[s,4] = 0
+                for j in range(3):
+                    apply_dm(ao[j+1], mask, c, d, q[j])
+                    rho[s,4] += numint._contract_rho(q[j].T, ao[j+1])
+                rho[s,4] *= .5
+                Q.append(q)
+            P.append(p)
+        if nspin == 1:
+            vxc = ni.eval_xc_eff(xc_code, rho[0,0] if lda else rho[0], 1,
+                                 xctype=xctype)[1]
+            wv = (weight * vxc).reshape(1, nvar, ng)
+        else:
+            vxc = ni.eval_xc_eff(xc_code, rho if not lda else rho[:,0], 1,
+                                 xctype=xctype, spin=1)[1]
+            wv = (weight * vxc).reshape(2, nvar, ng)
+        if not lda:
+            wv[:,0] *= .5  # same convention as _gga_grad_sum_
+        if mgga:
+            wv[:,4] *= .5  # factor 1/2 in tau
+        for s, (c, d) in enumerate(factors):
+            ws = numpy.ascontiguousarray(wv[s])
+            F = None
+            if not lda:
+                aow = numint._scale_ao(ao[:4], ws[:4], out=aowbuf)
+                F = apply_dm(aow, mask, c, d, fbuf[s])
+            libdft.VXCxc_grad_contract(
+                f.ctypes.data_as(ctypes.c_void_p),
+                ao.ctypes.data_as(ctypes.c_void_p),
+                ctypes.c_ssize_t(ao.strides[0] // ao.itemsize),
+                P[s].ctypes.data_as(ctypes.c_void_p),
+                F.ctypes.data_as(ctypes.c_void_p) if F is not None else None,
+                Q[s].ctypes.data_as(ctypes.c_void_p) if mgga else None,
+                ws.ctypes.data_as(ctypes.c_void_p),
+                ctypes.c_int(xctype_id), ctypes.c_int(nao), ctypes.c_int(ng),
+                mask.ctypes.data_as(ctypes.c_void_p) if mask is not None else None,
+                ao_shell.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(mol.nbas))
+    log.timer_debug1('xc force', *t0)
+    return f
+
+def _ao_dot_dm_t(mol, ao, dm, mask, shls_slice, ao_loc, out):
+    '''(ao.dot(dm)).T as a C-ordered (dm.shape[1], ngrids) array in out'''
+    ngrids, nao = ao.shape
+    n = dm.shape[1]
+    res = numpy.ndarray((n, ngrids), buffer=out)
+    if mask is not None and nao >= numint.SWITCH_SIZE and ao.flags.f_contiguous:
+        # Shell-screened product; writes the Fortran-ordered (ngrids, n) array
+        numint._dot_ao_dm(mol, ao, dm, mask, shls_slice, ao_loc, out=res)
+    else:
+        lib.dot(dm.T, ao.T, c=res)
+    return res
+
+def get_xc_force(ni, mol, grids, xc_code, dm, max_memory=2000, verbose=None):
+    '''XC contribution to restricted Kohn-Sham nuclear gradients.
+
+    Equivalent to contracting get_vxc with the density for each atom,
+    ``2 * einsum('xij,ij->x', get_vxc(...)[1][:,p0:p1], dm[p0:p1])``, but the
+    density is contracted on the grid first. Only P = ao.dot(dm) and, for
+    (meta-)GGA, aow.dot(dm) (and the three ao_xyz.dot(dm) for meta-GGA) are
+    formed, as thin products through the occupied orbitals when dm carries
+    mo_coeff/mo_occ tags. No 3 x nao x nao matrix is built. Without grid
+    response; NLC terms are not included.
+
+    Returns:
+        (natm, 3) array.
+    '''
+    f = _xc_force(ni, mol, grids, xc_code, [dm], 0, max_memory, verbose)
+    aoslices = mol.aoslice_by_atom()
+    return numpy.array([-2 * f[:,p0:p1].sum(axis=1) for p0, p1 in aoslices[:,2:]])
 
 def get_nlc_vxc(ni, mol, grids, xc_code, dm, relativity=0, hermi=1,
                 max_memory=2000, verbose=None):
@@ -767,6 +979,15 @@ class Gradients(rhf_grad.Gradients):
 
     get_veff = get_veff
 
+    # Set only while grad_elec runs. get_veff then stores XC and J/K terms
+    # here as per-atom forces instead of adding their matrices, and
+    # extra_force adds them. Direct calls to get_veff return the full matrix.
+    _force_terms = None
+
+    def grad_elec(self, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
+        with lib.temporary_env(self, _force_terms={}):
+            return rhf_grad.grad_elec(self, mo_energy, mo_coeff, mo_occ, atmlst)
+
     def extra_force(self, atom_id, envs):
         '''Hook for extra contributions in analytical gradients.
 
@@ -774,14 +995,17 @@ class Gradients(rhf_grad.Gradients):
         method, the grid response in DFT numerical integration can be put in
         this function.
         '''
+        de = 0
         if self.grid_response:
             vhf = envs['vhf']
             log = envs['log']
             log.debug('grids response for atom %d %s',
                       atom_id, vhf.exc1_grid[atom_id])
-            return vhf.exc1_grid[atom_id]
-        else:
-            return 0
+            de = vhf.exc1_grid[atom_id]
+        if self._force_terms:
+            for force in self._force_terms.values():
+                de = de + force[atom_id]
+        return de
 
 Grad = Gradients
 
