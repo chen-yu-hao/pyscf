@@ -1,0 +1,165 @@
+name: DFT round4 open-source backend and AO cache audit
+
+'on':
+  push:
+    branches: [perf/dft-round4-open-source-20261030]
+    paths: ['.github/workflows/dft-round4.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: dft-round4-verified
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ablation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        comparison: [cache, native, qcint]
+    env:
+      CANDIDATE_SHA: '5318ea91cd597d8cd94812cc18067f5a0cf5d8b7'
+      BASELINE_SHA: '5060bd524fa5e15ad0408fc80ddb3bc3d5cc6130'
+      COMPARISON: ${{ matrix.comparison }}
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_DENSE_BLAS: '1'
+      PYSCF_DFT_VMAT_TILE_SCREEN: '0'
+      PYSCF_DFT_MGGA_PACK_SIMD: '0'
+      PYSCF_JK_BLOCK_BOUND: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '5318ea91cd597d8cd94812cc18067f5a0cf5d8b7'
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Record environment and install dependencies
+        run: |
+          mkdir -p benchmark-results
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install 'cmake>=3.22,<4' 'numpy<3' scipy h5py threadpoolctl pytest setuptools wheel
+          python -m pip freeze > benchmark-results/python-packages.txt
+          lscpu > benchmark-results/cpu.txt
+          numactl --hardware > benchmark-results/numa.txt
+          gcc --version > benchmark-results/compiler.txt
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git rev-parse HEAD > benchmark-results/candidate-sha.txt
+          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      - name: Build isolated source trees and integral dependencies
+        run: |
+          base="$RUNNER_TEMP/pyscf-round4-baseline"
+          git worktree add --detach "$base" "$BASELINE_SHA"
+          baseline_native=OFF
+          candidate_native=OFF
+          candidate_qcint=OFF
+          if [[ "$COMPARISON" == native ]]; then candidate_native=ON; fi
+          if [[ "$COMPARISON" == qcint ]]; then
+            baseline_native=ON
+            candidate_native=ON
+            candidate_qcint=ON
+          fi
+          build_one() {
+            local root="$1" label="$2" native="$3" qcint="$4"
+            cmake -S "$root/pyscf/lib" -B "$root/build-native" \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_C_FLAGS_RELEASE='-O2 -DNDEBUG -fno-fast-math -ffp-contract=off' \
+              -DBLA_VENDOR=OpenBLAS -DENABLE_XCFUN=OFF \
+              -DBUILD_MARCH_NATIVE="$native" -DUSE_QCINT="$qcint" \
+              2>&1 | tee "benchmark-results/configure-$label.log"
+            cmake --build "$root/build-native" --parallel 3 \
+              2>&1 | tee "benchmark-results/build-$label.log"
+            cp "$root/build-native/CMakeCache.txt" "benchmark-results/cmake-$label.txt"
+            for dep in libcint libxc; do
+              cp "$root/build-native/deps/src/$dep-build/CMakeCache.txt" \
+                "benchmark-results/cmake-$label-$dep.txt"
+            done
+            git -C "$root/build-native/deps/src/libcint" rev-parse HEAD \
+              > "benchmark-results/integral-source-$label.txt"
+            git -C "$root/build-native/deps/src/libcint" remote get-url origin \
+              >> "benchmark-results/integral-source-$label.txt"
+            ldd "$root/pyscf/lib/libdft.so" > "benchmark-results/ldd-dft-$label.txt"
+            ldd "$root/pyscf/lib/libcvhf.so" > "benchmark-results/ldd-vhf-$label.txt"
+          }
+          build_one "$GITHUB_WORKSPACE" candidate "$candidate_native" "$candidate_qcint"
+          build_one "$base" baseline "$baseline_native" OFF
+          echo "BASELINE_ROOT=$base" >> "$GITHUB_ENV"
+      - name: Native regressions and cache logic
+        run: |
+          python benchmarks/test_ao_cache_unit.py pyscf/dft/ao_cache.py \
+            2>&1 | tee benchmark-results/cache-unit.log
+          python -m pytest -q pyscf/dft/test/test_ao_cache_native.py \
+            pyscf/dft/test/test_numint_dense_blas.py pyscf/dft/test/test_numint_mgga_vmat.py \
+            pyscf/dft/test/test_numint_rho_fused.py pyscf/dft/test/test_numint_cache_blocks.py \
+            2>&1 | tee benchmark-results/native-regression.log
+          for root in "$GITHUB_WORKSPACE" "$BASELINE_ROOT"; do
+            label=candidate
+            if [[ "$root" == "$BASELINE_ROOT" ]]; then label=baseline; fi
+            (cd "$root"; PYTHONPATH="$root" python - <<'PY'
+          import importlib, pytest
+          from pyscf import scf
+          scf._vhf = importlib.import_module('pyscf.scf._vhf')
+          raise SystemExit(pytest.main(['-q','pyscf/scf/test/test_jk.py']))
+          PY
+            ) 2>&1 | tee "benchmark-results/jk-regression-$label.log"
+          done
+      - name: Paired grid6 smoke and independent array checks
+        run: |
+          python benchmarks/dft_round4.py --comparison "$COMPARISON" \
+            --baseline-root "$BASELINE_ROOT" --candidate-root "$GITHUB_WORKSPACE" \
+            --sizes 1 --xc PBE MN15 --threads 2 --repeat 1 --profile --numa off \
+            --cache-mb 512 --output benchmark-results/smoke \
+            2>&1 | tee benchmark-results/smoke.log
+          python benchmarks/accept_round4.py benchmark-results/smoke \
+            --comparison "$COMPARISON" --candidate "$CANDIDATE_SHA" \
+            --sizes 1 --xc PBE MN15 --threads 2 --repeat 1 \
+            2>&1 | tee benchmark-results/smoke-acceptance.log
+      - name: Publish smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-round4-${{ matrix.comparison }}-smoke-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: 14
+      - name: Three-repeat molecular ablation and full array acceptance
+        run: |
+          sizes=(1 2 4)
+          threads=(1 2 4)
+          xcs=(PBE MN15)
+          if [[ "$COMPARISON" == qcint ]]; then
+            sizes=(4 8)
+            threads=(2)
+            xcs=(MN15)
+          fi
+          python benchmarks/dft_round4.py --comparison "$COMPARISON" \
+            --baseline-root "$BASELINE_ROOT" --candidate-root "$GITHUB_WORKSPACE" \
+            --sizes "${sizes[@]}" --xc "${xcs[@]}" --threads "${threads[@]}" \
+            --repeat 3 --profile --numa off --timeout 3600 --cache-mb 512 \
+            --output benchmark-results/full 2>&1 | tee benchmark-results/full.log
+          python benchmarks/accept_round4.py benchmark-results/full \
+            --comparison "$COMPARISON" --candidate "$CANDIDATE_SHA" \
+            --sizes "${sizes[@]}" --xc "${xcs[@]}" --threads "${threads[@]}" \
+            2>&1 | tee benchmark-results/acceptance.log
+      - name: Upload results and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dft-round4-${{ matrix.comparison }}-${{ github.run_id }}
+          path: benchmark-results/
+          if-no-files-found: warn
+          retention-days: 14
