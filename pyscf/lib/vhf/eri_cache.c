@@ -33,6 +33,9 @@ typedef struct ERICache {
         int natm, nbas, nenv;
         unsigned min_work;
         int fast_lookup;
+        size_t filter_words;
+        _Atomic uint64_t *filter;
+        _Atomic uint64_t filter_stats[3]; /* queries, negative, nonzero bypass */
         ERIShellInfo *shells;
         int *atm, *bas, *ao_loc;
         const int *source_atm, *source_bas;
@@ -61,7 +64,7 @@ static void unlock_registry(void)
 static void destroy_cache(ERICache *c)
 {
         free(c->atm); free(c->bas); free(c->ao_loc); free(c->env);
-        free(c->entries); free(c->arena); free(c->shells); free(c);
+        free(c->entries); free(c->arena); free(c->shells); free(c->filter); free(c);
 }
 static void drop_reference(ERICache *c)
 {
@@ -77,7 +80,7 @@ static void drop_reference(ERICache *c)
  */
 static void *create_cache(void *owner, int natm, int nbas, int nenv,
                           const int *atm, const int *bas, const double *env,
-                          const int *ao_loc, size_t max_bytes, unsigned min_work, int fast_lookup)
+                          const int *ao_loc, size_t max_bytes, unsigned min_work, int fast_lookup, int saturation_filter)
 {
         if (!owner || natm <= 0 || natm > 1000000 || nbas <= 0 || nbas > 65535 ||
             nenv <= 0 || max_bytes < 65536 || !atm || !bas || !env || !ao_loc) return NULL;
@@ -88,7 +91,9 @@ static void *create_cache(void *owner, int natm, int nbas, int nenv,
         if (snapshot >= max_bytes || max_bytes-snapshot < 65536) return NULL;
         size_t slots = 64;
         while (slots < (1U<<20) && slots <= (max_bytes-snapshot)/512) slots *= 2;
-        size_t index_bytes = slots*sizeof(ERIEntry);
+        size_t filter_words = saturation_filter ? slots/8 : 0;
+        size_t filter_bytes = filter_words*sizeof(_Atomic uint64_t);
+        size_t index_bytes = slots*sizeof(ERIEntry) + filter_bytes;
         if (index_bytes > (max_bytes-snapshot)/2) return NULL;
         ERICache *c = calloc(1, sizeof(*c));
         if (!c) return NULL;
@@ -98,6 +103,7 @@ static void *create_cache(void *owner, int natm, int nbas, int nenv,
         c->arena_size = max_bytes-snapshot-index_bytes;
         c->natm = natm; c->nbas = nbas; c->nenv = nenv; c->min_work = min_work;
         c->fast_lookup = fast_lookup;
+        c->filter_words = filter_words;
         c->atm = malloc((size_t)natm*ATM_SLOTS*sizeof(int));
         c->bas = malloc((size_t)nbas*BAS_SLOTS*sizeof(int));
         c->ao_loc = malloc(((size_t)nbas+1)*sizeof(int));
@@ -105,7 +111,8 @@ static void *create_cache(void *owner, int natm, int nbas, int nenv,
         c->entries = calloc(slots, sizeof(ERIEntry));
         c->arena = malloc(c->arena_size);
         if (fast_lookup) c->shells = malloc((size_t)nbas*sizeof(ERIShellInfo));
-        if (!c->atm || !c->bas || !c->ao_loc || !c->env || !c->entries || !c->arena || (fast_lookup && !c->shells)) {
+        if (filter_words) c->filter = malloc(filter_bytes);
+        if (!c->atm || !c->bas || !c->ao_loc || !c->env || !c->entries || !c->arena || (fast_lookup && !c->shells) || (filter_words && !c->filter)) {
                 destroy_cache(c); return NULL;
         }
         memcpy(c->atm, atm, (size_t)natm*ATM_SLOTS*sizeof(int));
@@ -126,6 +133,8 @@ static void *create_cache(void *owner, int natm, int nbas, int nenv,
                 atomic_init(&c->lookup_stats[i], 0);
         }
         for (size_t i = 0; i < slots; i++) atomic_init(&c->entries[i].state, 0);
+        for (size_t i = 0; i < filter_words; i++) atomic_init(&c->filter[i], 0);
+        for (int i = 0; i < 3; i++) atomic_init(&c->filter_stats[i], 0);
         lock_registry();
         for (ERICache *p = registry; p; p = p->next) {
                 if (p->owner == owner) { unlock_registry(); destroy_cache(c); return NULL; }
@@ -141,15 +150,32 @@ void *CVHFeri_cache_create(void *owner, int natm, int nbas, int nenv,
                           const int *ao_loc, size_t max_bytes, unsigned min_work)
 {
         return create_cache(owner, natm, nbas, nenv, atm, bas, env, ao_loc,
-                            max_bytes, min_work, 0);
+                            max_bytes, min_work, 0, 0);
 }
 void *CVHFeri_cache_create_fast(void *owner, int natm, int nbas, int nenv,
                                const int *atm, const int *bas, const double *env,
                                const int *ao_loc, size_t max_bytes, unsigned min_work)
 {
         return create_cache(owner, natm, nbas, nenv, atm, bas, env, ao_loc,
-                            max_bytes, min_work, 1);
+                            max_bytes, min_work, 1, 0);
 }
+/* New ABI only: old constructors retain their original policies. */
+void *CVHFeri_cache_create_filtered(void *owner, int natm, int nbas, int nenv,
+                                    const int *atm, const int *bas, const double *env,
+                                    const int *ao_loc, size_t max_bytes, unsigned min_work)
+{
+        return create_cache(owner, natm, nbas, nenv, atm, bas, env, ao_loc,
+                            max_bytes, min_work, 1, 1);
+}
+/* Read/reset only between driver calls. Never used to time production work. */
+void CVHFeri_cache_filter_stats(void *ptr, uint64_t *out)
+{
+        ERICache *c = ptr;
+        for (int i = 0; i < 3; i++)
+                out[i] = atomic_load_explicit(&c->filter_stats[i], memory_order_relaxed);
+        out[3] = c->filter_words*sizeof(_Atomic uint64_t);
+}
+
 /* Read only between driver calls, with the handle kept alive by its scope. */
 void CVHFeri_cache_lookup_stats(void *ptr, uint64_t *out)
 {
@@ -182,6 +208,8 @@ void CVHFeri_cache_stats(void *ptr, uint64_t *out, int diagnostics, int reset)
                         atomic_store_explicit(&c->lookup_stats[i], 0, memory_order_relaxed);
                 }
         }
+        if (reset) for (int i = 0; i < 3; i++)
+                atomic_store_explicit(&c->filter_stats[i], 0, memory_order_relaxed);
         out[4] = atomic_load_explicit(&c->used, memory_order_relaxed);
         out[5] = c->bytes; out[6] = c->limit;
         out[7] = atomic_load_explicit(&c->filled, memory_order_relaxed);
@@ -195,6 +223,34 @@ static uint64_t hash_key(uint64_t x)
         x ^= x >> 27; x *= UINT64_C(0x94d049bb133111eb);
         return x ^ (x >> 31);
 }
+/* Independent one-word blocked membership filter; not Parquet's wire format.
+ * Three bits are ORed before immutable publication. No deletion clears bits.
+ * Hash collisions can ONLY cause extra full lookups, never return ERI data.
+ * A concurrent insertion not yet observed can cause redundant recomputation;
+ * it cannot omit an integral or change the original numerical screening.
+ */
+static uint64_t filter_mask(uint64_t h)
+{
+        return (UINT64_C(1) << (h & 63)) |
+               (UINT64_C(1) << ((h >> 6) & 63)) |
+               (UINT64_C(1) << ((h >> 12) & 63));
+}
+static size_t filter_word(ERICache *c, uint64_t h)
+{
+        return (h >> 32) & (c->filter_words-1);
+}
+static void filter_publish(ERICache *c, uint64_t h)
+{
+        if (c->filter) atomic_fetch_or_explicit(&c->filter[filter_word(c,h)],
+                                               filter_mask(h), memory_order_release);
+}
+static int filter_maybe_present(ERICache *c, uint64_t h)
+{
+        uint64_t mask = filter_mask(h);
+        uint64_t bits = atomic_load_explicit(&c->filter[filter_word(c,h)], memory_order_acquire);
+        return (bits & mask) == mask;
+}
+
 static void count(ERICache *c, int index, int enabled)
 {
         if (enabled) atomic_fetch_add_explicit(&c->stats[index], 1, memory_order_relaxed);
@@ -268,7 +324,31 @@ static int cached_int2e(double *out, int *dims, int *shls, int *atm, int natm,
                 count(c, 3, diag);
                 return int2e_sph(out, dims, shls, atm, natm, bas, nbas, env, c->owner, work);
         }
-        size_t start = hash_key(key) & (c->slots-1), empty = SIZE_MAX;
+        uint64_t hashed = hash_key(key);
+        int precomputed = 0, precomputed_value = 0;
+        /* Consult the small filter ONLY when this nonzero tensor no longer
+         * fits. During cold filling an index scan is needed for admission,
+         * so filtering would just add overhead. Entries already in the cache
+         * remain eligible hits, even if no space remains for new integrals.
+         */
+        if (c->filter && elements*sizeof(double) >
+            c->arena_size-atomic_load_explicit(&c->used, memory_order_relaxed)) {
+                if (diag) atomic_fetch_add_explicit(&c->filter_stats[0], 1, memory_order_relaxed);
+                if (!filter_maybe_present(c, hashed)) {
+                        if (diag) atomic_fetch_add_explicit(&c->filter_stats[1], 1, memory_order_relaxed);
+                        precomputed_value = int2e_sph(out, dims, shls, atm, natm,
+                                                     bas, nbas, env, c->owner, work);
+                        if (precomputed_value != 0) {
+                                count(c, 2, diag);
+                                if (diag) atomic_fetch_add_explicit(&c->filter_stats[2], 1, memory_order_relaxed);
+                                return precomputed_value;
+                        }
+                        /* Zero ERIs require no arena bytes. Preserve their
+                         * admission into the index and never call libcint twice. */
+                        precomputed = 1;
+                }
+        }
+        size_t start = hashed & (c->slots-1), empty = SIZE_MAX;
         unsigned claim_state = 0;
         /* In the fast policy a used slot NEVER returns to state zero. A truly
          * never-used slot proves the key is absent from the rest of this probe
@@ -294,7 +374,8 @@ static int cached_int2e(double *out, int *dims, int *shls, int *atm, int natm,
                 }
         }
         count(c, 2, diag);
-        int value = int2e_sph(out, dims, shls, atm, natm, bas, nbas, env, c->owner, work);
+        int value = precomputed ? precomputed_value :
+                int2e_sph(out, dims, shls, atm, natm, bas, nbas, env, c->owner, work);
         if (empty == SIZE_MAX || value < 0) return value;
         size_t bytes = value ? elements*sizeof(double) : 0;
         if (bytes > c->arena_size-atomic_load_explicit(&c->used, memory_order_relaxed)) return value;
@@ -313,6 +394,7 @@ static int cached_int2e(double *out, int *dims, int *shls, int *atm, int natm,
         e->key = key; e->count = elements; e->offset = offset; e->value = value;
         if (value) memcpy(c->arena+offset, out, bytes);
         atomic_fetch_add_explicit(&c->filled, 1, memory_order_relaxed);
+        filter_publish(c, hashed);
         atomic_store_explicit(&e->state, 2, memory_order_release);
         return value;
 }
