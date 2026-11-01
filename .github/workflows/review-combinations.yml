@@ -1,0 +1,73 @@
+name: PySCF performance combinations
+
+'on':
+  push:
+    branches: [bench/pyscf-best-combinations-20261101]
+    paths:
+      - '.github/workflows/review-combinations*.yml'
+      - 'benchmarks/review_combo*.py'
+      - 'benchmarks/build_combo.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: pyscf-combinations-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - {xc: PBE, shard: 0, shards: 1}
+          - {xc: MN15, shard: 0, shards: 4}
+          - {xc: MN15, shard: 1, shards: 4}
+          - {xc: MN15, shard: 2, shards: 4}
+          - {xc: MN15, shard: 3, shards: 4}
+    uses: ./.github/workflows/review-combinations-job.yml
+    with:
+      stage: screen
+      xc: ${{ matrix.xc }}
+      n: 4
+      shard: ${{ matrix.shard }}
+      shards: ${{ matrix.shards }}
+      native: false
+
+  tune:
+    needs: screen
+    strategy:
+      fail-fast: false
+      matrix:
+        xc: [PBE, MN15]
+    uses: ./.github/workflows/review-combinations-job.yml
+    with:
+      stage: tune
+      xc: ${{ matrix.xc }}
+      n: 4
+      shard: 0
+      shards: 1
+      native: false
+
+  confirm:
+    needs: tune
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - {xc: PBE, n: 1, native: false}
+          - {xc: MN15, n: 1, native: false}
+          - {xc: MN15, n: 8, native: false}
+          - {xc: PBE, n: 4, native: true}
+          - {xc: MN15, n: 4, native: true}
+    uses: ./.github/workflows/review-combinations-job.yml
+    with:
+      stage: confirm
+      xc: ${{ matrix.xc }}
+      n: ${{ matrix.n }}
+      shard: 0
+      shards: 1
+      native: ${{ matrix.native }}

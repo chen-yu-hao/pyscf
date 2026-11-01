@@ -1,0 +1,116 @@
+name: Audited PySCF combination experiment
+
+'on':
+  workflow_call:
+    inputs:
+      stage: {required: true, type: string}
+      xc: {required: true, type: string}
+      n: {required: true, type: number}
+      shard: {required: true, type: number}
+      shards: {required: true, type: number}
+      native: {required: true, type: boolean}
+
+permissions:
+  contents: read
+
+jobs:
+  experiment:
+    name: ${{ inputs.stage }}-${{ inputs.xc }}-n${{ inputs.n }}-s${{ inputs.shard }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      CANDIDATE_SHA: e7cb735789293acf461f8ebbb4ac6a08b68ba5d6
+      UPSTREAM_SHA: 1c6d4a88393557da61a639d078d1aed2813912dd
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      BLIS_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+      OMP_DYNAMIC: 'FALSE'
+      OMP_MAX_ACTIVE_LEVELS: '1'
+      PYSCF_NUMA: 'off'
+      PYSCF_DFT_MGGA_COALESCE_STATS: '0'
+      PYSCF_JK_BLOCK_BOUND_STATS: '0'
+      PYSCF_DFT_VMAT_MAX_MEMORY_MB: '256'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: pyscf/pyscf
+          ref: 1c6d4a88393557da61a639d078d1aed2813912dd
+          path: upstream
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install fixed numerical environment and capture hardware
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential gfortran libopenblas-dev liblapack-dev numactl
+          python -m pip install cmake==3.31.10 numpy==2.5.4 scipy==1.18.1 h5py==3.16.0 threadpoolctl==3.7.0 setuptools wheel
+          mkdir -p combo-results
+          python -m pip freeze > combo-results/python-packages.txt
+          lscpu | tee combo-results/cpu.txt
+          numactl --hardware | tee combo-results/numa.txt
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          value = {'affinity': sorted(os.sched_getaffinity(0))}
+          for filename in ('/sys/fs/cgroup/cpu.max', '/sys/fs/cgroup/cpu/cpu.cfs_quota_us', '/sys/fs/cgroup/cpu/cpu.cfs_period_us'):
+              if Path(filename).is_file():
+                  value[filename] = Path(filename).read_text().strip()
+          print(json.dumps(value))
+          Path('combo-results/cpu-allocation.json').write_text(json.dumps(value, indent=2))
+          PY
+          git rev-parse HEAD > combo-results/benchmark-workflow-source.txt
+      - name: Build matched portable candidate and upstream
+        run: bash benchmarks/build_combo.sh portable
+      - name: Build matched native candidate and upstream on this host
+        if: ${{ inputs.native }}
+        run: bash benchmarks/build_combo.sh native
+      - name: Download complete screening evidence
+        if: ${{ inputs.stage == 'tune' }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: combo-screen-*
+          path: combo-inputs
+      - name: Download tuning evidence and frozen finalists
+        if: ${{ inputs.stage == 'confirm' }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: combo-tune-*
+          path: combo-inputs
+      - name: Run fresh-process audited SCF search
+        env:
+          SEARCH_STAGE: ${{ inputs.stage }}
+          SEARCH_XC: ${{ inputs.xc }}
+          SEARCH_N: ${{ inputs.n }}
+          SEARCH_SHARD: ${{ inputs.shard }}
+          SEARCH_SHARDS: ${{ inputs.shards }}
+          SEARCH_NATIVE: ${{ inputs.native }}
+        run: |
+          args=(--stage "$SEARCH_STAGE" --xc "$SEARCH_XC" --n "$SEARCH_N"
+                --shard "$SEARCH_SHARD" --shards "$SEARCH_SHARDS"
+                --roots combo-results/roots-portable.json
+                --output "combo-results/$SEARCH_STAGE-$SEARCH_XC-n$SEARCH_N-s$SEARCH_SHARD")
+          if [[ "$SEARCH_STAGE" != screen ]]; then
+            args+=(--inputs combo-inputs)
+          fi
+          if [[ "$SEARCH_NATIVE" == true ]]; then
+            args+=(--native-roots combo-results/roots-native.json)
+          fi
+          python benchmarks/review_combinations.py "${args[@]}" 2>&1 | tee combo-results/search.log
+      - name: Preserve samples, original arrays, failures and build provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combo-${{ inputs.stage }}-${{ inputs.xc }}-n${{ inputs.n }}-s${{ inputs.shard }}
+          path: combo-results/
+          retention-days: 14
+          if-no-files-found: error
