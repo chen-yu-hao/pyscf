@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         python-version: ["3.9", "3.12"]
     steps:
       - uses: actions/checkout@v7
@@ -82,7 +82,7 @@ jobs:
           # to codecov in the step below); all other legs run bare pytest.
           RUN_COVERAGE: ${{ matrix.python-version == '3.9' }}
       - name: Upload to codecov
-        if: matrix.python-version == '3.9' && matrix.os == 'ubuntu-latest'
+        if: matrix.python-version == '3.9' && matrix.os == 'ubuntu-24.04'
         uses: codecov/codecov-action@v7
         with:
           token: ${{secrets.CODECOV_TOKEN}}
@@ -92,7 +92,7 @@ jobs:
   # still covered, over the modules whose C extensions actually contain OpenMP
   # pragmas, and skips the slow ones to stay well inside the main job's runtime.
   linux-build-multithread:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       OMP_NUM_THREADS: 2
       PYTEST_JOBS: 2
@@ -114,7 +114,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         pyver: [cp39-cp39]
     env:
       img: quay.io/pypa/manylinux2014_aarch64
