@@ -776,7 +776,12 @@ class TD_Scanner(lib.SinglePointScanner):
         self.reset(mol)
 
         mf_scanner = self._scf
-        mf_e = mf_scanner(mol)
+        # Preserve the established SCF trajectory for excited-state scans.
+        # Projecting the guess changes finite-tolerance orbitals and can
+        # amplify TD energy differences in finite-difference gradients.
+        # Restore the option even if this shared scanner raises an exception.
+        with lib.temporary_env(mf_scanner, _projected_scanner_guess=False):
+            mf_e = mf_scanner(mol)
         self.kernel(**kwargs)
         return mf_e + self.e
 
