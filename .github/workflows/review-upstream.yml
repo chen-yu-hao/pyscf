@@ -24,9 +24,9 @@ defaults:
 jobs:
   verify-and-benchmark:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 60
     env:
-      CANDIDATE_SHA: 8d480e000a90040af0070830ae9cfdd1f8587de2
+      CANDIDATE_SHA: dbfc14b46a39b4c50201252b0c4bd21bf946d396
       UPSTREAM_SHA: 1c6d4a88393557da61a639d078d1aed2813912dd
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '1'

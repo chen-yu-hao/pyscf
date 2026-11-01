@@ -251,6 +251,21 @@ def validate_case(directory, case, performance):
         cfg = record['config']
         assert cfg['case'] == case['case']
         assert cfg['variant'] in case['variants']
+        for key in ('n', 'xc', 'basis', 'grid_level', 'threads', 'force_direct'):
+            assert cfg[key] == reference['config'][key]
+        expected_flags = dict(FLAGS, OMP_NUM_THREADS=str(cfg['threads']))
+        if not performance or cfg['variant'] in ('candidate-optimized', 'candidate-eri'):
+            expected_flags.update(PYSCF_DFT_DENSE_BLAS='1', PYSCF_DFT_MGGA_PACK_SIMD='1')
+        if cfg['variant'] == 'coalesce':
+            expected_flags['PYSCF_DFT_MGGA_COALESCE'] = '1'
+        if cfg['variant'] == 'scatter':
+            expected_flags['PYSCF_DFT_MGGA_SCATTER_RUNS'] = '1'
+        assert cfg['flags'] == expected_flags
+        expects_cache = cfg['variant'] in ('candidate-eri', 'legacy', 'fast', 'filtered')
+        assert (cfg['cache_options'] is not None) == expects_cache
+        if expects_cache:
+            assert cfg['cache_options']['fast_lookup'] == (cfg['variant'] in ('fast', 'filtered'))
+            assert cfg['cache_options']['saturation_filter'] == (cfg['variant'] == 'filtered')
         assert record['source_sha'] == cfg['sha']
         assert record['converged'] and not record['profiled']
         assert record['timed_diagnostic_counters'] is False
@@ -334,6 +349,12 @@ def audit(output):
     manifest = json.loads((output / 'manifest.json').read_text())
     assert not manifest['errors']
     assert len(manifest['cases']) == manifest['expected_cases']
+    for case in manifest['cases']:
+        for name in case['records']:
+            record = json.loads((output / name).read_text())
+            expected_sha = (manifest['upstream_sha'] if record['config']['variant'] == 'upstream'
+                            else manifest['candidate_sha'])
+            assert record['source_sha'] == record['config']['sha'] == expected_sha
     results = [validate_case(output, case, manifest['suite'] == 'performance')
                for case in manifest['cases']]
     result = dict(passed=True, suite=manifest['suite'], cases=results,
