@@ -136,12 +136,13 @@ class KnownValues(unittest.TestCase):
         numpy.testing.assert_allclose(actual, reference, atol=2e-12, rtol=2e-12)
 
     def test_scratch_limit(self):
-        # The byte limit is checked before reading inputs or allocating scratch.
+        # Exceed the byte limit even in builds without OpenMP, before inputs
+        # are read or scratch is allocated.
         sentinel = numpy.array([42.])
         ptr = sentinel.ctypes.data_as(ctypes.c_void_p)
         with lib.with_omp_threads(8):
             done = numint.libdft.VXCeval_rho_mgga_mo(
-                ptr, ptr, ptr, ptr, ctypes.c_int(4096), ctypes.c_int(8192),
+                ptr, ptr, ptr, ptr, ctypes.c_int(4096), ctypes.c_int(8193),
                 ctypes.c_int(1), ctypes.c_ssize_t(4096))
         self.assertEqual(done, 0)
         numpy.testing.assert_array_equal(sentinel, [42.])
@@ -149,3 +150,4 @@ class KnownValues(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

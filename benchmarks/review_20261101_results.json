@@ -1,0 +1,1394 @@
+{
+  "run_id": 41310223401,
+  "job_id": 124858844091,
+  "run_url": "https://github.com/chen-yu-hao/pyscf/actions/runs/41310223401",
+  "job_url": "https://github.com/chen-yu-hao/pyscf/actions/runs/41310223401/job/124858844091",
+  "workflow_sha": "4ed1ddc188d0a3160fb4d7e0254546ac21efd6e1",
+  "candidate_sha": "dbfc14b46a39b4c50201252b0c4bd21bf946d396",
+  "upstream_sha": "1c6d4a88393557da61a639d078d1aed2813912dd",
+  "verification": "Independent recalculation from each ordinary SCF log record",
+  "log_sha256": "cb9578edeabcbb2208ae6a3b1422d2bc56527085a4da2e6d04c36541d26db4c7",
+  "raw_record_count": 46,
+  "performance_record_count": 36,
+  "correctness_record_count": 10,
+  "artifacts": [
+    {
+      "id": 13086565105,
+      "name": "pyscf-reviewed-upstream-41310223401",
+      "size_bytes": 82032836,
+      "digest": "sha256:f612925e85551d690e3ece8f39b37eb3f351e24b319db2c6c0403829a40e96d3",
+      "expired": false,
+      "url": "https://github.com/chen-yu-hao/pyscf/actions/runs/41310223401/artifacts/13086565105"
+    }
+  ],
+  "source_test_log_summaries": [
+    {
+      "log_line": 1907,
+      "summary": "3 passed, 1 warning in 6.10s"
+    },
+    {
+      "log_line": 2000,
+      "summary": "3 passed, 1 warning in 5.90s"
+    },
+    {
+      "log_line": 2058,
+      "summary": "142 passed, 849 subtests passed in 180.34s (0:03:00)"
+    }
+  ],
+  "source_of_matrix_validation": "Remote audit reopened all stored NPZ arrays and shared grid arrays; local ZIP unavailable",
+  "limitations": [
+    "Raw logs support independent SCF timing, energy, and peak RSS recalculation.",
+    "Ne/Exc/Vxc/J/K errors are remote-auditor results, not a new local matrix computation.",
+    "The remote validator requires successful native XC calls, filter activation and equal in-core choice; per-block fallback counts are not printed.",
+    "Single runner, two OpenMP threads, one BLAS thread, three repetitions per performance variant.",
+    "RSS is the process high-water mark through SCF completion, including imports and construction; diagnostics execute after sampling."
+  ],
+  "final_gates": {
+    "UPSTREAM_CONTRACT_OUTCOME": "success",
+    "CANDIDATE_CONTRACT_OUTCOME": "success",
+    "NATIVE_OUTCOME": "success",
+    "ERI_OUTCOME": "success",
+    "PERFORMANCE_OUTCOME": "success",
+    "passed": true,
+    "diagnostic_old_guess_does_not_count_as_passing": true
+  },
+  "cases": [
+    {
+      "suite": "eri-gate",
+      "case": "MN15-n2-t2-cc-pvdz-grid2",
+      "raw_record_count": 4,
+      "timing_seconds": {
+        "control": {
+          "samples": [
+            1.014862471000015
+          ],
+          "median": 1.014862471000015,
+          "minimum": 1.014862471000015,
+          "maximum": 1.014862471000015,
+          "spread_percent_of_median": 0.0
+        },
+        "legacy": {
+          "samples": [
+            0.934936386000004
+          ],
+          "median": 0.934936386000004,
+          "minimum": 0.934936386000004,
+          "maximum": 0.934936386000004,
+          "spread_percent_of_median": 0.0
+        },
+        "fast": {
+          "samples": [
+            0.9238737230000424
+          ],
+          "median": 0.9238737230000424,
+          "minimum": 0.9238737230000424,
+          "maximum": 0.9238737230000424,
+          "spread_percent_of_median": 0.0
+        },
+        "filtered": {
+          "samples": [
+            0.9361684060000925
+          ],
+          "median": 0.9361684060000925,
+          "minimum": 0.9361684060000925,
+          "maximum": 0.9361684060000925,
+          "spread_percent_of_median": 0.0
+        }
+      },
+      "peak_scf_rss_mib": {
+        "control": {
+          "samples": [
+            211.0546875
+          ],
+          "median": 211.0546875,
+          "minimum": 211.0546875,
+          "maximum": 211.0546875,
+          "spread_percent_of_median": 0.0
+        },
+        "legacy": {
+          "samples": [
+            212.28125
+          ],
+          "median": 212.28125,
+          "minimum": 212.28125,
+          "maximum": 212.28125,
+          "spread_percent_of_median": 0.0
+        },
+        "fast": {
+          "samples": [
+            211.421875
+          ],
+          "median": 211.421875,
+          "minimum": 211.421875,
+          "maximum": 211.421875,
+          "spread_percent_of_median": 0.0
+        },
+        "filtered": {
+          "samples": [
+            211.80859375
+          ],
+          "median": 211.80859375,
+          "minimum": 211.80859375,
+          "maximum": 211.80859375,
+          "spread_percent_of_median": 0.0
+        }
+      },
+      "energies_hartree": {
+        "control": [
+          -152.67913677904698
+        ],
+        "legacy": [
+          -152.67913677904698
+        ],
+        "fast": [
+          -152.67913677904698
+        ],
+        "filtered": [
+          -152.67913677904698
+        ]
+      },
+      "energy_abs_errors_from_first_reference": {
+        "control": [
+          0.0
+        ],
+        "legacy": [
+          0.0
+        ],
+        "fast": [
+          0.0
+        ],
+        "filtered": [
+          0.0
+        ]
+      },
+      "recomputed_max_energy_abs_hartree": 0.0,
+      "remote_array_max_abs": {
+        "ne": 0.0,
+        "exc": 0.0,
+        "vxc": 0.0,
+        "vj": 0.0,
+        "vk": 0.0
+      },
+      "remote_array_evidence": "Remote audit reopened every NPZ; not independently recalculated from local arrays",
+      "final_acceptance_matches_recomputed_values": true
+    },
+    {
+      "suite": "eri-gate",
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "raw_record_count": 6,
+      "timing_seconds": {
+        "control": {
+          "samples": [
+            37.04165105100003
+          ],
+          "median": 37.04165105100003,
+          "minimum": 37.04165105100003,
+          "maximum": 37.04165105100003,
+          "spread_percent_of_median": 0.0
+        },
+        "legacy": {
+          "samples": [
+            37.254755777000014
+          ],
+          "median": 37.254755777000014,
+          "minimum": 37.254755777000014,
+          "maximum": 37.254755777000014,
+          "spread_percent_of_median": 0.0
+        },
+        "fast": {
+          "samples": [
+            37.350803291000034
+          ],
+          "median": 37.350803291000034,
+          "minimum": 37.350803291000034,
+          "maximum": 37.350803291000034,
+          "spread_percent_of_median": 0.0
+        },
+        "filtered": {
+          "samples": [
+            36.748278354000036
+          ],
+          "median": 36.748278354000036,
+          "minimum": 36.748278354000036,
+          "maximum": 36.748278354000036,
+          "spread_percent_of_median": 0.0
+        },
+        "coalesce": {
+          "samples": [
+            36.53612477699994
+          ],
+          "median": 36.53612477699994,
+          "minimum": 36.53612477699994,
+          "maximum": 36.53612477699994,
+          "spread_percent_of_median": 0.0
+        },
+        "scatter": {
+          "samples": [
+            36.792544329000066
+          ],
+          "median": 36.792544329000066,
+          "minimum": 36.792544329000066,
+          "maximum": 36.792544329000066,
+          "spread_percent_of_median": 0.0
+        }
+      },
+      "peak_scf_rss_mib": {
+        "control": {
+          "samples": [
+            688.81640625
+          ],
+          "median": 688.81640625,
+          "minimum": 688.81640625,
+          "maximum": 688.81640625,
+          "spread_percent_of_median": 0.0
+        },
+        "legacy": {
+          "samples": [
+            752.953125
+          ],
+          "median": 752.953125,
+          "minimum": 752.953125,
+          "maximum": 752.953125,
+          "spread_percent_of_median": 0.0
+        },
+        "fast": {
+          "samples": [
+            752.87890625
+          ],
+          "median": 752.87890625,
+          "minimum": 752.87890625,
+          "maximum": 752.87890625,
+          "spread_percent_of_median": 0.0
+        },
+        "filtered": {
+          "samples": [
+            751.2421875
+          ],
+          "median": 751.2421875,
+          "minimum": 751.2421875,
+          "maximum": 751.2421875,
+          "spread_percent_of_median": 0.0
+        },
+        "coalesce": {
+          "samples": [
+            685.72265625
+          ],
+          "median": 685.72265625,
+          "minimum": 685.72265625,
+          "maximum": 685.72265625,
+          "spread_percent_of_median": 0.0
+        },
+        "scatter": {
+          "samples": [
+            690.21875
+          ],
+          "median": 690.21875,
+          "minimum": 690.21875,
+          "maximum": 690.21875,
+          "spread_percent_of_median": 0.0
+        }
+      },
+      "energies_hartree": {
+        "control": [
+          -305.53380743607454
+        ],
+        "legacy": [
+          -305.533807436075
+        ],
+        "fast": [
+          -305.53380743607454
+        ],
+        "filtered": [
+          -305.53380743607465
+        ],
+        "coalesce": [
+          -305.53380743607477
+        ],
+        "scatter": [
+          -305.533807436075
+        ]
+      },
+      "energy_abs_errors_from_first_reference": {
+        "control": [
+          0.0
+        ],
+        "legacy": [
+          4.547473508864641e-13
+        ],
+        "fast": [
+          0.0
+        ],
+        "filtered": [
+          1.1368683772161603e-13
+        ],
+        "coalesce": [
+          2.2737367544323206e-13
+        ],
+        "scatter": [
+          4.547473508864641e-13
+        ]
+      },
+      "recomputed_max_energy_abs_hartree": 4.547473508864641e-13,
+      "remote_array_max_abs": {
+        "ne": 0.0,
+        "exc": 0.0,
+        "vxc": 8.881784197001252e-16,
+        "vj": 7.460698725481052e-14,
+        "vk": 3.375077994860476e-14
+      },
+      "remote_array_evidence": "Remote audit reopened every NPZ; not independently recalculated from local arrays",
+      "final_acceptance_matches_recomputed_values": true
+    },
+    {
+      "suite": "performance",
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "raw_record_count": 9,
+      "timing_seconds": {
+        "upstream": {
+          "samples": [
+            1.6249795850000055,
+            1.5720274560000007,
+            1.5478437269999858
+          ],
+          "median": 1.5720274560000007,
+          "minimum": 1.5478437269999858,
+          "maximum": 1.6249795850000055,
+          "spread_percent_of_median": 4.906775495912179
+        },
+        "candidate-default": {
+          "samples": [
+            1.5615010540000185,
+            1.5647249129999636,
+            1.5648248410000178
+          ],
+          "median": 1.5647249129999636,
+          "minimum": 1.5615010540000185,
+          "maximum": 1.5648248410000178,
+          "spread_percent_of_median": 0.21241989389859184
+        },
+        "candidate-optimized": {
+          "samples": [
+            1.3697289090000595,
+            1.3621756759999926,
+            1.3477067920000536
+          ],
+          "median": 1.3621756759999926,
+          "minimum": 1.3477067920000536,
+          "maximum": 1.3697289090000595,
+          "spread_percent_of_median": 1.6166869947842184
+        }
+      },
+      "peak_scf_rss_mib": {
+        "upstream": {
+          "samples": [
+            313.0390625,
+            313.24609375,
+            311.00390625
+          ],
+          "median": 313.0390625,
+          "minimum": 311.00390625,
+          "maximum": 313.24609375,
+          "spread_percent_of_median": 0.7162644438343857
+        },
+        "candidate-default": {
+          "samples": [
+            282.22265625,
+            282.28515625,
+            284.4765625
+          ],
+          "median": 282.28515625,
+          "minimum": 282.22265625,
+          "maximum": 284.4765625,
+          "spread_percent_of_median": 0.7984501487580433
+        },
+        "candidate-optimized": {
+          "samples": [
+            281.72265625,
+            284.33203125,
+            284.31640625
+          ],
+          "median": 284.31640625,
+          "minimum": 281.72265625,
+          "maximum": 284.33203125,
+          "spread_percent_of_median": 0.9177715188569073
+        }
+      },
+      "energies_hartree": {
+        "upstream": [
+          -76.3800182176148,
+          -76.3800182176148,
+          -76.3800182176147
+        ],
+        "candidate-default": [
+          -76.38001821761479,
+          -76.38001821761482,
+          -76.38001821761483
+        ],
+        "candidate-optimized": [
+          -76.38001821761475,
+          -76.38001821761472,
+          -76.38001821761488
+        ]
+      },
+      "energy_abs_errors_from_first_reference": {
+        "upstream": [
+          0.0,
+          0.0,
+          9.947598300641403e-14
+        ],
+        "candidate-default": [
+          1.4210854715202004e-14,
+          1.4210854715202004e-14,
+          2.842170943040401e-14
+        ],
+        "candidate-optimized": [
+          5.684341886080802e-14,
+          8.526512829121202e-14,
+          7.105427357601002e-14
+        ]
+      },
+      "recomputed_max_energy_abs_hartree": 9.947598300641403e-14,
+      "remote_array_max_abs": {
+        "ne": 0.0,
+        "exc": 0.0,
+        "vxc": 3.552713678800501e-15,
+        "vj": 2.1316282072803006e-14,
+        "vk": 2.842170943040401e-14
+      },
+      "remote_array_evidence": "Remote audit reopened every NPZ; not independently recalculated from local arrays",
+      "final_acceptance_matches_recomputed_values": true,
+      "speedup_vs_upstream": {
+        "upstream": 1.0,
+        "candidate-default": 1.004666981997517,
+        "candidate-optimized": 1.1540563259918388
+      },
+      "time_saved_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": 0.4645302454588385,
+        "candidate-optimized": 13.349116721788867
+      },
+      "median_regressions_vs_upstream": [],
+      "median_peak_rss_change_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": -9.824303077191843,
+        "candidate-optimized": -9.175422396366272
+      },
+      "timing_range_comparison": {
+        "candidate-default": {
+          "ranges_overlap": true,
+          "all_candidate_samples_faster": false,
+          "all_candidate_samples_slower": false
+        },
+        "candidate-optimized": {
+          "ranges_overlap": false,
+          "all_candidate_samples_faster": true,
+          "all_candidate_samples_slower": false
+        }
+      }
+    },
+    {
+      "suite": "performance",
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "raw_record_count": 9,
+      "timing_seconds": {
+        "upstream": {
+          "samples": [
+            2.352233614000056,
+            2.349021869000012,
+            2.3195399510000243
+          ],
+          "median": 2.349021869000012,
+          "minimum": 2.3195399510000243,
+          "maximum": 2.352233614000056,
+          "spread_percent_of_median": 1.3917990050024382
+        },
+        "candidate-default": {
+          "samples": [
+            2.0042093270000123,
+            2.0207128679999187,
+            2.0218209070000057
+          ],
+          "median": 2.0207128679999187,
+          "minimum": 2.0042093270000123,
+          "maximum": 2.0218209070000057,
+          "spread_percent_of_median": 0.8715528207342578
+        },
+        "candidate-optimized": {
+          "samples": [
+            1.9374174429999584,
+            1.9228058300000157,
+            1.937494470000047
+          ],
+          "median": 1.9374174429999584,
+          "minimum": 1.9228058300000157,
+          "maximum": 1.937494470000047,
+          "spread_percent_of_median": 0.7581556599019194
+        }
+      },
+      "peak_scf_rss_mib": {
+        "upstream": {
+          "samples": [
+            342.109375,
+            342.24609375,
+            339.65625
+          ],
+          "median": 342.109375,
+          "minimum": 339.65625,
+          "maximum": 342.24609375,
+          "spread_percent_of_median": 0.7570221511760676
+        },
+        "candidate-default": {
+          "samples": [
+            283.828125,
+            283.32421875,
+            283.84765625
+          ],
+          "median": 283.828125,
+          "minimum": 283.32421875,
+          "maximum": 283.84765625,
+          "spread_percent_of_median": 0.1844205890448665
+        },
+        "candidate-optimized": {
+          "samples": [
+            283.56640625,
+            283.6328125,
+            283.9609375
+          ],
+          "median": 283.6328125,
+          "minimum": 283.56640625,
+          "maximum": 283.9609375,
+          "spread_percent_of_median": 0.13909929761740808
+        }
+      },
+      "energies_hartree": {
+        "upstream": [
+          -76.38525094771441,
+          -76.38525094771441,
+          -76.38525094771434
+        ],
+        "candidate-default": [
+          -76.38525094771448,
+          -76.38525094771434,
+          -76.38525094771434
+        ],
+        "candidate-optimized": [
+          -76.38525094771441,
+          -76.38525094771441,
+          -76.38525094771448
+        ]
+      },
+      "energy_abs_errors_from_first_reference": {
+        "upstream": [
+          0.0,
+          0.0,
+          7.105427357601002e-14
+        ],
+        "candidate-default": [
+          7.105427357601002e-14,
+          7.105427357601002e-14,
+          7.105427357601002e-14
+        ],
+        "candidate-optimized": [
+          0.0,
+          0.0,
+          7.105427357601002e-14
+        ]
+      },
+      "recomputed_max_energy_abs_hartree": 7.105427357601002e-14,
+      "remote_array_max_abs": {
+        "ne": 0.0,
+        "exc": 0.0,
+        "vxc": 6.661338147750939e-16,
+        "vj": 5.3290705182007514e-14,
+        "vk": 4.085620730620576e-14
+      },
+      "remote_array_evidence": "Remote audit reopened every NPZ; not independently recalculated from local arrays",
+      "final_acceptance_matches_recomputed_values": true,
+      "speedup_vs_upstream": {
+        "upstream": 1.0,
+        "candidate-default": 1.1624718712882005,
+        "candidate-optimized": 1.2124500465747394
+      },
+      "time_saved_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": 13.976413133175969,
+        "candidate-optimized": 17.522375224853704
+      },
+      "median_regressions_vs_upstream": [],
+      "median_peak_rss_change_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": -17.03585293445993,
+        "candidate-optimized": -17.092943594427958
+      },
+      "timing_range_comparison": {
+        "candidate-default": {
+          "ranges_overlap": false,
+          "all_candidate_samples_faster": true,
+          "all_candidate_samples_slower": false
+        },
+        "candidate-optimized": {
+          "ranges_overlap": false,
+          "all_candidate_samples_faster": true,
+          "all_candidate_samples_slower": false
+        }
+      }
+    },
+    {
+      "suite": "performance",
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "raw_record_count": 9,
+      "timing_seconds": {
+        "upstream": {
+          "samples": [
+            38.73651358500001,
+            38.24290146499993,
+            38.37060607100011
+          ],
+          "median": 38.37060607100011,
+          "minimum": 38.24290146499993,
+          "maximum": 38.73651358500001,
+          "spread_percent_of_median": 1.2864329510112793
+        },
+        "candidate-default": {
+          "samples": [
+            32.76334995500008,
+            32.86082310500001,
+            33.066645634999986
+          ],
+          "median": 32.86082310500001,
+          "minimum": 32.76334995500008,
+          "maximum": 33.066645634999986,
+          "spread_percent_of_median": 0.9229704290449042
+        },
+        "candidate-optimized": {
+          "samples": [
+            30.650574732999985,
+            30.83158326900002,
+            30.753969095000002
+          ],
+          "median": 30.753969095000002,
+          "minimum": 30.650574732999985,
+          "maximum": 30.83158326900002,
+          "spread_percent_of_median": 0.5885696751560572
+        }
+      },
+      "peak_scf_rss_mib": {
+        "upstream": {
+          "samples": [
+            824.8515625,
+            822.1796875,
+            822.19921875
+          ],
+          "median": 822.19921875,
+          "minimum": 822.1796875,
+          "maximum": 824.8515625,
+          "spread_percent_of_median": 0.3249668619318425
+        },
+        "candidate-default": {
+          "samples": [
+            707.33203125,
+            704.4765625,
+            707.4921875
+          ],
+          "median": 707.33203125,
+          "minimum": 704.4765625,
+          "maximum": 707.4921875,
+          "spread_percent_of_median": 0.42633796672133956
+        },
+        "candidate-optimized": {
+          "samples": [
+            708.5390625,
+            705.36328125,
+            709.12109375
+          ],
+          "median": 708.5390625,
+          "minimum": 705.36328125,
+          "maximum": 709.12109375,
+          "spread_percent_of_median": 0.5303606673061868
+        }
+      },
+      "energies_hartree": {
+        "upstream": [
+          -305.51380096660694,
+          -305.51380096660694,
+          -305.51380096660705
+        ],
+        "candidate-default": [
+          -305.51380096660705,
+          -305.513800966607,
+          -305.51380096660716
+        ],
+        "candidate-optimized": [
+          -305.513800966607,
+          -305.51380096660716,
+          -305.5138009666069
+        ]
+      },
+      "energy_abs_errors_from_first_reference": {
+        "upstream": [
+          0.0,
+          0.0,
+          1.1368683772161603e-13
+        ],
+        "candidate-default": [
+          1.1368683772161603e-13,
+          5.684341886080802e-14,
+          2.2737367544323206e-13
+        ],
+        "candidate-optimized": [
+          5.684341886080802e-14,
+          2.2737367544323206e-13,
+          5.684341886080802e-14
+        ]
+      },
+      "recomputed_max_energy_abs_hartree": 2.2737367544323206e-13,
+      "remote_array_max_abs": {
+        "ne": 9.947598300641403e-14,
+        "exc": 1.4210854715202004e-14,
+        "vxc": 1.4210854715202004e-14,
+        "vj": 4.973799150320701e-14,
+        "vk": 3.907985046680551e-14
+      },
+      "remote_array_evidence": "Remote audit reopened every NPZ; not independently recalculated from local arrays",
+      "final_acceptance_matches_recomputed_values": true,
+      "speedup_vs_upstream": {
+        "upstream": 1.0,
+        "candidate-default": 1.1676702664566472,
+        "candidate-optimized": 1.2476635439306085
+      },
+      "time_saved_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": 14.359384774389339,
+        "candidate-optimized": 19.850186785964375
+      },
+      "median_regressions_vs_upstream": [],
+      "median_peak_rss_change_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": -13.970724476561047,
+        "candidate-optimized": -13.823919271390084
+      },
+      "timing_range_comparison": {
+        "candidate-default": {
+          "ranges_overlap": false,
+          "all_candidate_samples_faster": true,
+          "all_candidate_samples_slower": false
+        },
+        "candidate-optimized": {
+          "ranges_overlap": false,
+          "all_candidate_samples_faster": true,
+          "all_candidate_samples_slower": false
+        }
+      }
+    },
+    {
+      "suite": "performance",
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "raw_record_count": 9,
+      "timing_seconds": {
+        "upstream": {
+          "samples": [
+            61.791125068000156,
+            61.68586502300013,
+            61.835422363000134
+          ],
+          "median": 61.791125068000156,
+          "minimum": 61.68586502300013,
+          "maximum": 61.835422363000134,
+          "spread_percent_of_median": 0.24203692655768239
+        },
+        "candidate-default": {
+          "samples": [
+            37.981909219000045,
+            37.78366546699999,
+            37.78386955699989
+          ],
+          "median": 37.78386955699989,
+          "minimum": 37.78366546699999,
+          "maximum": 37.981909219000045,
+          "spread_percent_of_median": 0.524678267007531
+        },
+        "candidate-optimized": {
+          "samples": [
+            36.94428208299996,
+            36.83608063099996,
+            36.969927017000145
+          ],
+          "median": 36.94428208299996,
+          "minimum": 36.83608063099996,
+          "maximum": 36.969927017000145,
+          "spread_percent_of_median": 0.36229256180830344
+        }
+      },
+      "peak_scf_rss_mib": {
+        "upstream": {
+          "samples": [
+            830.5625,
+            827.2734375,
+            819.8203125
+          ],
+          "median": 827.2734375,
+          "minimum": 819.8203125,
+          "maximum": 830.5625,
+          "spread_percent_of_median": 1.2985050665306779
+        },
+        "candidate-default": {
+          "samples": [
+            686.43359375,
+            686.16015625,
+            686.38671875
+          ],
+          "median": 686.38671875,
+          "minimum": 686.16015625,
+          "maximum": 686.43359375,
+          "spread_percent_of_median": 0.03983723643399824
+        },
+        "candidate-optimized": {
+          "samples": [
+            688.9140625,
+            686.3203125,
+            686.49609375
+          ],
+          "median": 686.49609375,
+          "minimum": 686.3203125,
+          "maximum": 688.9140625,
+          "spread_percent_of_median": 0.3778244368196742
+        }
+      },
+      "energies_hartree": {
+        "upstream": [
+          -305.53380743607454,
+          -305.5338074360745,
+          -305.53380743607454
+        ],
+        "candidate-default": [
+          -305.53380743607477,
+          -305.53380743607477,
+          -305.53380743607465
+        ],
+        "candidate-optimized": [
+          -305.53380743607454,
+          -305.53380743607437,
+          -305.53380743607477
+        ]
+      },
+      "energy_abs_errors_from_first_reference": {
+        "upstream": [
+          0.0,
+          5.684341886080802e-14,
+          0.0
+        ],
+        "candidate-default": [
+          2.2737367544323206e-13,
+          2.2737367544323206e-13,
+          1.1368683772161603e-13
+        ],
+        "candidate-optimized": [
+          0.0,
+          1.7053025658242404e-13,
+          2.2737367544323206e-13
+        ]
+      },
+      "recomputed_max_energy_abs_hartree": 2.2737367544323206e-13,
+      "remote_array_max_abs": {
+        "ne": 6.394884621840902e-14,
+        "exc": 7.105427357601002e-15,
+        "vxc": 1.7735812818386876e-14,
+        "vj": 4.973799150320701e-14,
+        "vk": 3.375077994860476e-14
+      },
+      "remote_array_evidence": "Remote audit reopened every NPZ; not independently recalculated from local arrays",
+      "final_acceptance_matches_recomputed_values": true,
+      "speedup_vs_upstream": {
+        "upstream": 1.0,
+        "candidate-default": 1.6353837177736246,
+        "candidate-optimized": 1.6725490815920754
+      },
+      "time_saved_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": 38.852271235684185,
+        "candidate-optimized": 40.21102214542401
+      },
+      "median_regressions_vs_upstream": [],
+      "median_peak_rss_change_percent_vs_upstream": {
+        "upstream": 0.0,
+        "candidate-default": -17.030248085295252,
+        "candidate-optimized": -17.017026942799674
+      },
+      "timing_range_comparison": {
+        "candidate-default": {
+          "ranges_overlap": false,
+          "all_candidate_samples_faster": true,
+          "all_candidate_samples_slower": false
+        },
+        "candidate-optimized": {
+          "ranges_overlap": false,
+          "all_candidate_samples_faster": true,
+          "all_candidate_samples_slower": false
+        }
+      }
+    }
+  ],
+  "raw_records": [
+    {
+      "case": "MN15-n2-t2-cc-pvdz-grid2",
+      "repeat": 0,
+      "variant": "control",
+      "seconds": 1.014862471000015,
+      "energy": -152.67913677904698,
+      "rss_mib": 211.0546875,
+      "log_line": 2093,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n2-t2-cc-pvdz-grid2",
+      "repeat": 0,
+      "variant": "legacy",
+      "seconds": 0.934936386000004,
+      "energy": -152.67913677904698,
+      "rss_mib": 212.28125,
+      "log_line": 2094,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n2-t2-cc-pvdz-grid2",
+      "repeat": 0,
+      "variant": "fast",
+      "seconds": 0.9238737230000424,
+      "energy": -152.67913677904698,
+      "rss_mib": 211.421875,
+      "log_line": 2095,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n2-t2-cc-pvdz-grid2",
+      "repeat": 0,
+      "variant": "filtered",
+      "seconds": 0.9361684060000925,
+      "energy": -152.67913677904698,
+      "rss_mib": 211.80859375,
+      "log_line": 2096,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "control",
+      "seconds": 37.04165105100003,
+      "energy": -305.53380743607454,
+      "rss_mib": 688.81640625,
+      "log_line": 2097,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "legacy",
+      "seconds": 37.254755777000014,
+      "energy": -305.533807436075,
+      "rss_mib": 752.953125,
+      "log_line": 2098,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "fast",
+      "seconds": 37.350803291000034,
+      "energy": -305.53380743607454,
+      "rss_mib": 752.87890625,
+      "log_line": 2099,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "filtered",
+      "seconds": 36.748278354000036,
+      "energy": -305.53380743607465,
+      "rss_mib": 751.2421875,
+      "log_line": 2100,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "coalesce",
+      "seconds": 36.53612477699994,
+      "energy": -305.53380743607477,
+      "rss_mib": 685.72265625,
+      "log_line": 2101,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "scatter",
+      "seconds": 36.792544329000066,
+      "energy": -305.533807436075,
+      "rss_mib": 690.21875,
+      "log_line": 2102,
+      "suite": "eri-gate"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "upstream",
+      "seconds": 1.6249795850000055,
+      "energy": -76.3800182176148,
+      "rss_mib": 313.0390625,
+      "log_line": 2263,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-default",
+      "seconds": 1.5615010540000185,
+      "energy": -76.38001821761479,
+      "rss_mib": 282.22265625,
+      "log_line": 2264,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-optimized",
+      "seconds": 1.3697289090000595,
+      "energy": -76.38001821761475,
+      "rss_mib": 281.72265625,
+      "log_line": 2265,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-default",
+      "seconds": 1.5647249129999636,
+      "energy": -76.38001821761482,
+      "rss_mib": 282.28515625,
+      "log_line": 2266,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-optimized",
+      "seconds": 1.3621756759999926,
+      "energy": -76.38001821761472,
+      "rss_mib": 284.33203125,
+      "log_line": 2267,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "upstream",
+      "seconds": 1.5720274560000007,
+      "energy": -76.3800182176148,
+      "rss_mib": 313.24609375,
+      "log_line": 2268,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-optimized",
+      "seconds": 1.3477067920000536,
+      "energy": -76.38001821761488,
+      "rss_mib": 284.31640625,
+      "log_line": 2269,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "upstream",
+      "seconds": 1.5478437269999858,
+      "energy": -76.3800182176147,
+      "rss_mib": 311.00390625,
+      "log_line": 2270,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n1-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-default",
+      "seconds": 1.5648248410000178,
+      "energy": -76.38001821761483,
+      "rss_mib": 284.4765625,
+      "log_line": 2271,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "upstream",
+      "seconds": 2.352233614000056,
+      "energy": -76.38525094771441,
+      "rss_mib": 342.109375,
+      "log_line": 2272,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-default",
+      "seconds": 2.0042093270000123,
+      "energy": -76.38525094771448,
+      "rss_mib": 283.828125,
+      "log_line": 2273,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-optimized",
+      "seconds": 1.9374174429999584,
+      "energy": -76.38525094771441,
+      "rss_mib": 283.56640625,
+      "log_line": 2274,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-default",
+      "seconds": 2.0207128679999187,
+      "energy": -76.38525094771434,
+      "rss_mib": 283.32421875,
+      "log_line": 2275,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-optimized",
+      "seconds": 1.9228058300000157,
+      "energy": -76.38525094771441,
+      "rss_mib": 283.6328125,
+      "log_line": 2276,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "upstream",
+      "seconds": 2.349021869000012,
+      "energy": -76.38525094771441,
+      "rss_mib": 342.24609375,
+      "log_line": 2277,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-optimized",
+      "seconds": 1.937494470000047,
+      "energy": -76.38525094771448,
+      "rss_mib": 283.9609375,
+      "log_line": 2278,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "upstream",
+      "seconds": 2.3195399510000243,
+      "energy": -76.38525094771434,
+      "rss_mib": 339.65625,
+      "log_line": 2279,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n1-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-default",
+      "seconds": 2.0218209070000057,
+      "energy": -76.38525094771434,
+      "rss_mib": 283.84765625,
+      "log_line": 2280,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "upstream",
+      "seconds": 38.73651358500001,
+      "energy": -305.51380096660694,
+      "rss_mib": 824.8515625,
+      "log_line": 2281,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-default",
+      "seconds": 32.76334995500008,
+      "energy": -305.51380096660705,
+      "rss_mib": 707.33203125,
+      "log_line": 2282,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-optimized",
+      "seconds": 30.650574732999985,
+      "energy": -305.513800966607,
+      "rss_mib": 708.5390625,
+      "log_line": 2283,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-default",
+      "seconds": 32.86082310500001,
+      "energy": -305.513800966607,
+      "rss_mib": 704.4765625,
+      "log_line": 2284,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-optimized",
+      "seconds": 30.83158326900002,
+      "energy": -305.51380096660716,
+      "rss_mib": 705.36328125,
+      "log_line": 2285,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "upstream",
+      "seconds": 38.24290146499993,
+      "energy": -305.51380096660694,
+      "rss_mib": 822.1796875,
+      "log_line": 2286,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-optimized",
+      "seconds": 30.753969095000002,
+      "energy": -305.5138009666069,
+      "rss_mib": 709.12109375,
+      "log_line": 2287,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "upstream",
+      "seconds": 38.37060607100011,
+      "energy": -305.51380096660705,
+      "rss_mib": 822.19921875,
+      "log_line": 2288,
+      "suite": "performance"
+    },
+    {
+      "case": "PBE-n4-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-default",
+      "seconds": 33.066645634999986,
+      "energy": -305.51380096660716,
+      "rss_mib": 707.4921875,
+      "log_line": 2289,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "upstream",
+      "seconds": 61.791125068000156,
+      "energy": -305.53380743607454,
+      "rss_mib": 830.5625,
+      "log_line": 2290,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-default",
+      "seconds": 37.981909219000045,
+      "energy": -305.53380743607477,
+      "rss_mib": 686.43359375,
+      "log_line": 2291,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 0,
+      "variant": "candidate-optimized",
+      "seconds": 36.94428208299996,
+      "energy": -305.53380743607454,
+      "rss_mib": 688.9140625,
+      "log_line": 2292,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-default",
+      "seconds": 37.78366546699999,
+      "energy": -305.53380743607477,
+      "rss_mib": 686.16015625,
+      "log_line": 2293,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "candidate-optimized",
+      "seconds": 36.83608063099996,
+      "energy": -305.53380743607437,
+      "rss_mib": 686.3203125,
+      "log_line": 2294,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 1,
+      "variant": "upstream",
+      "seconds": 61.68586502300013,
+      "energy": -305.5338074360745,
+      "rss_mib": 827.2734375,
+      "log_line": 2295,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-optimized",
+      "seconds": 36.969927017000145,
+      "energy": -305.53380743607477,
+      "rss_mib": 686.49609375,
+      "log_line": 2296,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "upstream",
+      "seconds": 61.835422363000134,
+      "energy": -305.53380743607454,
+      "rss_mib": 819.8203125,
+      "log_line": 2297,
+      "suite": "performance"
+    },
+    {
+      "case": "MN15-n4-t2-def2-TZVPP-grid6",
+      "repeat": 2,
+      "variant": "candidate-default",
+      "seconds": 37.78386955699989,
+      "energy": -305.53380743607465,
+      "rss_mib": 686.38671875,
+      "log_line": 2298,
+      "suite": "performance"
+    }
+  ],
+  "all_logged_statistics_match_remote_acceptance": true
+}
