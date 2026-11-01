@@ -42,6 +42,7 @@ static size_t vmat_workspace_bytes(void)
 #include "xc_dense_blas.h"
 #include "mgga_pack_simd.h"
 #include "mgga_coalesce.h"
+#include "mgga_scatter_runs.h"
 
 /* Optional diagnostics. Read/reset only when no kernels are in flight.
  * Ordinary SCF and timed profiles leave this diagnostic OFF. */
@@ -102,6 +103,9 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                  ptrdiff_t ao_stride)
 {
         const int sparse = screen_index != NULL;
+        const char *scatter_setting = getenv("PYSCF_DFT_MGGA_SCATTER_RUNS");
+        const int scatter_runs = sparse && ncomp == 4 && scatter_setting != NULL &&
+                scatter_setting[0] == '1' && scatter_setting[1] == '\0';
         const char *pack_setting = getenv("PYSCF_DFT_MGGA_PACK_SIMD");
         const int pack_simd = ncomp == 4 && pack_setting != NULL &&
                 pack_setting[0] == '1' && pack_setting[1] == '\0';
@@ -146,7 +150,8 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                 pack_size = (size_t)ncomp * grid_tile * nao;
         }
         const size_t thread_size = 2 * pack_size + matrix_size + AO_TILE*AO_TILE;
-        const size_t thread_bytes = thread_size*sizeof(double) + (size_t)2*nao*sizeof(int);
+        const size_t thread_bytes = thread_size*sizeof(double) + (size_t)2*nao*sizeof(int)
+                + (scatter_runs ? (size_t)2*AO_TILE*sizeof(uint8_t) : 0);
         int nthreads = 1;
 #ifdef _OPENMP
         nthreads = omp_get_max_threads();
@@ -325,6 +330,12 @@ int VXCxc_vmat(double *out, double *ao, double *wv,
                                 dgemm_(&TRANS_T, &TRANS_N, &nj, &ni, &k,
                                        &D1, right+(size_t)jb*k, &k,
                                        left+(size_t)ib*k, &k, &D0, product, &nj);
+                                if (scatter_runs) {
+                                        VXCmgga_scatter_runs(partial, product,
+                                                active_ao, active_shell, screen, pair_mask,
+                                                ao_loc, nao, nbas, nbins, ib, ni, jb, nj);
+                                        continue;
+                                }
                                 for (i = 0; i < ni; i++) {
                                         const int stop = MIN(nj, ib+i-jb+1);
                                         double *dst = partial + (size_t)active_ao[ib+i]*nao;
