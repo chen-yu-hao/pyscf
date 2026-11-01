@@ -500,7 +500,14 @@ class KohnShamDFT:
 
     def reset(self, mol=None):
         from pyscf.dft import numa
-        numa.close(self)
+        if not isinstance(self, lib.SinglePointScanner):
+            # Scanners keep NUMA workers across geometries; numa.nr_rks
+            # reloads them with the new molecule and grid.
+            numa.close(self)
+        if mol is not None and mol is not self.mol:
+            # A new molecule (e.g. a scanner step) is a new calculation; the
+            # previous convergence flag does not describe it.
+            self.converged = False
         hf.SCF.reset(self, mol)
         self.grids.reset(mol)
         self.nlcgrids.reset(mol)
@@ -607,9 +614,13 @@ class RKS(KohnShamDFT, hf.RHF):
     def scf(self, *args, **kwargs):
         from pyscf.dft import numa
         try:
-            return super().scf(*args, **kwargs)
-        finally:
+            result = super().scf(*args, **kwargs)
+        except BaseException:
             numa.close(self)
+            raise
+        if not isinstance(self, lib.SinglePointScanner):
+            numa.close(self)
+        return result
 
     kernel = lib.alias(scf, alias_name='kernel')
     __doc__ = '''Restricted Kohn-Sham\n''' + hf.SCF.__doc__ + KohnShamDFT.__doc__

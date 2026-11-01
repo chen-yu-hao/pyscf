@@ -1,0 +1,11 @@
+n=4 PBE def2-tzvpp grid6 threads=1 nao=236 ngrids=529520: reference 20.04s, get_xc_force 6.58s, speedup 3.05x, max|diff| 2.2e-14
+n=4 MN15 def2-tzvpp grid6 threads=4 nao=236 ngrids=529520: reference 17.27s, get_xc_force 2.74s, speedup 6.30x, max|diff| 1.4e-14
+n=8 PBE def2-tzvpp grid5 threads=4 nao=472 ngrids=720464: reference 27.27s, get_xc_force 5.15s, speedup 5.29x, max|diff| 3.5e-14
+n=8 MN15 def2-tzvpp grid5 threads=4 nao=472 ngrids=720464: reference 54.11s, get_xc_force 6.66s, speedup 8.13x, max|diff| 9.5e-15
+n=14 PBE def2-tzvpp grid3 threads=4 nao=826 ngrids=471776: reference 42.42s, get_xc_force 5.69s, speedup 7.45x, max|diff| 2.7e-14
+n=4 def2-tzvpp nao=236 threads=1
+  J : matrix  17.11s  force   7.72s  speedup 2.22x  max|diff| 3.0e-12
+  JK: matrix  21.29s  force   8.11s  speedup 2.62x  max|diff| 3.4e-12
+n=8 def2-tzvpp nao=472 threads=4
+  J : matrix  31.83s  force  12.12s  speedup 2.63x  max|diff| 2.0e-11
+  JK: matrix  39.47s  force  13.11s  speedup 3.01x  max|diff| 1.5e-11

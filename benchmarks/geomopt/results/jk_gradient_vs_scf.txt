@@ -1,0 +1,2 @@
+  gradient     J:   4.56s   JK:   5.56s   ratio J 4.3x  JK 4.0x
+

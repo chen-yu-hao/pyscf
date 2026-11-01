@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         python-version: ["3.9", "3.12"]
     steps:
       - uses: actions/checkout@v7
@@ -82,7 +82,7 @@ jobs:
           # to codecov in the step below); all other legs run bare pytest.
           RUN_COVERAGE: ${{ matrix.python-version == '3.9' }}
       - name: Upload to codecov
-        if: matrix.python-version == '3.9' && matrix.os == 'ubuntu-latest'
+        if: matrix.python-version == '3.9' && matrix.os == 'ubuntu-24.04'
         uses: codecov/codecov-action@v7
         with:
           token: ${{secrets.CODECOV_TOKEN}}
@@ -92,7 +92,7 @@ jobs:
   # still covered, over the modules whose C extensions actually contain OpenMP
   # pragmas, and skips the slow ones to stay well inside the main job's runtime.
   linux-build-multithread:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       OMP_NUM_THREADS: 2
       PYTEST_JOBS: 2
@@ -114,7 +114,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         pyver: [cp39-cp39]
     env:
       img: quay.io/pypa/manylinux2014_aarch64
@@ -127,7 +127,7 @@ jobs:
         run: |
             docker run --rm -v ${{ github.workspace }}:/src/pyscf:rw --workdir=/src/pyscf ${{ env.img }} \
             bash -exc '/opt/python/${{ matrix.pyver }}/bin/pip install --upgrade pip setuptools && \
-            /opt/python/${{ matrix.pyver }}/bin/pip install "numpy!=1.16,!=1.17" "scipy!=1.5" h5py==3.10 pytest pytest-cov pytest-timer pyberny geometric && \
+            /opt/python/${{ matrix.pyver }}/bin/pip install "numpy!=1.16,!=1.17" "scipy!=1.5" h5py==3.10 threadpoolctl pytest pytest-cov pytest-timer pyberny geometric && \
             yum install -y epel-release && \
             yum-config-manager --enable epel && \
             yum install -y openblas-devel gcc cmake curl && \
@@ -137,8 +137,8 @@ jobs:
             cmake -DBUILD_LIBXC=OFF -DBUILD_XCFUN=OFF -DBUILD_LIBCINT=OFF .. && \
             make -j2 && cd .. && rm -Rf build && cd ../.. && \
             export OMP_NUM_THREADS=1 && export PYTHONPATH=$(pwd):$PYTHONPATH && \
-            echo 'pbc_tools_pbc_fft_engine = "NUMPY"' > .pyscf_conf.py && \
-            echo "dftd3_DFTD3PATH = './pyscf/lib/deps/lib'" >> .pyscf_conf.py && \
+            printf "%s\n" "pbc_tools_pbc_fft_engine = \"NUMPY\"" > .pyscf_conf.py && \
+            printf "%s\n" "dftd3_DFTD3PATH = \"./pyscf/lib/deps/lib\"" >> .pyscf_conf.py && \
             echo "scf_hf_SCF_mute_chkfile = True" >> .pyscf_conf.py && \
             ulimit -s 20000 && /opt/python/${{ matrix.pyver }}/bin/pytest pyscf/ --ignore=pyscf/adc --ignore=pyscf/pbc/df --ignore=pyscf/pbc/cc -s -c pytest.ini pyscf'
 

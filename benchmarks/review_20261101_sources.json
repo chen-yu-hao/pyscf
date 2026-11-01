@@ -1,0 +1,70 @@
+{
+  "upstream_sha": "1c6d4a88393557da61a639d078d1aed2813912dd",
+  "base_sha": "3a6238ea20a467eabaf6290e0f23de2ea23460ec",
+  "dft_sha": "7f58ad247069c5d963d517b841c037846336777d",
+  "prs": [
+    {
+      "number": 9,
+      "head": "d5913330e2d10a1d8f454ccfd998a960428235ff",
+      "branch": "perf/dft-eri-saturation-filter-20261031",
+      "base": "86f086194edfacc8714cb3eddbc036ee20412bc1",
+      "base_branch": "perf/dft-eri-lookup-v2-20261031"
+    },
+    {
+      "number": 8,
+      "head": "86f086194edfacc8714cb3eddbc036ee20412bc1",
+      "branch": "perf/dft-eri-lookup-v2-20261031",
+      "base": "cae3b46838dccc7b959ce60297bb5c37dc1302aa",
+      "base_branch": "perf/dft-semidirect-eri-cache-20261030"
+    },
+    {
+      "number": 7,
+      "head": "cae3b46838dccc7b959ce60297bb5c37dc1302aa",
+      "branch": "perf/dft-semidirect-eri-cache-20261030",
+      "base": "fa67b6df5078dcaed5173e55421a7fb367d32e51",
+      "base_branch": "perf/dft-round3-mgga-jk-20261030"
+    },
+    {
+      "number": 6,
+      "head": "95fc406474b25c099232d09d3ffbf98e218e51ed",
+      "branch": "perf/dft-round6-scatter-replay-20261030",
+      "base": "57ee82c01a7cf5a6cf82bc006505ca70637fec01",
+      "base_branch": "perf/dft-round5-mgga-coalesce-20261030"
+    },
+    {
+      "number": 5,
+      "head": "57ee82c01a7cf5a6cf82bc006505ca70637fec01",
+      "branch": "perf/dft-round5-mgga-coalesce-20261030",
+      "base": "fa67b6df5078dcaed5173e55421a7fb367d32e51",
+      "base_branch": "perf/dft-round3-mgga-jk-20261030"
+    },
+    {
+      "number": 4,
+      "head": "fae482bbdc25cf10875d7e728c4919288be79721",
+      "branch": "perf/dft-round4-open-source-20261030",
+      "base": "04e9aa2fa960c92bdd872111ca5f6bf29769a875",
+      "base_branch": "perf/dft-round2-dense-blas-20261030"
+    },
+    {
+      "number": 3,
+      "head": "fa67b6df5078dcaed5173e55421a7fb367d32e51",
+      "branch": "perf/dft-round3-mgga-jk-20261030",
+      "base": "04e9aa2fa960c92bdd872111ca5f6bf29769a875",
+      "base_branch": "perf/dft-round2-dense-blas-20261030"
+    },
+    {
+      "number": 2,
+      "head": "04e9aa2fa960c92bdd872111ca5f6bf29769a875",
+      "branch": "perf/dft-round2-dense-blas-20261030",
+      "base": "4580f1f472b518cf4540c79634791847c721a37b",
+      "base_branch": "perf/dft-h2o-grid6-smoke-20261029"
+    },
+    {
+      "number": 1,
+      "head": "4580f1f472b518cf4540c79634791847c721a37b",
+      "branch": "perf/dft-h2o-grid6-smoke-20261029",
+      "base": "3a6238ea20a467eabaf6290e0f23de2ea23460ec",
+      "base_branch": "DFT"
+    }
+  ]
+}

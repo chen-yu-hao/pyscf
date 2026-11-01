@@ -4,7 +4,7 @@ add_library(cvhf SHARED
   fill_nr_s8.c nr_incore.c nr_direct.c optimizer.c nr_direct_dot.c
   time_rev.c r_direct_o1.c rkb_screen.c
   r_direct_dot.c rah_direct_dot.c rha_direct_dot.c
-  hessian_screen.c nr_sgx_direct.c nr_sr_vhf.c nr_s8_precheck.c eri_cache.c)
+  hessian_screen.c nr_sgx_direct.c nr_sr_vhf.c nr_s8_precheck.c eri_cache.c grad_jk_force.c)
 add_dependencies(cvhf cgto np_helper)
 target_compile_features(cvhf PRIVATE c_std_11)
 # Rename only the direct driver, not the screening/contraction routines.

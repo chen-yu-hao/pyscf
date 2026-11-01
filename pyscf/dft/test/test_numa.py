@@ -10,6 +10,11 @@ from pyscf import dft, gto, lib, scf
 from pyscf.dft import numa
 
 
+requires_affinity = unittest.skipUnless(
+    os.name == 'posix' and hasattr(os, 'sched_getaffinity'),
+    'Requires POSIX CPU-affinity support for NUMA workers')
+
+
 class AutoNumaTests(unittest.TestCase):
     def setUp(self):
         mode = mock.patch.dict(os.environ, {'PYSCF_NUMA': 'auto'})
@@ -42,6 +47,7 @@ class AutoNumaTests(unittest.TestCase):
         stack.enter_context(mock.patch.object(numa.time, 'perf_counter', side_effect=[0, 10, 10, 10+setup, 10+setup, 10+setup+candidate_seconds]))
         return stack
 
+    @requires_affinity
     def test_success_reuses_workers(self):
         with self.calibration():
             self.invoke()
@@ -50,6 +56,7 @@ class AutoNumaTests(unittest.TestCase):
         self.assertEqual(self.native.call_count, 1)
         self.assertEqual(self.pool.evaluate.call_count, 2)
 
+    @requires_affinity
     def test_default_on_never_duplicates_integration(self):
         with self.calibration(), mock.patch.dict(os.environ):
             os.environ.pop('PYSCF_NUMA', None)
@@ -58,6 +65,7 @@ class AutoNumaTests(unittest.TestCase):
         self.native.assert_not_called()
         self.assertEqual(self.pool.evaluate.call_count, 2)
 
+    @requires_affinity
     def test_default_uma_has_no_trial_workers_or_grid_hash(self):
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}), \
                 mock.patch.object(numa, '_partitions', return_value=([], [])) as plan, \
@@ -69,6 +77,7 @@ class AutoNumaTests(unittest.TestCase):
         plan.assert_called_once()
         signature.assert_not_called()
 
+    @requires_affinity
     def test_direct_on_failure_falls_back_once(self):
         self.pool.evaluate.side_effect = EOFError('worker exited')
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
@@ -77,6 +86,7 @@ class AutoNumaTests(unittest.TestCase):
         np.testing.assert_array_equal(value[2], self.value[2])
         self.assertTrue(numa._states[self.mf].disabled)
 
+    @requires_affinity
     def test_direct_on_rejects_nonfinite_result(self):
         self.pool.evaluate.return_value = (2., -1., np.full((2, 2), np.nan))
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
@@ -84,6 +94,7 @@ class AutoNumaTests(unittest.TestCase):
         self.native.assert_called_once()
         np.testing.assert_array_equal(value[2], self.value[2])
 
+    @requires_affinity
     def test_switch_to_auto_recalibrates(self):
         with self.calibration(), mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}):
             self.invoke()
@@ -92,6 +103,7 @@ class AutoNumaTests(unittest.TestCase):
         self.pool.close.assert_called()
         self.native.assert_called_once()
 
+    @requires_affinity
     def test_slow_or_unamortized_keeps_native(self):
         for elapsed, setup in ((9, 1), (2, 100)):
             with self.subTest(elapsed=elapsed, setup=setup):
@@ -101,6 +113,7 @@ class AutoNumaTests(unittest.TestCase):
                 self.assertTrue(numa._states[self.mf].disabled)
                 self.assertIsNone(numa._states[self.mf].pool)
 
+    @requires_affinity
     def test_wrong_matrix_and_nan_rejected(self):
         for value in (np.eye(2) * 2, np.full((2, 2), np.nan)):
             numa.close(self.mf)
@@ -110,6 +123,7 @@ class AutoNumaTests(unittest.TestCase):
             np.testing.assert_array_equal(result[2], self.value[2])
             self.assertTrue(numa._states[self.mf].disabled)
 
+    @requires_affinity
     def test_dead_worker_uses_native(self):
         with self.calibration():
             self.invoke()
@@ -120,17 +134,20 @@ class AutoNumaTests(unittest.TestCase):
         self.assertTrue(numa._states[self.mf].disabled)
         self.pool.close.assert_called()
 
+    @requires_affinity
     def test_failed_binding_uses_native(self):
         with self.calibration(), mock.patch.object(numa.subprocess, 'run', side_effect=OSError('binding denied')):
             result = self.invoke()
         np.testing.assert_array_equal(result[2], self.value[2])
         self.pool.evaluate.assert_not_called()
 
+    @requires_affinity
     def test_low_memory_does_not_start_workers(self):
         with self.calibration(), mock.patch.object(numa, '_memory_headroom', return_value=100):
             self.invoke()
         self.pool.evaluate.assert_not_called()
 
+    @requires_affinity
     def test_switch_off_closes_active_pool(self):
         with self.calibration():
             self.invoke()
@@ -139,6 +156,7 @@ class AutoNumaTests(unittest.TestCase):
         self.assertNotIn(self.mf, numa._states)
         self.pool.close.assert_called()
 
+    @requires_affinity
     def test_reset_and_exception_cleanup(self):
         with self.calibration():
             self.invoke()
@@ -152,6 +170,7 @@ class AutoNumaTests(unittest.TestCase):
                 self.mf.kernel()
         self.assertNotIn(self.mf, numa._states)
 
+    @requires_affinity
     def test_grid_and_environment_mutation_invalidate(self):
         before = numa._signature(self.mf, self.mol)
         self.mf.grids.weights[0] += .1
@@ -181,6 +200,111 @@ class AutoNumaTests(unittest.TestCase):
             self.assertFalse(numa._supported(mf, molecule, dm, 1))
         mf._numint.eval_xc = lambda *args: None
         self.assertFalse(numa._supported(mf, molecule, dm, 1))
+
+
+class ScannerTests(unittest.TestCase):
+    """Geometry optimizations drive RKS through SCF_Scanner objects."""
+    def setUp(self):
+        self.mol = gto.M(atom='H 0 0 0; H 0 0 .74', basis='sto-3g', verbose=0)
+        self.dm = np.eye(self.mol.nao)
+        self.value = (2., -1., np.eye(self.mol.nao))
+        self.pool = mock.Mock()
+        self.pool.evaluate.return_value = self.value
+        self.pool.reload.return_value = .1
+
+    def make(self, scanner):
+        mf = dft.RKS(self.mol)
+        mf.grids.level = 0
+        mf.grids.build(with_non0tab=True)
+        mf._numint.nr_rks = mock.Mock(return_value=self.value)
+        if scanner:
+            mf = mf.as_scanner()
+        self.addCleanup(numa.close, mf)
+        return mf
+
+    def workers(self):
+        stack = __import__('contextlib').ExitStack()
+        stack.enter_context(mock.patch.dict(os.environ, {'PYSCF_NUMA': 'on'}))
+        stack.enter_context(mock.patch.object(numa, '_supported', return_value=True))
+        groups = ([([0, 1], 0), ([2, 3], 1)], [0, 1, 2, 3])
+        stack.enter_context(mock.patch.object(numa, '_partitions', return_value=groups))
+        stack.enter_context(mock.patch.object(numa.shutil, 'which', return_value='/numactl'))
+        stack.enter_context(mock.patch.object(numa.subprocess, 'run'))
+        self.start = stack.enter_context(mock.patch.object(numa, 'PartitionedXC', return_value=self.pool))
+        stack.enter_context(mock.patch.object(numa, '_memory_headroom', return_value=10000))
+        return stack
+
+    def test_scanner_eligibility(self):
+        molecule = gto.M(atom=[('H', (i * 1.4, 0, 0)) for i in range(20)], basis='cc-pvtz', verbose=0)
+        mf = dft.RKS(molecule)
+        mf.xc = 'MN15'
+        mf.grids.weights = np.ones(100000)
+        scanner = mf.as_scanner()
+        dm = lib.tag_array(np.eye(molecule.nao), mo_coeff=np.eye(molecule.nao), mo_occ=np.ones(molecule.nao))
+        self.assertTrue(numa._supported(scanner, molecule, dm, 1))
+        # The previous geometry's convergence flag must not decline the next step
+        scanner.converged = True
+        moved = molecule.set_geom_(molecule.atom_coords() * 1.01, unit='Bohr', inplace=False)
+        scanner.reset(moved)
+        self.assertFalse(scanner.converged)
+        scanner.grids.weights = np.ones(100000)
+        self.assertTrue(numa._supported(scanner, moved, dm, 1))
+        # Rerunning a converged object with the same molecule still declines
+        scanner.converged = True
+        scanner.reset()
+        scanner.grids.weights = np.ones(100000)
+        self.assertFalse(numa._supported(scanner, moved, dm, 1))
+        # Subclasses other than the plain RKS scanner are declined
+        symm = dft.rks_symm.RKS(molecule).as_scanner()
+        self.assertFalse(numa._standard_rks(symm))
+
+    @requires_affinity
+    def test_scanner_reloads_workers_for_new_geometry(self):
+        mf = self.make(scanner=True)
+        with self.workers():
+            numa.nr_rks(mf, mf.mol, self.dm, 1, 3000)
+            mf.reset(mf.mol)             # scanner step: no close
+            self.assertIn(mf, numa._states)
+            mf.grids.build(with_non0tab=True)
+            mf.grids.weights[0] += .1    # new geometry/grid signature
+            numa.nr_rks(mf, mf.mol, self.dm, 1, 3000)
+        self.assertEqual(self.start.call_count, 1)
+        self.assertEqual(self.pool.reload.call_count, 1)
+        self.assertEqual(self.pool.evaluate.call_count, 2)
+        self.pool.close.assert_not_called()
+        numa.close(mf)
+        self.pool.close.assert_called()
+
+    @requires_affinity
+    def test_plain_rks_restarts_and_failed_reload_restarts(self):
+        mf = self.make(scanner=False)
+        with self.workers():
+            numa.nr_rks(mf, mf.mol, self.dm, 1, 3000)
+            mf.grids.weights[0] += .1
+            numa.nr_rks(mf, mf.mol, self.dm, 1, 3000)
+        self.assertEqual(self.start.call_count, 2)
+        self.pool.reload.assert_not_called()
+        scanner = self.make(scanner=True)
+        self.pool.reload.side_effect = RuntimeError('worker exited')
+        with self.workers():
+            numa.nr_rks(scanner, scanner.mol, self.dm, 1, 3000)
+            scanner.grids.weights[0] += .1
+            result = numa.nr_rks(scanner, scanner.mol, self.dm, 1, 3000)
+        self.assertEqual(self.start.call_count, 2)
+        self.assertIs(result, self.value)
+
+    @requires_affinity
+    def test_scanner_keeps_pool_after_kernel_closes_on_error(self):
+        scanner = self.make(scanner=True)
+        with self.workers():
+            numa.nr_rks(scanner, scanner.mol, self.dm, 1, 3000)
+            with mock.patch.object(scf.hf.SCF, 'scf', return_value=0.):
+                scanner.kernel()
+            self.assertIn(scanner, numa._states)
+            with mock.patch.object(scf.hf.SCF, 'scf', side_effect=RuntimeError('interrupted')):
+                with self.assertRaisesRegex(RuntimeError, 'interrupted'):
+                    scanner.kernel()
+        self.assertNotIn(scanner, numa._states)
 
 
 class ResourceTests(unittest.TestCase):

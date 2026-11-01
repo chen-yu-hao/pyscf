@@ -74,7 +74,10 @@ def discover(sys_root=Path('/sys/devices/system'), status_path=Path('/proc/self/
             if 'MemTotal:' in line:
                 memory[node] = int(line.split('MemTotal:')[1].split()[0]) * 1024
         distance_file = node_dir / 'distance'
-        distances[node] = {i: int(value) for i, value in enumerate(distance_file.read_text().split())} if distance_file.exists() else {}
+        distances[node] = (
+            {i: int(value) for i, value in enumerate(distance_file.read_text().split())}
+            if distance_file.exists() else {}
+        )
     if not memory:
         # No NUMA files: permit unbound local allocation rather than inventing a
         # node for numactl. CPU planning still works without libnuma/numactl.
@@ -126,7 +129,8 @@ def plans(topology, budget, layout, preferred_socket=None):
             'baseline_memory': topology.nearest_memory(baseline_xc[0].node),
             'xc': [c.cpu for c in xc], 'xc_memory': topology.nearest_memory(xc[0].node),
             'jk': [c.cpu for c in jk], 'jk_memory': topology.nearest_memory(jk[0].node),
-            'notes': 'Candidate split requires timing against the serial baseline; not a universal thread recommendation'}
+            'notes': ('Candidate split requires timing against the serial baseline; '
+                      'not a universal thread recommendation')}
 
 
 def choose_measured(baseline, candidate, *, setup_seconds, expected_calls,
