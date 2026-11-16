@@ -158,6 +158,43 @@ class KnownValues(unittest.TestCase):
         self.assertEqual(len(set(mf.chkfile for mf in jmf.mfs)), 12)
         self.assertEqual(len(set(id(mf.grids) for mf in jmf.mfs)), 12)
 
+    def test_parallel_backends(self):
+        ref = None
+        for parallel, nworkers in (('thread', 1), ('thread', 2), ('process', 2)):
+            jmf = jointscf.JointSCF([scf.RHF(mol) for mol in mols])
+            jmf.parallel = parallel
+            jmf.max_workers = nworkers
+            e = jmf.kernel()
+            self.assertTrue(jmf.converged.all())
+            self.assertAlmostEqual(abs(e - e_rhf).max(), 0, 8)
+            if ref is None:
+                ref = jmf
+            # the backend does not change the iterations
+            self.assertEqual(list(jmf.nfock), list(ref.nfock))
+            self.assertEqual(list(jmf.promoted_at), list(ref.promoted_at))
+            self.assertAlmostEqual(abs(e - ref.e_tot).max(), 0, 10)
+            for mf, mf0 in zip(jmf.mfs, ref.mfs):
+                self.assertTrue(mf.converged)
+                self.assertAlmostEqual(
+                    abs(mf.make_rdm1() - mf0.make_rdm1()).max(), 0, 7)
+            self.assertTrue(jmf.timings['total'] > jmf.timings['startup'])
+
+    def test_backend_fallback(self):
+        # Density-fitting objects are instances of a dynamically created
+        # class. They are handled by worker threads.
+        mfs = [scf.RHF(mol).density_fit() for mol in mols[:3]]
+        ref = [scf.RHF(mol).density_fit().run().e_tot for mol in mols[:3]]
+        jmf = jointscf.JointSCF(mfs)
+        jmf.max_workers = 2
+        e = jmf.kernel()
+        self.assertAlmostEqual(abs(e - ref).max(), 0, 10)
+        # callbacks run in the calling process
+        seen = []
+        jmf = jointscf.JointSCF([scf.RHF(mol) for mol in mols[:3]])
+        jmf.max_workers = 2
+        jmf.kernel(callback=lambda envs: seen.append(envs['cycle']))
+        self.assertEqual(len(seen), jmf.cycles.sum())
+
     def test_user_descriptors_and_dm0(self):
         jmf = jointscf.JointSCF([scf.RHF(mol) for mol in mols])
         jmf.descriptors = numpy.array(geoms)
@@ -218,15 +255,29 @@ class KnownValues(unittest.TestCase):
             model._store(i, 0, a + model.z[i,0] * b, b - model.z[i,1] * a)
         src = model.order[:12]
         dst = model.order[12:]
-        model.select_hyper(src, 0)
-        wts = model.weights(src, dst)
-        self.assertAlmostEqual(abs(wts.sum(axis=1) - 1).max(), 0, 5)
-        p = numpy.tensordot(wts, model._targets(src, 0)[0], axes=1)
+        hyper = model.select_hyper(src, 0)
+        wts = model.weights(src, dst, hyper)
+        self.assertAlmostEqual(abs(wts.sum(axis=1) - 1).max(), 0, 12)
+        p, f = model.predict(src, 0, wts)
         ref = numpy.array([a + model.z[i,0] * b for i in dst])
         self.assertAlmostEqual(abs(p - ref).max(), 0, 4)
-        res, err = model.loo_error(src, 0)
+        ref = numpy.array([b - model.z[i,1] * a for i in dst])
+        self.assertAlmostEqual(abs(f - ref).max(), 0, 4)
+        res, err = model.loo_error(src, 0, hyper)
         self.assertTrue(err.max() < 1e-3 * res.max())
-
+        self.assertAlmostEqual(abs(res - model.residuals(src, 0)).max(), 0, 12)
+        # increments between two entries
+        for i in src:
+            model._store(i, 1, 2 * a + model.z[i,0] * b, b)
+        dp, df = model.predict_increment(src, 1, 0, wts)
+        self.assertAlmostEqual(abs(dp - a).max(), 0, 4)
+        # AO representation
+        dm, fock = model.to_ao(dst[0], p[0], f[0])
+        s1e = mols[dst[0]].intor('int1e_ovlp')
+        self.assertAlmostEqual(numpy.einsum('ij,ji', dm, s1e), numpy.trace(p[0]), 9)
+        model.record(dst[0], 2, dm, fock)
+        self.assertAlmostEqual(abs(model._get(dst[0], 2)[0] - p[0]).max(), 0, 9)
+        self.assertAlmostEqual(abs(model._get(dst[0], 2)[1] - f[0]).max(), 0, 9)
 
 if __name__ == "__main__":
     print("Full Tests for joint SCF")

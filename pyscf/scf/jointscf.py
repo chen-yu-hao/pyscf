@@ -55,10 +55,17 @@ Example::
     >>> e_tot = jmf.kernel()
 '''
 
+import os
+import sys
 import copy
 import time
+import pickle
+import secrets
 import tempfile
+import traceback
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
+from multiprocessing.connection import Listener, Client
 
 import numpy
 import scipy.linalg
@@ -167,12 +174,11 @@ class SharedModel(lib.StreamObject):
     predicted as the linear combination  sum_j w_j(z) X~_j  with the weights
     of a kernel ridge regression over reduced geometry descriptors z.
     '''
-    def __init__(self, mols, descriptors=None, align=True, window=16):
+    def __init__(self, mols, descriptors=None, align=True):
         self.mol = mols[0]
         self.verbose = self.mol.verbose
         self.stdout = self.mol.stdout
         self.nconf = len(mols)
-        self.window = window
         if descriptors is None:
             descriptors = [default_descriptor(mol) for mol in mols]
         self.z = _reduce_descriptors(descriptors)
@@ -186,7 +192,6 @@ class SharedModel(lib.StreamObject):
         # config id -> {entry id: (P~, F~)}
         self._entries = [{} for _ in range(self.nconf)]
         self._cv_cols = None
-        self._hyper = None
         self.levels = [self.order]
         self.next_level = 1
         self.promotions = []
@@ -226,16 +231,14 @@ class SharedModel(lib.StreamObject):
         self._store(i, k, p, f)
 
     def _store(self, i, k, p, f):
-        entries = self._entries[i]
-        entries[k] = (p, f)
-        for key in [key for key in entries if key <= k - self.window]:
-            del entries[key]
+        self._entries[i][k] = (p, f)
 
     def _get(self, i, k):
         entries = self._entries[i]
         if k in entries:
             return entries[k]
-        # A converged configuration does not produce new entries.
+        # A converged configuration does not produce new entries.  A promoted
+        # configuration has no entries before its promotion.
         older = [key for key in entries if key < k]
         if older:
             return entries[max(older)]
@@ -270,12 +273,11 @@ class SharedModel(lib.StreamObject):
                     best = (err, length, ridge)
         if best is None:
             best = (numpy.inf, _LENGTH_SCALES[-1], _RIDGES[-1])
-        self._hyper = best[1:]
         logger.debug(self, 'shared model: nsrc=%d length=%g ridge=%g',
-                     len(src), *self._hyper)
-        return self._hyper
+                     len(src), *best[1:])
+        return best[1:]
 
-    def loo_error(self, src, k):
+    def loo_error(self, src, k, hyper):
         '''Residual of the exactly treated configurations and the
         leave-one-out prediction error of the model, both measured as the
         norm of the commutator [F~, P~].
@@ -283,7 +285,7 @@ class SharedModel(lib.StreamObject):
         Returns:
             (residuals, errors) : two arrays of length len(src)
         '''
-        length, ridge = self._hyper
+        length, ridge = hyper
         z = self.z[src]
         kinv = _regularized_inverse(_kernel_matrix(z, z, length), ridge)
         diag = numpy.maximum(kinv.diagonal(), 1e-300)
@@ -307,31 +309,28 @@ class SharedModel(lib.StreamObject):
         comm = comm - comm.swapaxes(-1, -2)
         return numpy.linalg.norm(comm.reshape(len(src), -1), axis=1)
 
-    def weights(self, src, dst):
-        '''Regression weights, shape (len(dst), len(src))'''
-        length, ridge = self._hyper
+    def weights(self, src, dst, hyper):
+        '''Regression weights, shape (len(dst), len(src)).  The weights of
+        each configuration in dst are normalized to 1.'''
+        length, ridge = hyper
         z = self.z[src]
         kinv = _regularized_inverse(_kernel_matrix(z, z, length), ridge)
-        return _kernel_matrix(self.z[dst], z, length).dot(kinv)
+        wts = _kernel_matrix(self.z[dst], z, length).dot(kinv)
+        return wts / wts.sum(axis=1, keepdims=True)
 
-    def predict(self, src, dst, k, wts=None, store=True):
-        '''Predict entry k of the configurations dst from the configurations
-        src.  The prediction can be stored as a (synthetic) entry of dst.
-
-        Returns:
-            A list of (dm, fock) in the AO basis of each configuration in dst.
-        '''
-        if wts is None:
-            wts = self.weights(src, dst)
+    def predict(self, src, k, wts):
+        '''Entry k predicted from the configurations src, in the aligned
+        orthogonal basis.'''
         p, f = self._targets(src, k)
-        p_pred = numpy.tensordot(wts, p, axes=1)
-        f_pred = numpy.tensordot(wts, f, axes=1)
-        out = []
-        for n, i in enumerate(dst):
-            if store:
-                self._store(i, k, p_pred[n], f_pred[n])
-            out.append(self.to_ao(i, p_pred[n], f_pred[n]))
-        return out
+        return numpy.tensordot(wts, p, axes=1), numpy.tensordot(wts, f, axes=1)
+
+    def predict_increment(self, src, k, k0, wts):
+        '''The change of the matrices between the entries k0 and k,
+        predicted from the configurations src.'''
+        p, f = self._targets(src, k)
+        p0, f0 = self._targets(src, k0)
+        return (numpy.tensordot(wts, p - p0, axes=1),
+                numpy.tensordot(wts, f - f0, axes=1))
 
     def to_ao(self, i, p, f):
         s_isqrt, s_sqrt = self._metric[i]
@@ -342,12 +341,20 @@ class SharedModel(lib.StreamObject):
 
 class _State:
     '''SCF state of one configuration.  The attributes mirror the local
-    variables of :func:`pyscf.scf.hf.kernel`.'''
+    variables of :func:`pyscf.scf.hf.kernel`.
+
+    With the process backend the states live in the worker processes.  The
+    driver holds a copy which is updated with the attributes listed in
+    _SUMMARY (and _MATRICES for the members of a cascade group) after
+    every task.
+    '''
     def __init__(self, idx, mf):
         self.idx = idx
         self.mf = mf
         self.group = None
+        self.group_index = None
         self.level = 0
+        self.need_matrices = False
         self.started = False    # exact Fock builds are carried out
         self.done = False
         self.scf_conv = False
@@ -357,6 +364,7 @@ class _State:
         self.inherited = None   # synthetic (dm, fock) history from the model
         self.s1e = self.h1e = self.x_orth = self.mf_diis = None
         self.dm = self.vhf = self.fock_last = None
+        self.dm_plain = self.fock_plain = None
         self.e_tot = numpy.nan
         self.mo_energy = self.mo_coeff = self.mo_occ = None
         self.norm_gorb = numpy.inf
@@ -365,8 +373,23 @@ class _State:
         if self.conv_tol_grad is None:
             self.conv_tol_grad = numpy.sqrt(self.conv_tol)
 
-    def plain_fock(self):
-        return self.h1e + numpy.asarray(self.vhf)
+_SUMMARY = ('started', 'done', 'scf_conv', 'cycle', 'nfock', 'e_tot', 'norm_gorb')
+_MATRICES = ('dm_plain', 'fock_plain')
+_RESULTS = ('mo_energy', 'mo_coeff', 'mo_occ')
+
+def _summary(st, with_s1e=False):
+    '''The part of the state which the driver needs'''
+    out = {key: getattr(st, key) for key in _SUMMARY}
+    if st.need_matrices:
+        if st.vhf is not None:
+            out['dm_plain'] = numpy.asarray(st.dm)
+            out['fock_plain'] = st.h1e + numpy.asarray(st.vhf)
+        if with_s1e:
+            out['s1e'] = st.s1e
+    if st.done:
+        for key in _RESULTS:
+            out[key] = getattr(st, key)
+    return out
 
 
 def _norm_gorb(mf, mo_coeff, mo_occ, fock):
@@ -429,7 +452,7 @@ def _init_cycle(st, dm0=None, dump_chk=True):
     return st
 
 
-def _anchor_cycle(st, dump_chk=True):
+def _anchor_cycle(st, entries, dump_chk=True):
     '''First exact Fock build of a promoted configuration.
 
     The Fock matrix is built for the density matrix predicted by the shared
@@ -442,7 +465,6 @@ def _anchor_cycle(st, dump_chk=True):
     mf = st.mf
     mol = mf.mol
     h1e, s1e, mf_diis = st.h1e, st.s1e, st.mf_diis
-    entries = st.inherited
     cycle = max(entries)
     dm, fock_model = entries[cycle]
     vhf = mf.get_veff(mol, dm)
@@ -460,6 +482,7 @@ def _anchor_cycle(st, dump_chk=True):
     st.dm, st.vhf, st.e_tot = dm, vhf, e_tot
     st.nfock += 1
     st.cycle = cycle
+    st.started = True
     return st
 
 
@@ -557,16 +580,29 @@ def _extra_cycle(st, fock, dump_chk=True):
     return st
 
 
-class _Pool:
+_TASKS = {
+    'setup': _setup,
+    'init': _init_cycle,
+    'anchor': _anchor_cycle,
+    'cycle': _scf_cycle,
+}
+
+def _run_task(name, st, args):
+    _TASKS[name](st, *args)
+    return _summary(st, with_s1e=(name == 'setup'))
+
+
+class _ThreadBackend:
     '''Configuration-level thread pool.  The C kernels of PySCF release the
-    GIL.  Each worker thread uses a fixed number of OpenMP threads.'''
+    GIL.  Each worker thread uses a fixed number of OpenMP threads.  The
+    Python parts of the SCF iterations are executed one at a time.'''
     def __init__(self, nworkers, omp_threads):
         self.nworkers = nworkers
         self.omp_threads = omp_threads
         self._executor = None
         self._blas_ctl = None
 
-    def __enter__(self):
+    def start(self, states):
         if self.nworkers > 1:
             try:
                 from threadpoolctl import threadpool_limits
@@ -579,7 +615,7 @@ class _Pool:
                 initargs=(self.omp_threads,))
         return self
 
-    def __exit__(self, *args):
+    def close(self):
         if self._executor is not None:
             self._executor.shutdown(wait=True)
             self._executor = None
@@ -587,15 +623,138 @@ class _Pool:
             self._blas_ctl.restore_original_limits()
             self._blas_ctl = None
 
-    def map(self, fn, tasks):
+    def run(self, tasks):
+        '''tasks: list of (name, state, args)'''
         if self._executor is None or len(tasks) < 2:
-            return [fn(*task) for task in tasks]
-        futures = [self._executor.submit(fn, *task) for task in tasks]
-        return [fut.result() for fut in futures]
+            summaries = [_run_task(*task) for task in tasks]
+        else:
+            futures = [self._executor.submit(_run_task, *task) for task in tasks]
+            summaries = [fut.result() for fut in futures]
+        for (_, st, _), summary in zip(tasks, summaries):
+            st.__dict__.update(summary)
 
 
-def _call(fn, *args):
-    return fn(*args)
+class _ProcessBackend:
+    '''Worker processes which own the SCF states (integrals, grids, DIIS)
+    of a fixed subset of the batch.  The workers are started with a fresh
+    interpreter.  They do not import the main module of the calling script.
+    '''
+    startup_timeout = 120
+
+    def __init__(self, nworkers, omp_threads):
+        self.nworkers = nworkers
+        self.omp_threads = omp_threads
+        self._procs = []
+        self._conns = []
+        self._owner = {}
+
+    def start(self, states):
+        # Configurations of the same cascade level are distributed evenly
+        order = sorted(states, key=lambda st: (
+            st.level, st.group.rank[st.group_index] if st.group is not None else 0,
+            st.idx))
+        shards = [[] for _ in range(self.nworkers)]
+        for n, st in enumerate(order):
+            self._owner[st.idx] = n % self.nworkers
+            shards[n % self.nworkers].append(
+                (st.idx, st.mf, st.mf.chkfile, st.need_matrices))
+        # The mean-field objects must be picklable
+        payloads = [pickle.dumps(('load', shard)) for shard in shards]
+
+        import pyscf
+        root = os.path.dirname(os.path.dirname(os.path.abspath(pyscf.__file__)))
+        env = dict(os.environ)
+        env['PYTHONPATH'] = os.pathsep.join(
+            [root] + [x for x in env.get('PYTHONPATH', '').split(os.pathsep) if x])
+        for key in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
+            env[key] = str(self.omp_threads)
+        authkey = secrets.token_bytes(32)
+        try:
+            with Listener(authkey=authkey) as listener:
+                sock = getattr(getattr(listener, '_listener', None), '_socket', None)
+                if sock is not None:
+                    # Do not wait forever for a worker which failed to start
+                    sock.settimeout(self.startup_timeout)
+                for _ in range(self.nworkers):
+                    proc = subprocess.Popen(
+                        [sys.executable, '-c',
+                         'from pyscf.scf import jointscf; jointscf._worker_main()'],
+                        env=env, stdin=subprocess.PIPE)
+                    proc.stdin.write(pickle.dumps((listener.address, authkey)))
+                    proc.stdin.close()
+                    self._procs.append(proc)
+                for _ in range(self.nworkers):
+                    self._conns.append(listener.accept())
+            for conn, payload in zip(self._conns, payloads):
+                conn.send_bytes(payload)
+            for conn in self._conns:
+                self._recv(conn)
+        except BaseException:
+            self.close()
+            raise
+        return self
+
+    def _recv(self, conn):
+        status, out = conn.recv()
+        if status != 'ok':
+            raise RuntimeError(f'JointSCF worker failed:\n{out}')
+        return out
+
+    def close(self):
+        for conn in self._conns:
+            try:
+                conn.send(None)
+                conn.close()
+            except Exception:
+                pass
+        for proc in self._procs:
+            try:
+                proc.wait(timeout=30)
+            except Exception:
+                proc.kill()
+        self._conns = []
+        self._procs = []
+
+    def run(self, tasks):
+        '''tasks: list of (name, state, args)'''
+        shards = [[] for _ in range(self.nworkers)]
+        for name, st, args in tasks:
+            shards[self._owner[st.idx]].append((name, st.idx, args))
+        busy = [n for n, shard in enumerate(shards) if shard]
+        for n in busy:
+            self._conns[n].send(('run', shards[n]))
+        by_idx = {st.idx: st for _, st, _ in tasks}
+        for n in busy:
+            for idx, summary in self._recv(self._conns[n]):
+                by_idx[idx].__dict__.update(summary)
+
+
+def _worker_main():
+    '''Entry point of the worker processes of :class:`_ProcessBackend`'''
+    address, authkey = pickle.loads(sys.stdin.buffer.read())
+    states = {}
+    with Client(address, authkey=authkey) as conn:
+        while True:
+            try:
+                msg = conn.recv()
+            except EOFError:
+                break
+            if msg is None:
+                break
+            try:
+                cmd, payload = msg
+                out = None
+                if cmd == 'load':
+                    for idx, mf, chk, need_matrices in payload:
+                        mf.chkfile = chk
+                        states[idx] = st = _State(idx, mf)
+                        st.need_matrices = need_matrices
+                elif cmd == 'run':
+                    out = [(idx, _run_task(name, states[idx], args))
+                           for name, idx, args in payload]
+                conn.send(('ok', out))
+            except Exception:
+                conn.send(('error', traceback.format_exc()))
 
 
 def _group_key(mf):
@@ -636,6 +795,8 @@ def kernel(jmf, dm0=None, callback=None):
         dm0 : list of ndarrays
             Initial guess density matrices.  If given, all configurations
             are treated exactly from the first iteration (schedule 'sync').
+        callback : function(envs_dict) => None
+            Called at the end of every SCF cycle of every configuration.
 
     Returns:
         A list of the SCF states of all configurations
@@ -647,8 +808,6 @@ def kernel(jmf, dm0=None, callback=None):
     states = [_State(i, mf) for i, mf in enumerate(mfs)]
     dump_chk = jmf.dump_chk
     conv_check = jmf.conv_check
-    nworkers, omp_threads = jmf.get_num_workers()
-    log.info('workers = %d  OpenMP threads per worker = %d', nworkers, omp_threads)
 
     schedule = jmf.schedule
     if dm0 is not None:
@@ -678,26 +837,24 @@ def kernel(jmf, dm0=None, callback=None):
                  history[-1]['npending'], gmax)
         return log.timer_debug1('round %d' % it, *t0)
 
-    with _Pool(nworkers, omp_threads) as pool:
-        in_cascade = set(st.idx for _, members in groups for st in members)
+    backend = jmf.start_backend(states, callback)
+    jmf.timings = {'startup': time.perf_counter() - t_start}
+    try:
         # One- and two-electron integrals, DIIS objects
-        pool.map(_setup, [(st,) for st in states])
+        backend.run([('setup', st, ()) for st in states])
         for model, members in groups:
             for n, st in enumerate(members):
                 model.set_overlap(n, st.s1e)
 
         # round 0: Fock matrices of the initial guess
         t0 = (logger.process_clock(), logger.perf_counter())
-        tasks = []
-        for st in states:
-            if st.idx in in_cascade and st.level > 0:
-                continue
-            tasks.append((st, None if dm0 is None else dm0[st.idx], dump_chk))
-        pool.map(_init_cycle, tasks)
+        tasks = [('init', st, (None if dm0 is None else dm0[st.idx], dump_chk))
+                 for st in states if st.level == 0]
+        backend.run(tasks)
         for model, members in groups:
             for n, st in enumerate(members):
                 if st.started:
-                    model.record(n, 0, st.dm, st.plain_fock())
+                    model.record(n, 0, st.dm_plain, st.fock_plain)
         t0 = record_round(0, tasks, t0)
         cput1 = log.timer('initialize joint scf', *cput0)
 
@@ -707,25 +864,32 @@ def kernel(jmf, dm0=None, callback=None):
             for model, members in groups:
                 _promote(jmf, model, members, log)
 
-            active = [st for st in states if st.started and not st.done]
+            active = [st for st in states
+                      if (st.started or st.inherited is not None) and not st.done]
             if not active:
                 break
             it += 1
-            anchors = [st for st in active if st.inherited is not None]
-            cycles = [st for st in active if st.inherited is None]
-            tasks = ([(_anchor_cycle, st, dump_chk) for st in anchors] +
-                     [(_scf_cycle, st, callback, dump_chk, conv_check) for st in cycles])
-            pool.map(_call, tasks)
+            tasks = []
+            for st in active:
+                if st.inherited is not None:
+                    tasks.append(('anchor', st, (st.inherited, dump_chk)))
+                    st.inherited = None
+                else:
+                    tasks.append(('cycle', st, (callback, dump_chk, conv_check)))
+            backend.run(tasks)
             for model, members in groups:
                 for n, st in enumerate(members):
                     if st.started and not model.has_entry(n, st.cycle):
-                        model.record(n, st.cycle, st.dm, st.plain_fock())
+                        model.record(n, st.cycle, st.dm_plain, st.fock_plain)
             t0 = record_round(it, tasks, t0)
+    finally:
+        backend.close()
 
     for st in states:
         _finalize_state(st)
     jmf.scf_history = history
     jmf.models = [model for model, _ in groups]
+    jmf.timings['total'] = time.perf_counter() - t_start
     log.timer('joint scf', *cput1)
     return states
 
@@ -736,7 +900,6 @@ def _finalize_state(st):
     mol = mf.mol
     scf_conv, e_tot, cycle = st.scf_conv, st.e_tot, st.cycle
     mo_energy, mo_coeff, mo_occ = st.mo_energy, st.mo_coeff, st.mo_occ
-    dm, vhf, h1e, s1e = st.dm, st.vhf, st.h1e, st.s1e
     mf.converged = scf_conv
     mf.e_tot = e_tot
     mf.mo_energy, mf.mo_coeff, mf.mo_occ = mo_energy, mo_coeff, mo_occ
@@ -752,17 +915,14 @@ def _promote(jmf, model, members, log):
     if model.next_level >= len(model.levels):
         return
     src = [n for n, st in enumerate(members) if st.started]
-    if any(members[n].inherited is not None for n in src):
-        # The previous level has not been evaluated yet
-        return
     running = numpy.array([not members[n].done for n in src])
     if running.any():
         # The latest SCF cycle which all running configurations completed
         it = min(members[n].cycle for n, run in zip(src, running) if run)
     else:
         it = max(members[n].cycle for n in src)
-    model.select_hyper(src, it)
-    res, err = model.loo_error(src, it)
+    hyper = model.select_hyper(src, it)
+    res, err = model.loo_error(src, it, hyper)
     res_max = res[running].max() if running.any() else 0.
     eps = numpy.median(err)
     log.debug('cascade: cycle %d  residual= %.3g  model error= %.3g', it, res_max, eps)
@@ -772,40 +932,53 @@ def _promote(jmf, model, members, log):
     # Learning curve of the model.  If twice the number of sources does not
     # reduce the error substantially, more exact configurations will not
     # improve the predictions and the rest of the group is promoted at once.
+    # The estimate requires enough sources for a linear model of the
+    # descriptors.
     nhalf = len(src) // 2
     saturated = not running.any()
-    if not saturated and nhalf >= 2:
+    if not saturated and nhalf >= max(4, model.z.shape[1] + 2):
         half = sorted(src, key=lambda n: (members[n].level, model.rank[n]))[:nhalf]
-        eps_half = numpy.median(model.loo_error(half, it)[1])
+        eps_half = numpy.median(
+            model.loo_error(half, it, model.select_hyper(half, it))[1])
         saturated = eps_half < jmf.min_model_gain * eps
         log.debug('cascade: model error with %d sources= %.3g', nhalf, eps_half)
 
-    # The DIIS vectors inherited by the promoted configurations.  Only
-    # iterations in which the sources moved by more than the error of
-    # the model provide usable differences.
-    first = max(it - jmf.diis_inherit, 0)
-    inherit = [k for k in range(first, it)
-               if numpy.median(model.residuals(src, k)) > jmf.inherit_ratio * eps]
     dst = []
     while model.next_level < len(model.levels):
         dst.extend(model.levels[model.next_level])
         model.next_level += 1
         if not saturated:
             break
-    wts = model.weights(src, dst)
-    wts /= wts.sum(axis=1, keepdims=True)
+
+    # The state of the promoted configurations is predicted from all exactly
+    # treated configurations.
+    p_it, f_it = model.predict(src, it, model.weights(src, dst, hyper))
+
+    # Their DIIS history is the history of the leaders, relative to the
+    # state of the leaders at cycle `it`.  All leaders started from the
+    # initial guess and ran the same iterations.  Their history is a smooth
+    # function of the geometry, which the states of configurations promoted
+    # at different cycles are not.  Only the iterations in which the leaders
+    # moved by more than the error of the model provide usable differences.
+    lead = list(model.levels[0])
+    inherit = []
+    if jmf.diis_inherit > 0:
+        inherit = [k for k in range(it)
+                   if numpy.median(model.residuals(lead, k)) > jmf.inherit_ratio * eps]
+        inherit = inherit[-jmf.diis_inherit:]
     for n in dst:
         members[n].inherited = {}
-    for k in range(first, it + 1):
-        preds = model.predict(src, dst, k, wts, store=(k < it))
-        if k == it or k in inherit:
-            for n, pred in zip(dst, preds):
-                members[n].inherited[k] = pred
-    for n in dst:
+    if inherit:
+        wts_lead = model.weights(lead, dst, model.select_hyper(lead, it))
+        for k in inherit:
+            dp, df = model.predict_increment(lead, k, it, wts_lead)
+            for i, n in enumerate(dst):
+                members[n].inherited[k] = model.to_ao(n, p_it[i] + dp[i], f_it[i] + df[i])
+    for i, n in enumerate(dst):
         st = members[n]
+        st.inherited[it] = model.to_ao(n, p_it[i], f_it[i])
         st.cycle = it
         st.promoted_at = it
-        st.started = True
     model.promotions.append({
         'cycle': it, 'nsrc': len(src), 'ndst': len(dst), 'residual': res_max,
         'model_error': eps, 'ninherit': len(inherit), 'saturated': bool(saturated)})
@@ -829,6 +1002,13 @@ class JointSCF(lib.StreamObject):
             default it equals the number of OpenMP threads for small
             molecules.  Each worker runs lib.num_threads()//max_workers
             OpenMP threads.
+        parallel : str
+            'process' or 'thread'.  Worker processes own the integrals and
+            the SCF state of a subset of the batch.  They require picklable
+            mean-field objects and do not support callback functions.
+            Worker threads share the memory of the calling process; the
+            Python parts of the SCF iterations then run one at a time.
+            Threads are used if the process backend is not applicable.
         descriptors : ndarray, shape (nconf, ndesc)
             Geometry descriptors of the cross-configuration model.  Inverse
             interatomic distances by default.
@@ -873,6 +1053,7 @@ class JointSCF(lib.StreamObject):
     '''
     schedule = 'cascade'
     max_workers = None
+    parallel = 'process'
     descriptors = None
     n_lead = None
     level_growth = 2.
@@ -880,7 +1061,7 @@ class JointSCF(lib.StreamObject):
     inherit_ratio = 3.
     min_model_gain = 1.5
     max_lead_cycle = 30
-    diis_inherit = 8
+    diis_inherit = 7
     min_group_size = 6
     align = True
     dump_chk = True
@@ -906,6 +1087,7 @@ class JointSCF(lib.StreamObject):
         self.promoted_at = None
         self.scf_history = None
         self.models = None
+        self.timings = None
 
     def dump_flags(self, verbose=None):
         log = logger.new_logger(self, verbose)
@@ -930,6 +1112,30 @@ class JointSCF(lib.StreamObject):
             return 1, nthreads
         return nworkers, max(1, nthreads // nworkers)
 
+    def start_backend(self, states, callback=None):
+        '''Start the workers which carry out the SCF iterations'''
+        nworkers, omp_threads = self.get_num_workers()
+        log = logger.new_logger(self)
+        if self.parallel not in ('process', 'thread'):
+            raise ValueError(f'Unknown parallel backend {self.parallel}')
+        if nworkers > 1 and self.parallel == 'process':
+            hooks = callback is not None or any(
+                callable(st.mf.callback) or callable(st.mf.check_convergence)
+                for st in states)
+            if hooks:
+                log.info('Callback functions require worker threads')
+            else:
+                try:
+                    backend = _ProcessBackend(nworkers, omp_threads).start(states)
+                    log.info('%d worker processes with %d OpenMP threads',
+                             nworkers, omp_threads)
+                    return backend
+                except (pickle.PicklingError, AttributeError, TypeError) as e:
+                    log.warn('Worker processes are not available for these '
+                             'mean-field objects (%s). Use worker threads.', e)
+        log.info('%d worker threads with %d OpenMP threads', nworkers, omp_threads)
+        return _ThreadBackend(nworkers, omp_threads).start(states)
+
     def build_groups(self, states):
         '''Partition the batch into groups of configurations which share
         atoms, basis and method, and set up their cross-configuration models.
@@ -950,7 +1156,7 @@ class JointSCF(lib.StreamObject):
             model.verbose, model.stdout = self.verbose, self.stdout
             n_lead = self.n_lead
             if n_lead is None:
-                n_lead = max(8, 2 * model.z.shape[1] + 2)
+                n_lead = max(8, model.z.shape[1] + 2)
             n_lead = max(2, min(int(n_lead), nmem))
             levels = []
             nexact = 0
@@ -962,12 +1168,12 @@ class JointSCF(lib.StreamObject):
                 size = max(1, int(round(nexact * (self.level_growth - 1))))
             model.levels = levels
             model.next_level = 1
-            # Each promotion delays the promoted configurations by one cycle
-            model.window = self.diis_inherit + len(levels) + 2
             for ilevel, level in enumerate(levels):
                 for n in level:
                     members[n].level = ilevel
                     members[n].group = model
+                    members[n].group_index = n
+                    members[n].need_matrices = True
             groups.append((model, members))
         return groups
 
