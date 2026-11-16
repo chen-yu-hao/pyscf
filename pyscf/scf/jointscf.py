@@ -66,6 +66,7 @@ import traceback
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing.connection import Listener, Client
+from multiprocessing.connection import wait as wait_connections
 
 import numpy
 import scipy.linalg
@@ -151,10 +152,16 @@ def _kernel_matrix(za, zb, length):
     return 1. + za.dot(zb.T) + numpy.exp(-.5 * numpy.maximum(d2, 0) / length**2)
 
 
-def _regularized_inverse(kmat, ridge):
-    n = len(kmat)
-    kmat = kmat + numpy.eye(n) * (ridge * numpy.trace(kmat) / n)
-    return scipy.linalg.pinvh(kmat)
+def _regularized_inverse(kmat, ridge, eig=None):
+    '''(K + ridge * tr(K)/n)^{-1}'''
+    if eig is None:
+        eig = scipy.linalg.eigh(kmat)
+    e, v = eig
+    e = e + ridge * e.sum() / len(e)
+    einv = numpy.zeros_like(e)
+    mask = e > 1e-14 * abs(e).max()
+    einv[mask] = 1. / e[mask]
+    return (v * einv).dot(v.T)
 
 
 class SharedModel(lib.StreamObject):
@@ -192,6 +199,8 @@ class SharedModel(lib.StreamObject):
         # config id -> {entry id: (P~, F~)}
         self._entries = [{} for _ in range(self.nconf)]
         self._cv_cols = None
+        self._hyper = None      # (number of sources, hyper-parameters)
+        self._checked = None    # (cycle, number of sources) of the last test
         self.levels = [self.order]
         self.next_level = 1
         self.promotions = []
@@ -263,8 +272,9 @@ class SharedModel(lib.StreamObject):
         best = None
         for length in _LENGTH_SCALES:
             kmat = _kernel_matrix(z, z, length)
+            eig = scipy.linalg.eigh(kmat)
             for ridge in _RIDGES:
-                kinv = _regularized_inverse(kmat, ridge)
+                kinv = _regularized_inverse(kmat, ridge, eig)
                 diag = kinv.diagonal()
                 if (diag <= 0).any():
                     continue
@@ -362,6 +372,7 @@ class _State:
         self.nfock = 0
         self.promoted_at = 0
         self.inherited = None   # synthetic (dm, fock) history from the model
+        self.todo = None        # the next task: 'init', 'anchor' or 'cycle'
         self.s1e = self.h1e = self.x_orth = self.mf_diis = None
         self.dm = self.vhf = self.fock_last = None
         self.dm_plain = self.fock_plain = None
@@ -377,15 +388,12 @@ _SUMMARY = ('started', 'done', 'scf_conv', 'cycle', 'nfock', 'e_tot', 'norm_gorb
 _MATRICES = ('dm_plain', 'fock_plain')
 _RESULTS = ('mo_energy', 'mo_coeff', 'mo_occ')
 
-def _summary(st, with_s1e=False):
+def _summary(st):
     '''The part of the state which the driver needs'''
     out = {key: getattr(st, key) for key in _SUMMARY}
     if st.need_matrices:
-        if st.vhf is not None:
-            out['dm_plain'] = numpy.asarray(st.dm)
-            out['fock_plain'] = st.h1e + numpy.asarray(st.vhf)
-        if with_s1e:
-            out['s1e'] = st.s1e
+        out['dm_plain'] = numpy.asarray(st.dm)
+        out['fock_plain'] = st.h1e + numpy.asarray(st.vhf)
     if st.done:
         for key in _RESULTS:
             out[key] = getattr(st, key)
@@ -464,6 +472,8 @@ def _anchor_cycle(st, entries, dump_chk=True):
     '''
     mf = st.mf
     mol = mf.mol
+    if st.s1e is None:
+        _setup(st)
     h1e, s1e, mf_diis = st.h1e, st.s1e, st.mf_diis
     cycle = max(entries)
     dm, fock_model = entries[cycle]
@@ -581,7 +591,6 @@ def _extra_cycle(st, fock, dump_chk=True):
 
 
 _TASKS = {
-    'setup': _setup,
     'init': _init_cycle,
     'anchor': _anchor_cycle,
     'cycle': _scf_cycle,
@@ -589,18 +598,25 @@ _TASKS = {
 
 def _run_task(name, st, args):
     _TASKS[name](st, *args)
-    return _summary(st, with_s1e=(name == 'setup'))
+    return _summary(st)
 
 
 class _ThreadBackend:
     '''Configuration-level thread pool.  The C kernels of PySCF release the
     GIL.  Each worker thread uses a fixed number of OpenMP threads.  The
-    Python parts of the SCF iterations are executed one at a time.'''
+    Python parts of the SCF iterations are executed one at a time.
+
+    The backend has one slot: a batch of tasks is finished before the next
+    one is accepted.
+    '''
+    nslots = 1
+
     def __init__(self, nworkers, omp_threads):
         self.nworkers = nworkers
         self.omp_threads = omp_threads
         self._executor = None
         self._blas_ctl = None
+        self._finished = []
 
     def start(self, states):
         if self.nworkers > 1:
@@ -623,8 +639,12 @@ class _ThreadBackend:
             self._blas_ctl.restore_original_limits()
             self._blas_ctl = None
 
-    def run(self, tasks):
+    def slot(self, st):
+        return 0
+
+    def submit(self, slot, tasks):
         '''tasks: list of (name, state, args)'''
+        t0 = time.perf_counter()
         if self._executor is None or len(tasks) < 2:
             summaries = [_run_task(*task) for task in tasks]
         else:
@@ -632,34 +652,38 @@ class _ThreadBackend:
             summaries = [fut.result() for fut in futures]
         for (_, st, _), summary in zip(tasks, summaries):
             st.__dict__.update(summary)
+        self._finished.append((slot, tasks, time.perf_counter() - t0))
+
+    def wait(self):
+        '''Returns a list of (slot, tasks, busy time) of the finished batches'''
+        finished, self._finished = self._finished, []
+        return finished
 
 
 class _ProcessBackend:
     '''Worker processes which own the SCF states (integrals, grids, DIIS)
-    of a fixed subset of the batch.  The workers are started with a fresh
+    of a subset of the batch.  The workers are started with a fresh
     interpreter.  They do not import the main module of the calling script.
+
+    Every worker is a slot which processes its batches of tasks
+    independently of the other workers.
     '''
     startup_timeout = 120
 
     def __init__(self, nworkers, omp_threads):
-        self.nworkers = nworkers
+        self.nslots = self.nworkers = nworkers
         self.omp_threads = omp_threads
         self._procs = []
         self._conns = []
         self._owner = {}
+        self._inflight = {}
 
     def start(self, states):
-        # Configurations of the same cascade level are distributed evenly
-        order = sorted(states, key=lambda st: (
-            st.level, st.group.rank[st.group_index] if st.group is not None else 0,
-            st.idx))
-        shards = [[] for _ in range(self.nworkers)]
-        for n, st in enumerate(order):
-            self._owner[st.idx] = n % self.nworkers
-            shards[n % self.nworkers].append(
-                (st.idx, st.mf, st.mf.chkfile, st.need_matrices))
         # The mean-field objects must be picklable
-        payloads = [pickle.dumps(('load', shard)) for shard in shards]
+        self._blobs = {
+            st.idx: pickle.dumps((st.idx, st.mf, st.mf.chkfile, st.need_matrices))
+            for st in states}
+        self._load = [0] * self.nworkers
 
         import pyscf
         root = os.path.dirname(os.path.dirname(os.path.abspath(pyscf.__file__)))
@@ -685,20 +709,10 @@ class _ProcessBackend:
                     self._procs.append(proc)
                 for _ in range(self.nworkers):
                     self._conns.append(listener.accept())
-            for conn, payload in zip(self._conns, payloads):
-                conn.send_bytes(payload)
-            for conn in self._conns:
-                self._recv(conn)
         except BaseException:
             self.close()
             raise
         return self
-
-    def _recv(self, conn):
-        status, out = conn.recv()
-        if status != 'ok':
-            raise RuntimeError(f'JointSCF worker failed:\n{out}')
-        return out
 
     def close(self):
         for conn in self._conns:
@@ -715,18 +729,40 @@ class _ProcessBackend:
         self._conns = []
         self._procs = []
 
-    def run(self, tasks):
+    def slot(self, st):
+        '''The worker which owns the configuration.  A configuration is
+        given to the worker with the smallest number of running
+        configurations when its first task is issued.'''
+        n = self._owner.get(st.idx)
+        if n is None:
+            n = self._owner[st.idx] = min(
+                range(self.nworkers), key=self._load.__getitem__)
+            self._load[n] += 1
+        return n
+
+    def submit(self, slot, tasks):
         '''tasks: list of (name, state, args)'''
-        shards = [[] for _ in range(self.nworkers)]
-        for name, st, args in tasks:
-            shards[self._owner[st.idx]].append((name, st.idx, args))
-        busy = [n for n, shard in enumerate(shards) if shard]
-        for n in busy:
-            self._conns[n].send(('run', shards[n]))
-        by_idx = {st.idx: st for _, st, _ in tasks}
-        for n in busy:
-            for idx, summary in self._recv(self._conns[n]):
-                by_idx[idx].__dict__.update(summary)
+        blobs = [self._blobs.pop(st.idx) for _, st, _ in tasks if st.idx in self._blobs]
+        self._conns[slot].send((blobs, [(name, st.idx, args) for name, st, args in tasks]))
+        self._inflight[slot] = tasks
+
+    def wait(self):
+        '''Returns a list of (slot, tasks, busy time) of the finished batches'''
+        slots = {self._conns[slot]: slot for slot in self._inflight}
+        finished = []
+        for conn in wait_connections(list(slots)):
+            slot = slots[conn]
+            status, out = conn.recv()
+            if status != 'ok':
+                raise RuntimeError(f'JointSCF worker failed:\n{out}')
+            summaries, busy = out
+            tasks = self._inflight.pop(slot)
+            for (_, st, _), summary in zip(tasks, summaries):
+                st.__dict__.update(summary)
+                if st.done:
+                    self._load[slot] -= 1
+            finished.append((slot, tasks, busy))
+        return finished
 
 
 def _worker_main():
@@ -742,17 +778,15 @@ def _worker_main():
             if msg is None:
                 break
             try:
-                cmd, payload = msg
-                out = None
-                if cmd == 'load':
-                    for idx, mf, chk, need_matrices in payload:
-                        mf.chkfile = chk
-                        states[idx] = st = _State(idx, mf)
-                        st.need_matrices = need_matrices
-                elif cmd == 'run':
-                    out = [(idx, _run_task(name, states[idx], args))
-                           for name, idx, args in payload]
-                conn.send(('ok', out))
+                t0 = time.perf_counter()
+                blobs, tasks = msg
+                for blob in blobs:
+                    idx, mf, chk, need_matrices = pickle.loads(blob)
+                    mf.chkfile = chk
+                    states[idx] = st = _State(idx, mf)
+                    st.need_matrices = need_matrices
+                out = [_run_task(name, states[idx], args) for name, idx, args in tasks]
+                conn.send(('ok', (out, time.perf_counter() - t0)))
             except Exception:
                 conn.send(('error', traceback.format_exc()))
 
@@ -767,7 +801,7 @@ def _group_key(mf):
 def _supports_cascade(mf):
     '''The shared model handles real AO matrices of shape (nao,nao) or
     (2,nao,nao) of molecules and the plain commutator DIIS.'''
-    if mf.istype('GHF') or mf.istype('DHF') or hasattr(mf, 'cell'):
+    if mf.istype('GHF') or mf.istype('DHF') or 'cell' in mf.__dict__:
         return False
     if isinstance(mf.diis, lib.diis.DIIS):
         return type(mf.diis) is scf_diis.CDIIS
@@ -822,66 +856,69 @@ def kernel(jmf, dm0=None, callback=None):
                  len(members), model.z.shape[1],
                  [len(level) for level in model.levels])
 
-    history = []
-    def record_round(it, tasks, t0):
-        active = [st for st in states if st.started and not st.done]
-        gmax = max([st.norm_gorb for st in active
-                    if numpy.isfinite(st.norm_gorb)], default=0.)
-        history.append({
-            'round': it, 'nfock': len(tasks),
-            'nconverged': sum(st.scf_conv and st.done for st in states),
-            'npending': sum(not st.started for st in states),
-            'max_norm_gorb': gmax, 'time': time.perf_counter() - t_start})
-        log.info('round %3d  fock builds= %4d  converged= %4d  pending= %4d  '
-                 'max|g|= %.3g', it, len(tasks), history[-1]['nconverged'],
-                 history[-1]['npending'], gmax)
-        return log.timer_debug1('round %d' % it, *t0)
-
     backend = jmf.start_backend(states, callback)
     jmf.timings = {'startup': time.perf_counter() - t_start}
+    cput1 = log.timer('initialize joint scf', *cput0)
+    history = []
+    busy = {}
     try:
-        # One- and two-electron integrals, DIIS objects
-        backend.run([('setup', st, ()) for st in states])
         for model, members in groups:
             for n, st in enumerate(members):
-                model.set_overlap(n, st.s1e)
+                model.set_overlap(n, st.mf.get_ovlp(st.mf.mol))
+        # The configurations of level 0 start from the initial guess
+        for st in states:
+            if st.level == 0:
+                st.todo = 'init'
 
-        # round 0: Fock matrices of the initial guess
-        t0 = (logger.process_clock(), logger.perf_counter())
-        tasks = [('init', st, (None if dm0 is None else dm0[st.idx], dump_chk))
-                 for st in states if st.level == 0]
-        backend.run(tasks)
-        for model, members in groups:
-            for n, st in enumerate(members):
-                if st.started:
-                    model.record(n, 0, st.dm_plain, st.fock_plain)
-        t0 = record_round(0, tasks, t0)
-        cput1 = log.timer('initialize joint scf', *cput0)
-
-        it = 0
         while True:
             # Promotion of the next levels of the cascade groups
             for model, members in groups:
                 _promote(jmf, model, members, log)
 
-            active = [st for st in states
-                      if (st.started or st.inherited is not None) and not st.done]
-            if not active:
+            # Tasks of the idle slots: one SCF step of every configuration
+            # which they own
+            batches = {}
+            for st in states:
+                if st.todo is not None and st.idx not in busy:
+                    slot = backend.slot(st)
+                    if slot not in busy.values():
+                        batches.setdefault(slot, []).append(st)
+            for slot, batch in batches.items():
+                tasks = []
+                for st in batch:
+                    if st.todo == 'init':
+                        args = (None if dm0 is None else dm0[st.idx], dump_chk)
+                    elif st.todo == 'anchor':
+                        args = (st.inherited, dump_chk)
+                        st.inherited = None
+                    else:
+                        args = (callback, dump_chk, conv_check)
+                    tasks.append((st.todo, st, args))
+                    st.todo = None
+                    busy[st.idx] = slot
+                backend.submit(slot, tasks)
+            if not busy:
                 break
-            it += 1
-            tasks = []
-            for st in active:
-                if st.inherited is not None:
-                    tasks.append(('anchor', st, (st.inherited, dump_chk)))
-                    st.inherited = None
-                else:
-                    tasks.append(('cycle', st, (callback, dump_chk, conv_check)))
-            backend.run(tasks)
-            for model, members in groups:
-                for n, st in enumerate(members):
-                    if st.started and not model.has_entry(n, st.cycle):
-                        model.record(n, st.cycle, st.dm_plain, st.fock_plain)
-            t0 = record_round(it, tasks, t0)
+
+            for slot, tasks, worker_time in backend.wait():
+                for _, st, _ in tasks:
+                    del busy[st.idx]
+                    if not st.done:
+                        st.todo = 'cycle'
+                    if st.group is not None and not st.group.has_entry(
+                            st.group_index, st.cycle):
+                        st.group.record(st.group_index, st.cycle,
+                                        st.dm_plain, st.fock_plain)
+                gmax = max([st.norm_gorb for st in states if st.started and not st.done
+                            and numpy.isfinite(st.norm_gorb)], default=0.)
+                history.append({
+                    'slot': slot, 'ntasks': len(tasks), 'worker_time': worker_time,
+                    'nconverged': sum(st.scf_conv and st.done for st in states),
+                    'npending': sum(not st.started for st in states),
+                    'max_norm_gorb': gmax, 'time': time.perf_counter() - t_start})
+                log.debug('batch %3d  slot %d  tasks= %4d  converged= %4d  pending= %4d'
+                          '  max|g|= %.3g', len(history), slot, len(tasks),
+                          history[-1]['nconverged'], history[-1]['npending'], gmax)
     finally:
         backend.close()
 
@@ -911,23 +948,43 @@ def _finalize_state(st):
 
 def _promote(jmf, model, members, log):
     '''Promote the next level of a cascade group if the SCF residual of the
-    exactly treated configurations reached the accuracy of the model.'''
+    exactly treated configurations reached the accuracy of the model.
+
+    The decision is a function of the SCF cycle `it` which all exactly
+    treated configurations completed and of their states at that cycle.  It
+    does not depend on the order in which the workers deliver the results.
+    '''
     if model.next_level >= len(model.levels):
         return
-    src = [n for n, st in enumerate(members) if st.started]
-    running = numpy.array([not members[n].done for n in src])
-    if running.any():
-        # The latest SCF cycle which all running configurations completed
-        it = min(members[n].cycle for n, run in zip(src, running) if run)
-    else:
-        it = max(members[n].cycle for n in src)
-    hyper = model.select_hyper(src, it)
+    src = [n for level in model.levels[:model.next_level] for n in level]
+    if any(not members[n].started for n in src):
+        # Some configurations have not been evaluated yet
+        return
+    live = [members[n].cycle for n in src if not members[n].done]
+    it = min(live) if live else max(members[n].cycle for n in src)
+    if model._checked == (it, len(src)):
+        return
+    model._checked = (it, len(src))
+    # configurations which were not converged before cycle `it`
+    running = numpy.array([not members[n].done or members[n].cycle > it for n in src])
+
+    if model._hyper is None or model._hyper[0] != len(src):
+        model._hyper = (len(src), model.select_hyper(src, it))
+    hyper = model._hyper[1]
     res, err = model.loo_error(src, it, hyper)
     res_max = res[running].max() if running.any() else 0.
     eps = numpy.median(err)
     log.debug('cascade: cycle %d  residual= %.3g  model error= %.3g', it, res_max, eps)
     if res_max > jmf.promote_ratio * eps and it < jmf.max_lead_cycle:
         return
+    # The decision is taken with the hyper-parameters of the current cycle
+    hyper = model.select_hyper(src, it)
+    if hyper != model._hyper[1]:
+        model._hyper = (len(src), hyper)
+        err = model.loo_error(src, it, hyper)[1]
+        eps = numpy.median(err)
+        if res_max > jmf.promote_ratio * eps and it < jmf.max_lead_cycle:
+            return
 
     # Learning curve of the model.  If twice the number of sources does not
     # reduce the error substantially, more exact configurations will not
@@ -977,6 +1034,7 @@ def _promote(jmf, model, members, log):
     for i, n in enumerate(dst):
         st = members[n]
         st.inherited[it] = model.to_ao(n, p_it[i], f_it[i])
+        st.todo = 'anchor'
         st.cycle = it
         st.promoted_at = it
     model.promotions.append({

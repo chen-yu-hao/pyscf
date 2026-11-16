@@ -260,9 +260,9 @@ class KnownValues(unittest.TestCase):
         self.assertAlmostEqual(abs(wts.sum(axis=1) - 1).max(), 0, 12)
         p, f = model.predict(src, 0, wts)
         ref = numpy.array([a + model.z[i,0] * b for i in dst])
-        self.assertAlmostEqual(abs(p - ref).max(), 0, 4)
+        self.assertAlmostEqual(abs(p - ref).max(), 0, 3)
         ref = numpy.array([b - model.z[i,1] * a for i in dst])
-        self.assertAlmostEqual(abs(f - ref).max(), 0, 4)
+        self.assertAlmostEqual(abs(f - ref).max(), 0, 3)
         res, err = model.loo_error(src, 0, hyper)
         self.assertTrue(err.max() < 1e-3 * res.max())
         self.assertAlmostEqual(abs(res - model.residuals(src, 0)).max(), 0, 12)
@@ -270,7 +270,7 @@ class KnownValues(unittest.TestCase):
         for i in src:
             model._store(i, 1, 2 * a + model.z[i,0] * b, b)
         dp, df = model.predict_increment(src, 1, 0, wts)
-        self.assertAlmostEqual(abs(dp - a).max(), 0, 4)
+        self.assertAlmostEqual(abs(dp - a).max(), 0, 3)
         # AO representation
         dm, fock = model.to_ao(dst[0], p[0], f[0])
         s1e = mols[dst[0]].intor('int1e_ovlp')

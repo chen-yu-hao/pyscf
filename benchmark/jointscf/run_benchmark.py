@@ -135,8 +135,7 @@ def child(case, spec):
         out['levels'] = jmf.levels.tolist()
         out['promoted_at'] = jmf.promoted_at.tolist()
         out['promotions'] = [m.promotions for m in jmf.models]
-        out['rounds'] = len(jmf.scf_history)
-        out['round_history'] = jmf.scf_history
+        out['batch_history'] = jmf.scf_history
         out['ndescriptor'] = [int(m.z.shape[1]) for m in jmf.models]
 
     out['e_tot'] = [r[0] for r in res]
