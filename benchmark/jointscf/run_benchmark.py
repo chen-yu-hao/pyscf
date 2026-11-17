@@ -37,6 +37,10 @@ def method_table(nproc):
         f'sync_{n}w':       dict(kind='joint', schedule='sync', omp=n, workers=n),
         'cascade_1w':       dict(kind='joint', schedule='cascade', omp=1, workers=1),
         f'cascade_{n}w':    dict(kind='joint', schedule='cascade', omp=n, workers=n),
+        'transferable_polish_1w':      dict(kind='joint', schedule='transferable', polish=True, omp=1, workers=1),
+        f'transferable_polish_{n}w':   dict(kind='joint', schedule='transferable', polish=True, omp=n, workers=n),
+        'transferable_nopolish_1w':    dict(kind='joint', schedule='transferable', polish=False, omp=1, workers=1),
+        f'transferable_nopolish_{n}w': dict(kind='joint', schedule='transferable', polish=False, omp=n, workers=n),
         # the same with the AO values on the grids kept in memory
         'direct_1t_cache':     dict(kind='direct', omp=1, cache=True),
         f'direct_{n}p_cache':  dict(kind='pool', omp=1, nproc=n, cache=True),
@@ -126,6 +130,10 @@ def child(case, spec):
         jmf = jointscf.JointSCF([_make_mf(mol, xc, level, cache, conv_tol) for mol in mols])
         jmf.schedule = spec['schedule']
         jmf.max_workers = spec['workers']
+        for attr in ('polish', 'molecule_batch', 'correction_rank', 'latent_rank',
+                     'optimizer', 'max_shared_fock', 'seed'):
+            if attr in spec:
+                setattr(jmf, attr, spec[attr])
         jmf.kernel()
         # Launching the worker processes is reported separately, as it is
         # for the process pool of the independent calculations.
@@ -134,9 +142,12 @@ def child(case, spec):
         res = list(zip(jmf.e_tot.tolist(), jmf.converged.tolist(), jmf.nfock.tolist()))
         out['levels'] = jmf.levels.tolist()
         out['promoted_at'] = jmf.promoted_at.tolist()
-        out['promotions'] = [m.promotions for m in jmf.models]
+        out['promotions'] = [getattr(m, 'promotions', []) for m in jmf.models]
         out['batch_history'] = jmf.scf_history
         out['ndescriptor'] = [int(m.z.shape[1]) for m in jmf.models]
+        out['nfock_shared'] = jmf.nfock_shared.tolist()
+        out['nfock_polish'] = jmf.nfock_polish.tolist()
+        out['e_err_est'] = jmf.e_err_est.tolist()
 
     out['e_tot'] = [r[0] for r in res]
     out['converged'] = [r[1] for r in res]
@@ -174,6 +185,7 @@ def environment_info():
 
 def run_one(case, method, spec):
     env = dict(os.environ)
+    env.setdefault('PYSCF_EXT_PATH', '')
     env['OMP_NUM_THREADS'] = str(spec['omp'])
     if spec['omp'] == 1:
         # the BLAS library bundled with numpy/scipy

@@ -23,7 +23,7 @@ loop body is the body of :func:`pyscf.scf.hf.kernel`), so the results are
 ordinary single-point SCF solutions and each ``mf`` can be handed to any
 post-SCF module afterwards.
 
-Two schedules are available:
+Three schedules are available:
 
 ``sync``
     Every configuration receives one exact Fock build in every iteration.
@@ -44,6 +44,20 @@ Two schedules are available:
     to exact Fock builds.  A promoted configuration inherits a synthetic DIIS
     history from the model, so it keeps the convergence momentum of the
     configurations it was following instead of restarting the extrapolation.
+
+``transferable``
+    Shared descriptor-conditioned orbital subspace optimization followed by
+    optional exact SCF polishing.  Occupied orbitals are parameterized as
+    ``C_R = X_R qf(Phi_theta(z_R) A_R + Delta_R)`` in the Kabsch-aligned
+    Loewdin basis ``X_R``, where ``Phi_theta`` is shared across geometries,
+    ``A_R`` are local subspace coefficients, and ``Delta_R`` is a local
+    rank-``r_Delta`` correction.  Mini-batches of geometries evaluate one
+    exact Fock matrix each and backpropagate ``dE/dD = F`` through the thin
+    QR decomposition to update ``theta`` and ``(A_R, Delta_R)`` without extra
+    Fock builds.  With ``polish=True`` (default), the final densities seed
+    standard independent DIIS SCF polishing to ``mf.conv_tol``; with
+    ``polish=False``, an approximate variational upper-bound solution and an
+    energy error estimate are returned directly.
 
 Example::
 
@@ -370,6 +384,7 @@ class _State:
         self.scf_conv = False
         self.cycle = 0
         self.nfock = 0
+        self.nfock_shared = 0
         self.promoted_at = 0
         self.inherited = None   # synthetic (dm, fock) history from the model
         self.todo = None        # the next task: 'init', 'anchor' or 'cycle'
@@ -379,12 +394,15 @@ class _State:
         self.e_tot = numpy.nan
         self.mo_energy = self.mo_coeff = self.mo_occ = None
         self.norm_gorb = numpy.inf
+        self.e_err_est = 0.0
+        self.shared_payload = None
         self.conv_tol = mf.conv_tol
         self.conv_tol_grad = mf.conv_tol_grad
         if self.conv_tol_grad is None:
             self.conv_tol_grad = numpy.sqrt(self.conv_tol)
 
-_SUMMARY = ('started', 'done', 'scf_conv', 'cycle', 'nfock', 'e_tot', 'norm_gorb')
+_SUMMARY = ('started', 'done', 'scf_conv', 'cycle', 'nfock', 'nfock_shared',
+            'e_tot', 'norm_gorb', 'e_err_est')
 _MATRICES = ('dm_plain', 'fock_plain')
 _RESULTS = ('mo_energy', 'mo_coeff', 'mo_occ')
 
@@ -394,6 +412,9 @@ def _summary(st):
     if st.need_matrices:
         out['dm_plain'] = numpy.asarray(st.dm)
         out['fock_plain'] = st.h1e + numpy.asarray(st.vhf)
+    if st.shared_payload is not None:
+        out['shared_payload'] = st.shared_payload
+        st.shared_payload = None
     if st.done:
         for key in _RESULTS:
             out[key] = getattr(st, key)
@@ -547,6 +568,11 @@ def _scf_cycle(st, callback=None, dump_chk=True, conv_check=True):
         st.done = True
         if scf_conv and conv_check:
             _extra_cycle(st, fock, dump_chk)
+        else:
+            from pyscf.scf import _transferable
+            if _transferable.supports_transferable(mf):
+                st.e_err_est = _transferable.estimate_pt2_err(
+                    mf, fock, st.mo_coeff, st.mo_energy, st.mo_occ)
     return st
 
 
@@ -587,6 +613,75 @@ def _extra_cycle(st, fock, dump_chk=True):
     st.mo_energy, st.mo_coeff, st.mo_occ = mo_energy, mo_coeff, mo_occ
     st.norm_gorb = norm_gorb
     st.scf_conv = scf_conv
+    from pyscf.scf import _transferable
+    if _transferable.supports_transferable(mf):
+        st.e_err_est = _transferable.estimate_pt2_err(
+            mf, fock, mo_coeff, mo_energy, mo_occ)
+    return st
+
+
+def _setup_transferable(st):
+    '''Initialize integrals/grids and zero-Fock guess for transferable SCF.'''
+    if st.s1e is None:
+        _setup(st)
+    mf = st.mf
+    dm0 = mf.get_init_guess(mf.mol, mf.init_guess, s1e=st.s1e)
+    st.shared_payload = (numpy.asarray(st.s1e, dtype=float),
+                         numpy.asarray(st.h1e, dtype=float),
+                         numpy.asarray(dm0, dtype=float))
+    return st
+
+
+def _eval_fock_shared(st, dm):
+    '''Evaluate a single exact Fock matrix during transferable shared training.'''
+    if st.s1e is None:
+        _setup(st)
+    mf = st.mf
+    mol = mf.mol
+    vhf = mf.get_veff(mol, dm)
+    e_tot = float(numpy.real(mf.energy_tot(dm, st.h1e, vhf)))
+    fock = numpy.asarray(mf.get_fock(st.h1e, st.s1e, vhf, dm))
+    st.dm = dm
+    st.vhf = vhf
+    st.e_tot = e_tot
+    st.nfock += 1
+    st.nfock_shared += 1
+    st.cycle += 1
+    st.shared_payload = (e_tot, fock)
+    return st
+
+
+def _finalize_shared(st, dm, c_occ, dump_chk=True):
+    '''Finalize a transferable configuration without SCF polishing (polish=False).'''
+    from pyscf.scf import _transferable
+    if st.s1e is None:
+        _setup(st)
+    mf = st.mf
+    mol = mf.mol
+    vhf = mf.get_veff(mol, dm)
+    e_tot = float(numpy.real(mf.energy_tot(dm, st.h1e, vhf)))
+    fock = numpy.asarray(mf.get_fock(st.h1e, st.s1e, vhf, dm))
+    mo_coeff, mo_energy, mo_occ, e_err_est = (
+        _transferable.semicanonical_mo_and_err_est(
+            mf, st.s1e, fock, c_occ, lindep=getattr(mf, 'lindep', 1e-10)))
+    norm_gorb = _norm_gorb(mf, mo_coeff, mo_occ, fock)
+    if dump_chk and mf.chkfile:
+        chkfile.save_mol(mol, mf.chkfile)
+    st.dm = dm
+    st.vhf = vhf
+    st.e_tot = e_tot
+    st.mo_coeff = mo_coeff
+    st.mo_energy = mo_energy
+    st.mo_occ = mo_occ
+    st.norm_gorb = norm_gorb
+    st.e_err_est = float(e_err_est)
+    st.nfock += 1
+    st.nfock_shared += 1
+    st.cycle += 1
+    st.started = True
+    st.scf_conv = False
+    st.done = True
+    st.shared_payload = None
     return st
 
 
@@ -594,6 +689,9 @@ _TASKS = {
     'init': _init_cycle,
     'anchor': _anchor_cycle,
     'cycle': _scf_cycle,
+    'setup_transferable': _setup_transferable,
+    'eval_fock_shared': _eval_fock_shared,
+    'finalize_shared': _finalize_shared,
 }
 
 def _run_task(name, st, args):
@@ -819,6 +917,113 @@ def _check_sanity(mf):
             f'{mf.__class__} defines a different SCF driver.')
 
 
+def _dispatch_sync(backend, task_items):
+    '''Submit ``task_items = [(name, st, args), ...]`` and wait for completion.'''
+    batches = {}
+    for name, st, args in task_items:
+        slot = backend.slot(st)
+        batches.setdefault(slot, []).append((name, st, args))
+    inflight_slots = set()
+    for slot, tasks in batches.items():
+        backend.submit(slot, tasks)
+        inflight_slots.add(slot)
+    while inflight_slots:
+        for slot, _, _ in backend.wait():
+            inflight_slots.discard(slot)
+
+
+def _run_transferable_group(jmf, model, members, backend, dm_init_map,
+                            dump_chk, history, t_start, log):
+    '''Execute shared transferable training and hand off to polish or finalize.'''
+    from pyscf.scf import _transferable
+
+    nmem = len(members)
+    _dispatch_sync(backend, [('setup_transferable', members[i], ()) for i in model.order])
+    setup_data = []
+    for st in members:
+        setup_data.append(st.shared_payload)
+        st.shared_payload = None
+    try:
+        model.initialize(setup_data)
+    except _transferable.IncompatibleGroupError as exc:
+        log.info('transferable: falling back to sync for %d configurations (%s)',
+                 nmem, exc)
+        for st in members:
+            st.todo = 'init'
+        return False
+
+    if jmf.molecule_batch is None:
+        batch_size = min(8, nmem)
+    elif isinstance(jmf.molecule_batch, str) and jmf.molecule_batch.lower() == 'full':
+        batch_size = nmem
+    else:
+        batch_size = max(1, min(int(jmf.molecule_batch), nmem))
+
+    d_dim = model.z.shape[1]
+    if jmf.max_shared_fock is None:
+        if jmf.polish:
+            steps_target = max(6, 2 * d_dim + 3)
+            cap = nmem
+            budget = min(cap, max(batch_size, steps_target * batch_size))
+        else:
+            steps_target = max(24, 4 * d_dim + 20)
+            cap = 4 * nmem
+            budget = min(cap, max(4 * batch_size, steps_target * batch_size))
+    else:
+        budget = max(0, int(jmf.max_shared_fock))
+
+    tol_e = (jmf.shared_tol_e if jmf.shared_tol_e is not None
+             else (1e-4 if model.correction_rank == 0 else 1e-7))
+    tol_grad = float(jmf.shared_tol_grad)
+
+    log.info('transferable group: %d configs, %d descriptors, K=%s, r_Delta=%s, '
+             'batch=%d, budget=%d, optimizer=%s, polish=%s',
+             nmem, d_dim, model.latent_ranks, model.correction_rank,
+             batch_size, budget, jmf.optimizer, jmf.polish)
+
+    step = 0
+    while model.nfock_shared_total < budget:
+        rem = budget - model.nfock_shared_total
+        b_cur = min(batch_size, rem)
+        batch_indices = model.select_batch(step, b_cur)
+        dms, cache = model.forward_batch(batch_indices)
+        _dispatch_sync(backend, [
+            ('eval_fock_shared', members[idx], (dm,))
+            for idx, dm in zip(batch_indices, dms)
+        ])
+        e_vec = numpy.empty(len(batch_indices), dtype=float)
+        fock_list = []
+        for pos, idx in enumerate(batch_indices):
+            st = members[idx]
+            e_val, f_val = st.shared_payload
+            st.shared_payload = None
+            e_vec[pos] = e_val
+            fock_list.append(f_val)
+
+        mean_de, grad_rms = model.backward_and_step(batch_indices, e_vec, fock_list, cache)
+        history.append({
+            'phase': 'shared', 'step': step, 'ntasks': len(batch_indices),
+            'mean_energy': float(numpy.mean(e_vec)), 'mean_de': mean_de,
+            'grad_rms': grad_rms, 'time': time.perf_counter() - t_start})
+        log.debug('transferable step %3d  batch=%d  nfock=%d  mean|dE|=%.3g  |g|=%.3g',
+                  step, len(batch_indices), model.nfock_shared_total, mean_de, grad_rms)
+        step += 1
+        if step >= 3 and numpy.isfinite(mean_de) and mean_de < tol_e and grad_rms < tol_grad:
+            break
+
+    dms_fin, c_occ_fin = model.build_all_densities()
+    if jmf.polish:
+        for i, st in enumerate(members):
+            dm_init_map[st.idx] = dms_fin[i]
+            st.todo = 'init'
+    else:
+        _dispatch_sync(backend, [
+            ('finalize_shared', members[i], (dms_fin[i], c_occ_fin[i], dump_chk))
+            for i in model.order
+        ])
+    return True
+
+
 def kernel(jmf, dm0=None, callback=None):
     '''Single-loop SCF driver for a batch of mean-field objects.
 
@@ -847,8 +1052,11 @@ def kernel(jmf, dm0=None, callback=None):
     if dm0 is not None:
         schedule = 'sync'
     groups = []
+    t_groups = []
     if schedule == 'cascade':
         groups = jmf.build_groups(states)
+    elif schedule == 'transferable':
+        t_groups = jmf.build_transferable_groups(states, log)
     elif schedule != 'sync':
         raise ValueError(f'Unknown schedule {schedule}')
     for model, members in groups:
@@ -861,14 +1069,30 @@ def kernel(jmf, dm0=None, callback=None):
     cput1 = log.timer('initialize joint scf', *cput0)
     history = []
     busy = {}
+    dm_init_map = {} if dm0 is None else {i: dm0[i] for i in range(len(states))}
+    active_models = [model for model, _ in groups]
     try:
-        for model, members in groups:
-            for n, st in enumerate(members):
-                model.set_overlap(n, st.mf.get_ovlp(st.mf.mol))
-        # The configurations of level 0 start from the initial guess
-        for st in states:
-            if st.level == 0:
-                st.todo = 'init'
+        if schedule == 'transferable':
+            t_member_ids = set()
+            for model, members in t_groups:
+                for st in members:
+                    t_member_ids.add(st.idx)
+            for st in states:
+                if st.idx not in t_member_ids:
+                    st.todo = 'init'
+            for model, members in t_groups:
+                if _run_transferable_group(
+                        jmf, model, members, backend, dm_init_map,
+                        dump_chk, history, t_start, log):
+                    active_models.append(model)
+        else:
+            for model, members in groups:
+                for n, st in enumerate(members):
+                    model.set_overlap(n, st.mf.get_ovlp(st.mf.mol))
+            # The configurations of level 0 start from the initial guess
+            for st in states:
+                if st.level == 0:
+                    st.todo = 'init'
 
         while True:
             # Promotion of the next levels of the cascade groups
@@ -887,7 +1111,7 @@ def kernel(jmf, dm0=None, callback=None):
                 tasks = []
                 for st in batch:
                     if st.todo == 'init':
-                        args = (None if dm0 is None else dm0[st.idx], dump_chk)
+                        args = (dm_init_map.get(st.idx), dump_chk)
                     elif st.todo == 'anchor':
                         args = (st.inherited, dump_chk)
                         st.inherited = None
@@ -925,7 +1149,7 @@ def kernel(jmf, dm0=None, callback=None):
     for st in states:
         _finalize_state(st)
     jmf.scf_history = history
-    jmf.models = [model for model, _ in groups]
+    jmf.models = active_models
     jmf.timings['total'] = time.perf_counter() - t_start
     log.timer('joint scf', *cput1)
     return states
@@ -1054,7 +1278,8 @@ class JointSCF(lib.StreamObject):
 
     Attributes:
         schedule : str
-            'sync' or 'cascade'.  See the documentation of the module.
+            'sync', 'cascade', or 'transferable'.  See the documentation of the
+            module.
         max_workers : int
             Number of configurations which are processed concurrently.  By
             default it equals the number of OpenMP threads for small
@@ -1097,6 +1322,41 @@ class JointSCF(lib.StreamObject):
         align : bool
             Align the orientations of the configurations (Kabsch) before
             comparing AO matrices.
+        latent_rank : int or None
+            Subspace dimension ``K`` of ``Phi_theta(z_R)`` for
+            ``schedule='transferable'``.  Defaults to ``min(n_orth, m + max(4, m//2))``.
+        correction_rank : int or None
+            Rank ``r_Delta`` of the local orbital correction ``Delta_R`` for
+            ``schedule='transferable'`` (``0`` for pure shared subspace,
+            ``None`` for full rank).
+        molecule_batch : int, 'full', or None
+            Mini-batch size for ``schedule='transferable'``.  Defaults to
+            ``min(8, nconf)``.
+        optimizer : str
+            Optimizer for shared parameters ``theta`` in
+            ``schedule='transferable'``: ``'lbfgs'`` or ``'adam'``.
+        max_shared_fock : int or None
+            Fock budget for the shared training phase of
+            ``schedule='transferable'``.
+        polish : bool
+            If True (default), polish transferable densities with independent
+            DIIS SCF cycles to ``mf.conv_tol``.  If False, return the
+            variational shared-model energies with ``converged=False`` and an
+            energy error estimate ``e_err_est``.
+        reg_delta : float
+            L2 regularization strength on local corrections ``Delta_R``.
+        reg_theta : float
+            L2 regularization strength on shared parameters ``theta``.
+        n_hidden : int
+            Number of tanh basis units in ``Phi_theta(z_R)``.
+        shared_tol_e : float or None
+            Stopping threshold on mini-batch mean KS energy change during shared
+            training.
+        shared_tol_grad : float
+            Stopping threshold on projected orbital gradient RMS during shared
+            training.
+        seed : int
+            Deterministic random seed for ``schedule='transferable'``.
 
     Saved results:
         e_tot : ndarray
@@ -1104,6 +1364,13 @@ class JointSCF(lib.StreamObject):
         converged : ndarray of bool
         nfock : ndarray of int
             Number of exact Fock builds of each configuration
+        nfock_shared : ndarray of int
+            Fock builds during the shared phase of ``schedule='transferable'``
+        nfock_polish : ndarray of int
+            Fock builds during the polishing phase of ``schedule='transferable'``
+        e_err_est : ndarray of float
+            Second-order perturbation energy error estimate (mHa-scale diagnostic
+            when ``polish=False``)
         cycles : ndarray of int
         mfs : list
             The mean-field objects.  They carry the same results (mo_coeff,
@@ -1124,6 +1391,18 @@ class JointSCF(lib.StreamObject):
     align = True
     dump_chk = True
     conv_check = True
+    latent_rank = None
+    correction_rank = 0
+    molecule_batch = None
+    optimizer = 'lbfgs'
+    max_shared_fock = None
+    polish = True
+    reg_delta = 1e-6
+    reg_theta = 1e-6
+    n_hidden = 8
+    shared_tol_e = None
+    shared_tol_grad = 1e-3
+    seed = 0
 
     def __init__(self, mfs, mols=None):
         if mols is not None:
@@ -1140,6 +1419,9 @@ class JointSCF(lib.StreamObject):
         self.e_tot = None
         self.converged = None
         self.nfock = None
+        self.nfock_shared = None
+        self.nfock_polish = None
+        self.e_err_est = None
         self.cycles = None
         self.levels = None
         self.promoted_at = None
@@ -1157,6 +1439,11 @@ class JointSCF(lib.StreamObject):
             log.info('n_lead = %s  level_growth = %g  promote_ratio = %g  '
                      'diis_inherit = %d', self.n_lead, self.level_growth,
                      self.promote_ratio, self.diis_inherit)
+        elif self.schedule == 'transferable':
+            log.info('latent_rank = %s  correction_rank = %s  molecule_batch = %s  '
+                     'optimizer = %s  max_shared_fock = %s  polish = %s',
+                     self.latent_rank, self.correction_rank, self.molecule_batch,
+                     self.optimizer, self.max_shared_fock, self.polish)
         return self
 
     def get_num_workers(self):
@@ -1235,6 +1522,47 @@ class JointSCF(lib.StreamObject):
             groups.append((model, members))
         return groups
 
+    def build_transferable_groups(self, states, log):
+        '''Partition the batch into groups eligible for transferable subspace
+        optimization.  Unsupported methods or singletons fall back to sync.'''
+        from pyscf.scf import _transferable
+
+        buckets = {}
+        unsupported = []
+        for st in states:
+            if _transferable.supports_transferable(st.mf):
+                buckets.setdefault(_group_key(st.mf), []).append(st)
+            else:
+                unsupported.append(st)
+        if unsupported:
+            types = sorted({st.mf.__class__.__name__ for st in unsupported})
+            log.info('transferable: falling back to sync for %d unsupported '
+                     'configuration(s) (%s)', len(unsupported), ', '.join(types))
+
+        groups = []
+        for members in buckets.values():
+            if len(members) < 2:
+                log.info('transferable: falling back to sync for %d singleton '
+                         'configuration', len(members))
+                continue
+            desc = None
+            if self.descriptors is not None:
+                desc = numpy.asarray(self.descriptors)[[st.idx for st in members]]
+            model = _transferable.TransferableGroupModel(
+                [st.mf for st in members],
+                descriptors=desc,
+                align=self.align,
+                latent_rank=self.latent_rank,
+                correction_rank=self.correction_rank,
+                n_hidden=self.n_hidden,
+                reg_delta=self.reg_delta,
+                reg_theta=self.reg_theta,
+                optimizer=self.optimizer,
+                seed=self.seed,
+            )
+            groups.append((model, members))
+        return groups
+
     def kernel(self, dm0=None, **kwargs):
         cput0 = (logger.process_clock(), logger.perf_counter())
         self.dump_flags()
@@ -1242,6 +1570,12 @@ class JointSCF(lib.StreamObject):
         self.e_tot = numpy.array([st.e_tot for st in states])
         self.converged = numpy.array([st.scf_conv for st in states])
         self.nfock = numpy.array([st.nfock for st in states])
+        self.nfock_shared = numpy.array([st.nfock_shared for st in states])
+        if self.schedule == 'transferable' and dm0 is None:
+            self.nfock_polish = self.nfock - self.nfock_shared
+        else:
+            self.nfock_polish = numpy.zeros_like(self.nfock)
+        self.e_err_est = numpy.array([st.e_err_est for st in states])
         self.cycles = numpy.array([st.cycle for st in states])
         self.levels = numpy.array([st.level for st in states])
         self.promoted_at = numpy.array([st.promoted_at for st in states])

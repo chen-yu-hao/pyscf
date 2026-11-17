@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import unittest
 import numpy
 from pyscf import gto
 from pyscf import scf
 from pyscf import dft
 from pyscf.scf import jointscf
+from pyscf.scf import _transferable
 
 
 def water(r1, r2, ang, charge=0, spin=0, basis='6-31g'):
@@ -278,6 +280,253 @@ class KnownValues(unittest.TestCase):
         model.record(dst[0], 2, dm, fock)
         self.assertAlmostEqual(abs(model._get(dst[0], 2)[0] - p[0]).max(), 0, 9)
         self.assertAlmostEqual(abs(model._get(dst[0], 2)[1] - f[0]).max(), 0, 9)
+
+    def test_transferable_polish(self):
+        jmf = jointscf.JointSCF([scf.RHF(mol) for mol in mols])
+        jmf.schedule = 'transferable'
+        jmf.polish = True
+        jmf.max_workers = 2
+        e = jmf.kernel()
+        self.assertTrue(jmf.converged.all())
+        self.assertTrue(all(mf.converged for mf in jmf.mfs))
+        self.assertAlmostEqual(abs(e - e_rhf).max(), 0, 8)
+        self.assertTrue((jmf.nfock == jmf.nfock_shared + jmf.nfock_polish).all())
+        self.assertTrue((jmf.nfock_shared >= 0).all())
+        self.assertTrue((jmf.nfock_polish > 0).all())
+
+        # DFT (RKS/PBE)
+        ref_ks = [rks(mol, 'pbe').run().e_tot for mol in mols[:10]]
+        jmf_ks = jointscf.JointSCF([rks(mol, 'pbe') for mol in mols[:10]])
+        jmf_ks.schedule = 'transferable'
+        jmf_ks.polish = True
+        jmf_ks.max_workers = 1
+        e_ks = jmf_ks.kernel()
+        self.assertTrue(jmf_ks.converged.all())
+        self.assertAlmostEqual(abs(e_ks - ref_ks).max(), 0, 8)
+
+    def test_transferable_nopolish_variational_and_ranks(self):
+        errs = []
+        for r_delta in (0, 1, 2, None):
+            jmf = jointscf.JointSCF([scf.RHF(mol) for mol in mols[:8]])
+            jmf.schedule = 'transferable'
+            jmf.polish = False
+            jmf.correction_rank = r_delta
+            jmf.molecule_batch = 4
+            jmf.max_shared_fock = 80
+            jmf.max_workers = 1
+            e = jmf.kernel()
+            self.assertFalse(jmf.converged.any())
+            self.assertTrue((jmf.nfock_polish == 0).all())
+            self.assertTrue((jmf.nfock == jmf.nfock_shared).all())
+            self.assertTrue((jmf.e_err_est >= 0).all())
+            self.assertTrue(numpy.isfinite(jmf.e_err_est).all())
+            # Exact variational upper bound
+            self.assertTrue((e >= e_rhf[:8] - 1e-10).all())
+            for mf in jmf.mfs:
+                occ = mf.mo_coeff[:, mf.mo_occ > 0]
+                s1e = mf.get_ovlp()
+                numpy.testing.assert_allclose(
+                    occ.T.dot(s1e).dot(occ), numpy.eye(occ.shape[1]), atol=1e-10)
+            errs.append(float((e - e_rhf[:8]).mean()))
+        self.assertGreater(errs[0], errs[1] - 1e-9)
+        self.assertGreater(errs[1], errs[2] - 1e-9)
+        self.assertGreater(errs[2], errs[3] - 1e-9)
+        self.assertGreater(errs[0], errs[-1] + 1e-5)
+
+    def test_transferable_gradients(self):
+        mols3 = mols[:3]
+        weights = numpy.array([0.2, 0.5, 0.3])
+        rng = numpy.random.default_rng(19)
+        factories = (
+            lambda m: scf.RHF(m),
+            lambda m: rks(m, 'svwn'),
+            lambda m: rks(m, 'pbe'),
+            lambda m: rks(m, 'b3lyp'),
+        )
+        for factory in factories:
+            for r_delta in (None, 1):
+                mfs = [factory(m) for m in mols3]
+                for mf in mfs:
+                    if hasattr(mf, 'grids'):
+                        mf.grids.prune = None
+                    mf.build(mf.mol)
+                setup_data = [(mf.get_ovlp(), mf.get_hcore(), mf.get_init_guess())
+                              for mf in mfs]
+                model = _transferable.TransferableGroupModel(
+                    mfs, correction_rank=r_delta, latent_rank=7, n_hidden=3,
+                    reg_delta=1e-3, reg_theta=1e-3, seed=7)
+                model.initialize(setup_data)
+                theta0 = model.theta[0] + rng.normal(scale=0.02, size=model.theta[0].shape)
+                a_list = [model.a_mats[0][i] + rng.normal(scale=0.02, size=model.a_mats[0][i].shape)
+                          for i in range(3)]
+                if r_delta is None:
+                    d_list = [model.delta_entries[0][i] + rng.normal(
+                        scale=0.02, size=model.delta_entries[0][i].shape)
+                        for i in range(3)]
+                else:
+                    d_list = [(b + rng.normal(scale=0.02, size=b.shape),
+                               g + rng.normal(scale=0.02, size=g.shape))
+                              for b, g in model.delta_entries[0]]
+
+                calls = [0]
+                for mf in mfs:
+                    orig = mf.get_veff
+                    def wrapped(mol=None, dm=None, dm_last=0, vhf_last=0, hermi=1, _orig=orig):
+                        calls[0] += 1
+                        return _orig(mol, dm, dm_last, vhf_last, hermi)
+                    mf.get_veff = wrapped
+
+                _, gt, ga, gd, _ = _transferable.evaluate_transferable_loss_and_grad(
+                    mfs, theta0, a_list, d_list,
+                    weights=weights, latent_rank=7, correction_rank=r_delta, n_hidden=3,
+                    reg_delta=1e-3, reg_theta=1e-3,
+                    providers=model.providers, ref_coords=model.ref_coords,
+                    mass=model.mass, z=model.z)
+                self.assertEqual(calls[0], 3)
+
+                eps = 1e-6
+                def check_rel(grad_vec, eval_shifted):
+                    idx_s = rng.choice(grad_vec.size, size=min(8, grad_vec.size), replace=False)
+                    ana = numpy.array([grad_vec.ravel()[k] for k in idx_s])
+                    fd = numpy.array([(eval_shifted(k, eps) - eval_shifted(k, -eps)) / (2 * eps)
+                                      for k in idx_s])
+                    rel = numpy.linalg.norm(ana - fd) / max(numpy.linalg.norm(fd), 1e-12)
+                    self.assertLess(rel, 1e-5)
+
+                check_rel(gt, lambda k, d: _transferable.evaluate_transferable_loss_and_grad(
+                    mfs, theta0 + numpy.eye(theta0.size)[k] * d, a_list, d_list,
+                    weights=weights, latent_rank=7, correction_rank=r_delta, n_hidden=3,
+                    reg_delta=1e-3, reg_theta=1e-3, providers=model.providers,
+                    ref_coords=model.ref_coords, mass=model.mass, z=model.z)[0])
+
+                def shift_a(k, d):
+                    al = [x.copy() for x in a_list]
+                    al[1].ravel()[k] += d
+                    return _transferable.evaluate_transferable_loss_and_grad(
+                        mfs, theta0, al, d_list, weights=weights, latent_rank=7,
+                        correction_rank=r_delta, n_hidden=3, reg_delta=1e-3, reg_theta=1e-3,
+                        providers=model.providers, ref_coords=model.ref_coords,
+                        mass=model.mass, z=model.z)[0]
+                check_rel(ga[1], shift_a)
+
+                if r_delta is None:
+                    def shift_d(k, d):
+                        dl = [x.copy() for x in d_list]
+                        dl[1].ravel()[k] += d
+                        return _transferable.evaluate_transferable_loss_and_grad(
+                            mfs, theta0, a_list, dl, weights=weights, latent_rank=7,
+                            correction_rank=r_delta, n_hidden=3, reg_delta=1e-3, reg_theta=1e-3,
+                            providers=model.providers, ref_coords=model.ref_coords,
+                            mass=model.mass, z=model.z)[0]
+                    check_rel(gd[1], shift_d)
+                else:
+                    def shift_b(k, d):
+                        dl = [(b.copy(), g.copy()) for b, g in d_list]
+                        dl[1][0].ravel()[k] += d
+                        return _transferable.evaluate_transferable_loss_and_grad(
+                            mfs, theta0, a_list, dl, weights=weights, latent_rank=7,
+                            correction_rank=r_delta, n_hidden=3, reg_delta=1e-3, reg_theta=1e-3,
+                            providers=model.providers, ref_coords=model.ref_coords,
+                            mass=model.mass, z=model.z)[0]
+                    def shift_g(k, d):
+                        dl = [(b.copy(), g.copy()) for b, g in d_list]
+                        dl[1][1].ravel()[k] += d
+                        return _transferable.evaluate_transferable_loss_and_grad(
+                            mfs, theta0, a_list, dl, weights=weights, latent_rank=7,
+                            correction_rank=r_delta, n_hidden=3, reg_delta=1e-3, reg_theta=1e-3,
+                            providers=model.providers, ref_coords=model.ref_coords,
+                            mass=model.mass, z=model.z)[0]
+                    check_rel(gd[1][0], shift_b)
+                    check_rel(gd[1][1], shift_g)
+
+    def test_transferable_orientation_invariance(self):
+        mols1 = [random_rotation(mol, i + 10)[0] for i, mol in enumerate(mols[:10])]
+        for polish, tol in ((False, 10), (True, 8)):
+            jmf0 = jointscf.JointSCF([scf.RHF(mol) for mol in mols[:10]])
+            jmf0.schedule = 'transferable'
+            jmf0.polish = polish
+            jmf0.max_workers = 1
+            e0 = jmf0.kernel()
+
+            jmf1 = jointscf.JointSCF([scf.RHF(mol) for mol in mols1])
+            jmf1.schedule = 'transferable'
+            jmf1.polish = polish
+            jmf1.max_workers = 1
+            e1 = jmf1.kernel()
+
+            self.assertAlmostEqual(abs(e1 - e0).max(), 0, tol)
+            self.assertEqual(list(jmf1.nfock_shared), list(jmf0.nfock_shared))
+            self.assertEqual(list(jmf1.nfock_polish), list(jmf0.nfock_polish))
+            self.assertEqual(list(jmf1.nfock), list(jmf0.nfock))
+
+    def test_transferable_backends_and_batch_size(self):
+        for polish in (False, True):
+            ref = None
+            for parallel, nworkers in (('thread', 1), ('thread', 2), ('process', 2)):
+                jmf = jointscf.JointSCF([scf.RHF(mol) for mol in mols[:12]])
+                jmf.schedule = 'transferable'
+                jmf.polish = polish
+                jmf.parallel = parallel
+                jmf.max_workers = nworkers
+                jmf.seed = 42
+                e = jmf.kernel()
+                if polish:
+                    self.assertTrue(jmf.converged.all())
+                if ref is None:
+                    ref = jmf
+                self.assertEqual(list(jmf.nfock_shared), list(ref.nfock_shared))
+                self.assertEqual(list(jmf.nfock_polish), list(ref.nfock_polish))
+                self.assertEqual(list(jmf.nfock), list(ref.nfock))
+                self.assertAlmostEqual(abs(e - ref.e_tot).max(), 0, 10)
+
+        for mb in (1, 4, 12):
+            jmf = jointscf.JointSCF([scf.RHF(mol) for mol in mols[:12]])
+            jmf.schedule = 'transferable'
+            jmf.polish = True
+            jmf.molecule_batch = mb
+            jmf.max_workers = 2
+            e = jmf.kernel()
+            self.assertTrue(jmf.converged.all())
+            self.assertAlmostEqual(abs(e - e_rhf[:12]).max(), 0, 8)
+
+    def test_transferable_uks_and_fallback(self):
+        molc = [water(*g, charge=1, spin=1) for g in geoms[:8]]
+        def uks(mol):
+            mf = dft.UKS(mol, xc='pbe')
+            mf.grids.level = 1
+            return mf
+        ref_uks = [uks(mol).run().e_tot for mol in molc]
+        jmf_p = jointscf.JointSCF([uks(mol) for mol in molc])
+        jmf_p.schedule = 'transferable'
+        jmf_p.polish = True
+        jmf_p.max_workers = 2
+        e_p = jmf_p.kernel()
+        self.assertTrue(jmf_p.converged.all())
+        self.assertAlmostEqual(abs(e_p - ref_uks).max(), 0, 8)
+
+        jmf_np = jointscf.JointSCF([uks(mol) for mol in molc])
+        jmf_np.schedule = 'transferable'
+        jmf_np.polish = False
+        jmf_np.max_workers = 1
+        e_np = jmf_np.kernel()
+        self.assertFalse(jmf_np.converged.any())
+        self.assertTrue((e_np >= numpy.asarray(ref_uks) - 1e-10).all())
+
+        # ROHF falls back to sync with a log message
+        buf = io.StringIO()
+        mfs_rohf = [scf.ROHF(mol) for mol in molc[:4]]
+        for mf in mfs_rohf:
+            mf.stdout = buf
+        ref_rohf = [scf.ROHF(mol).run().e_tot for mol in molc[:4]]
+        jmf_ro = jointscf.JointSCF(mfs_rohf)
+        jmf_ro.stdout = buf
+        jmf_ro.verbose = 4
+        jmf_ro.schedule = 'transferable'
+        jmf_ro.max_workers = 1
+        e_ro = jmf_ro.kernel()
+        self.assertTrue(jmf_ro.converged.all())
+        self.assertAlmostEqual(abs(e_ro - ref_rohf).max(), 0, 10)
+        self.assertIn('falling back to sync', buf.getvalue())
 
 if __name__ == "__main__":
     print("Full Tests for joint SCF")
